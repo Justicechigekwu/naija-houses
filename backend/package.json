@@ -1,0 +1,27 @@
+{
+  "name": "full-stack",
+  "version": "1.0.0",
+  "description": "building my first complete project from scratch",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "full_stack"
+  },
+  "author": "justice",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.18.0",
+    "multer": "^2.0.2",
+    "nodemon": "^3.1.10"
+  },
+  "keywords": []
+}
