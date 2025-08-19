@@ -1,29 +1,32 @@
 "use client";
+
+import { useRouter } from "next/navigation";
 import ListingForm from "@/components/ListingForm";
+import api from "@/libs/api";
 
 export default function CreateListingPage() {
-  const handleCreate = async (data: FormData) => {
-    const token = localStorage.getItem("token");
-    const res = await fetch("http://localhost:5000/api/listings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: data,
-    });
+  const router = useRouter();
+  const handleCreateListing = async (formData: FormData) => {
+    try {
+      const res = await api.post("/listings", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    const result = await res.json();
-    if (res.ok) {
       alert("Listing created successfully!");
-    } else {
-      alert(result.message || "Something went wrong");
+      router.push('/')
+
+      console.log(res.data);
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Something went wrong");
     }
   };
 
   return (
-    <>
-      <h1>Create Listing</h1>
-      <ListingForm onSubmit={handleCreate} />
-    </>
+    <div className="">
+      <h1 className="text-center py-5 font-medium text-xl">Create Listing</h1>
+      <ListingForm onSubmit={handleCreateListing} />
+    </div>
   );
 }
+

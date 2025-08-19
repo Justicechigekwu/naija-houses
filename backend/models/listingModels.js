@@ -16,22 +16,22 @@ const listingSchema = new mongoose.Schema(
 
         propertyType: { 
             type: String,
-            enum: ['House', 'Apartment', 'Duplex', 'Bungalow'], 
-            required: true },
-
-        salePrice: {
-            type: Number,
-            required: [true, "Please enter a price"],
+            enum: ['House', 'Apartment', 'Duplex', 'Bungalow', 'Mansion']
         },
 
-        rentPrice: { 
-            type: Number,
-            required: [true, "Please enter a price"]
+        price: {
+            type: String,
+            required: [true, 'Please enter a price']
         },
 
         location: {
             type: String,
             required: [true, 'Please enter a location'],
+        },
+
+        state: { 
+            type: String,
+            required: [true, 'Please enter a state']
         },
 
         size: { 
@@ -40,12 +40,10 @@ const listingSchema = new mongoose.Schema(
 
         bedrooms: { 
             type: Number,
-            required: true 
         },
 
         bathrooms: { 
             type: Number, 
-            required: true 
         },
 
         parkingSpaces: { 
@@ -57,31 +55,34 @@ const listingSchema = new mongoose.Schema(
             type: String 
         },
 
-        state: { 
-            type: String 
-        },
 
         furnished: { 
-            type: Boolean, 
-            default: false 
+            type: String,
+            enum: ['Yes', 'No'],
         },
 
         images: [String],
 
+        postedBy: {
+            type: String,
+            enum: ['Owner', 'Agent'],
+            required: true
+        },
+
         owner: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
+            required: true
         },
 
-        status: { 
-            type: String, 
-            enum: ['Available', 'Sold', 'Rented'], 
-            default: 'Available' 
-        }
+        status: {
+            type: String,
+            enum: ['Available', 'Sold', 'Rented'],
+            default: 'Available'
+        },
     },
     { timestamps: true }
 );
 
-const listing = mongoose.model('listing', listingSchema);
-export default listing;
+const Listing = mongoose.model('listing', listingSchema);
+export default Listing;

@@ -8,21 +8,26 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 const storage = multer.diskStorage({
-    destination: (req, file, cd) => {
-        cd(null, uploadDir);
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
     },
 
-    filename: (req, file, cd) => {
-        cd(null, Date.now() + path.extname(file.originalname));
+    filename: (req, file, cb) => {
+        const safeName = file.originalname
+        .replace(/\s+/g, '-')
+        .replace(/[^a-zA-Z0-9.-]/g, '')
+        .toLocaleLowerCase();
+
+        cb(null, Date.now() + '-' + safeName);
     },
 });
 
-const fileFilter = (req, file, cd) => {
+const fileFilter = (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (allowedTypes.includes(file.mimetype)) {
-        cd(null, true);
+        cb(null, true);
     }  else {
-        cd(new Error('Only  JPG, PNG, images are allowed'), false);
+        cb(new Error('Only  JPG, JPEG, PNG, images are allowed'), false);
     }
 };
 

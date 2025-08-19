@@ -19,9 +19,10 @@ export const signup = async (req, res) => {
             token,
 
         user: {
-            userId: newUser._id,
-            userEmail: newUser.email,
-            userName: newUser.name
+            id: newUser._id,
+            name: newUser.name,
+            email: newUser.email,
+            avatar: newUser.avatar || null
         }
     });
 
@@ -49,12 +50,13 @@ export const login = async (req, res) => {
 
         user: {
             id: user._id,
-            userName: user.username,
-            email: user.email
+            name: user.username,
+            email: user.email,
+            avatar: user.avatar || null
         }
     });
 
    } catch (error) {
-    res.status(500).json({ message: 'login failed', error: err.message})
+    res.status(500).json({ message: 'login failed', error: error.message})
    }
 };

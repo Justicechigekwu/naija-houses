@@ -3,9 +3,9 @@ import dotenv from 'dotenv';
 import express from 'express';
 import dbConnect from './config/databaseConfig.js';
 import cors from 'cors';
-// import router from './routes/authRoutes.js';
 import listingRoutes from './routes/listingRoutes.js'
 import authRoutes from './routes/authRoutes.js'
+import profileRoutes from './routes/profileRoutes.js'
 
 
 dotenv.config();
@@ -18,9 +18,10 @@ app.use(cors({
     origin:process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true
 }));
-// app.use('/api', router);
+
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 app.use('/api/auth', authRoutes)
+app.use('/api', profileRoutes)
 app.use('/api/listings', listingRoutes)
 
 app.get('/api/ping', (req, res) => {

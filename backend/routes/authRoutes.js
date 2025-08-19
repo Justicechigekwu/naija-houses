@@ -13,5 +13,6 @@ router.get('/profile', verifyToken, (req, res) => {
 
 router.post('/register', signup)
 router.post('/login', login)
+// router.post('/google', googleAuth)
 
 export default router;

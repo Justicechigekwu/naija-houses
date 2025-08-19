@@ -1,51 +1,115 @@
+// 
+
+
+
+
 "use client";
 import { useState } from "react";
+import { X } from "lucide-react";
 
 interface ListingFormProps {
-  initialData?: any;
+  initialData?: Partial<{
+    title: string;
+    listingType: string;
+    propertyType: string;
+    price: string;
+    location: string;
+    size: string | number;
+    bedrooms: string | number;
+    bathrooms: string | number;
+    parkingSpaces: string | number;
+    city: string;
+    state: string;
+    furnished: string;
+    postedBy: string;
+  }>;
   onSubmit: (formData: FormData) => Promise<void>;
 }
 
+type FormShape = {
+  title: string;
+  listingType: string;
+  propertyType: string;
+  price: string;         // keep as string so it can include text (e.g. "per month")
+  location: string;
+  size: string | number;
+  bedrooms: string | number;
+  bathrooms: string | number;
+  parkingSpaces: string | number;
+  city: string;
+  state: string;
+  furnished: string;
+  postedBy: string;
+};
+
 export default function ListingForm({ initialData, onSubmit }: ListingFormProps) {
-  const [formData, setFormData] = useState({
+  const [step, setStep] = useState(1);
+
+  const [formData, setFormData] = useState<FormShape>({
     title: initialData?.title || "",
     listingType: initialData?.listingType || "",
     propertyType: initialData?.propertyType || "",
-    salePrice: initialData?.salePrice || "",
-    rentPrice: initialData?.rentPrice || "",
+    price: initialData?.price || "",
     location: initialData?.location || "",
-    size: initialData?.size || "",
-    bedrooms: initialData?.bedrooms || "",
-    bathrooms: initialData?.bathrooms || "",
-    parkingSpaces: initialData?.parkingSpaces || "",
+    size: initialData?.size ?? "",
+    bedrooms: initialData?.bedrooms ?? "",
+    bathrooms: initialData?.bathrooms ?? "",
+    parkingSpaces: initialData?.parkingSpaces ?? "",
     city: initialData?.city || "",
     state: initialData?.state || "",
     furnished: initialData?.furnished || "",
-    status: initialData?.status || "",
+    postedBy: initialData?.postedBy || "",
   });
 
   const [images, setImages] = useState<File[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Formats: "5000" -> "5,000", "5000 per apartment" -> "5,000 per apartment"
+  function formatPriceInput(value: string) {
+    const match = value.match(/^([\d\s,\.]*)(.*)$/); // numeric prefix + any trailing text
+    if (!match) return value;
+
+    const rawNum = match[1].replace(/[^\d]/g, ""); // keep digits only
+    const tail = match[2] ?? "";
+
+    const formattedNum = rawNum ? Number(rawNum).toLocaleString() : "";
+    const trimmedTail = tail.replace(/^\s+/, ""); // trim only the leading space
+
+    return trimmedTail ? `${formattedNum} ${trimmedTail}`.trim() : formattedNum;
+  }
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+
+    if (name === "price") {
+      setFormData((prev) => ({ ...prev, price: formatPriceInput(value) }));
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages(Array.from(e.target.files));
+    const { files } = e.target;
+    if (files && files.length > 0) {
+      setImages((prev) => [...prev, ...Array.from(files)]);
     }
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = new FormData();
 
-    // Append text fields
-    Object.keys(formData).forEach((key) => {
-      data.append(key, formData[key as keyof typeof formData]);
+    (Object.keys(formData) as Array<keyof FormShape>).forEach((key) => {
+      const val = formData[key];
+      data.append(String(key), val != null ? String(val) : "");
     });
 
-    // Append images
     images.forEach((image) => {
       data.append("images", image);
     });
@@ -54,46 +118,246 @@ export default function ListingForm({ initialData, onSubmit }: ListingFormProps)
   };
 
   return (
-    <div style={{ maxWidth: "700px", margin: "0 auto" }}>
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <input type="text" name="title" placeholder="Title" value={formData.title} onChange={handleChange} required />
+    <div className="max-w-3xl border bg-[#F5F5F5] rounded shadow mx-auto p-6">
+      <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-6">
+        {step === 1 && (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-xl text-gray-700 mb-2">Listing Type</label>
+              <select
+                name="listingType"
+                value={formData.listingType}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-md text-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+              >
+                <option value="">Select Listing Type</option>
+                <option value="Sale">Sale</option>
+                <option value="Rent">Rent</option>
+              </select>
+            </div>
 
-        <select name="listingType" value={formData.listingType} onChange={handleChange} required>
-          <option value="">Select Listing Type</option>
-          <option value="Sale">Sale</option>
-          <option value="Rent">Rent</option>
-        </select>
+            <div>
+              <label className="block text-xl text-gray-700 mb-2">Posted By</label>
+              <select
+                name="postedBy"
+                value={formData.postedBy}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-md text-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+              >
+                <option value="">Select</option>
+                <option value="Owner">Owner</option>
+                <option value="Agent">Agent</option>
+              </select>
+            </div>
 
-        <input type="text" name="propertyType" placeholder="Property Type" value={formData.propertyType} onChange={handleChange} required />
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              disabled={!formData.listingType || !formData.postedBy}
+              className="w-full bg-green-600 text-white text-lg py-3 rounded-md hover:bg-green-700 transition disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
 
-        <input type="number" name="salePrice" placeholder="Sale Price" value={formData.salePrice} onChange={handleChange} />
-        <input type="number" name="rentPrice" placeholder="Rent Price" value={formData.rentPrice} onChange={handleChange} />
+        {step === 2 && (
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="title" className="block text-2xl text-gray-700 mb-2">Title</label>
+              <input
+                type="text"
+                name="title"
+                placeholder="Enter property title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+              />
+            </div>
 
-        <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} required />
-        <input type="number" name="size" placeholder="Size" value={formData.size} onChange={handleChange} />
-        <input type="number" name="bedrooms" placeholder="Bedrooms" value={formData.bedrooms} onChange={handleChange} />
-        <input type="number" name="bathrooms" placeholder="Bathrooms" value={formData.bathrooms} onChange={handleChange} />
-        <input type="number" name="parkingSpaces" placeholder="Parking Spaces" value={formData.parkingSpaces} onChange={handleChange} />
+            <div>
+              <label className="block text-2xl text-gray-700 mb-2">Property Type</label>
+              <select
+                name="propertyType"
+                value={formData.propertyType}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+              >
+                <option value="">Select Property Type</option>
+                <option value="House">House</option>
+                <option value="Apartment">Apartment</option>
+                <option value="Duplex">Duplex</option>
+                <option value="Bungalow">Bungalow</option>
+                <option value="Mansion">Mansion</option>
+              </select>
+            </div>
 
-        <input type="text" name="city" placeholder="City" value={formData.city} onChange={handleChange} />
-        <input type="text" name="state" placeholder="State" value={formData.state} onChange={handleChange} />
+            <div>
+              <label className="block text-2xl text-gray-700 mb-2">Price</label>
+              <input
+                type="text"
+                name="price"
+                placeholder="e.g. 5000 or 5000 per apartment"
+                value={formData.price}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+              />
+            </div>
 
-        <select name="furnished" value={formData.furnished} onChange={handleChange}>
-          <option value="">Furnished?</option>
-          <option value="Yes">Yes</option>
-          <option value="No">No</option>
-        </select>
+            <div>
+              <label className="block text-2xl text-gray-700 mb-2">Location</label>
+              <input
+                type="text"
+                name="location"
+                placeholder="Enter location"
+                value={formData.location}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+              />
+            </div>
 
-        <select name="status" value={formData.status} onChange={handleChange}>
-          <option value="">Status</option>
-          <option value="Available">Available</option>
-          <option value="Sold">Sold</option>
-          <option value="Rented">Rented</option>
-        </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-2xl text-gray-700 mb-2">Size (sqm)</label>
+                <input
+                  type="number"
+                  name="size"
+                  value={formData.size}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+                />
+              </div>
 
-        <input type="file" name="images" multiple onChange={handleImageChange} />
+              <div>
+                <label className="block text-2xl text-gray-700 mb-2">Bedrooms</label>
+                <input
+                  type="number"
+                  name="bedrooms"
+                  value={formData.bedrooms}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+                />
+              </div>
 
-        <button type="submit">{initialData ? "Update Listing" : "Create Listing"}</button>
+              <div>
+                <label className="block text-2xl text-gray-700 mb-2">Bathrooms</label>
+                <input
+                  type="number"
+                  name="bathrooms"
+                  value={formData.bathrooms}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-2xl text-gray-700 mb-2">Parking Spaces</label>
+                <input
+                  placeholder="Optional"
+                  type="number"
+                  name="parkingSpaces"
+                  value={formData.parkingSpaces}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-2xl text-gray-700 mb-2">City</label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-2xl text-gray-700 mb-2">State</label>
+                <input
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-2xl text-gray-700 mb-2">Furnished?</label>
+              <select
+                name="furnished"
+                value={formData.furnished}
+                onChange={handleChange}
+                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+              >
+                <option value="">Choose option</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-2xl text-gray-700 mb-2">Upload Images</label>
+              <input
+                type="file"
+                name="images"
+                multiple
+                onChange={handleImageChange}
+                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl bg-white focus:ring-2 focus:ring-green-500 focus:outline-none"
+              />
+
+              {images.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {images.map((img, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={URL.createObjectURL(img)}
+                        alt={`preview-${index}`}
+                        className="w-full h-32 object-cover rounded-md border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-80 hover:opacity-100"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="px-6 py-3 bg-gray-300 text-lg rounded-md hover:bg-gray-400 transition"
+              >
+                Back
+              </button>
+
+              <button
+                type="submit"
+                className="px-6 py-3 bg-green-600 text-white text-lg rounded-md hover:bg-green-700 transition"
+              >
+                {initialData ? "Update Listing" : "Create Listing"}
+              </button>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

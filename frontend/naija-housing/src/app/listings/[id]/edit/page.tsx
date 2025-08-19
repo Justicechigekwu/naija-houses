@@ -1,47 +1,45 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import ListingForm from "@/components/ListingForm";
+import api from "@/libs/api";
+import { useParams } from "next/navigation";
 
 export default function EditListingPage() {
-  const params = useParams();
-  const [listing, setListing] = useState<any>(null);
+  const { id } = useParams();
+  const [initialData, setInitialData] = useState(null);
 
   useEffect(() => {
-    const fetchListing = async () => {
-      const res = await fetch(`http://localhost:5000/api/listings/${params.id}`);
-      const data = await res.json();
-      setListing(data);
-    };
+    async function fetchListing() {
+      try {
+        const res = await api.get(`/listings/${id}`);
+        setInitialData(res.data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
     fetchListing();
-  }, [params.id]);
+  }, [id]);
 
-  const handleUpdate = async (data: FormData) => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`http://localhost:5000/api/listings/${params.id}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: data,
-    });
-
-    const result = await res.json();
-    if (res.ok) {
+  const handleUpdateListing = async (formData: FormData) => {
+    try {
+      const res = await api.put(`/listings/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       alert("Listing updated successfully!");
-    } else {
-      alert(result.message || "Something went wrong");
+      console.log(res.data);
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Something went wrong");
     }
   };
 
-  if (!listing) return <p>Loading...</p>;
+  if (!initialData) return <p>Loading...</p>;
 
   return (
-    <>
+    <div>
       <h1>Edit Listing</h1>
-      <ListingForm initialData={listing} onSubmit={handleUpdate} />
-    </>
+      <ListingForm initialData={initialData} onSubmit={handleUpdateListing} />
+    </div>
   );
 }
-
-
