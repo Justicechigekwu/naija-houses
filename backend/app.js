@@ -6,6 +6,8 @@ import cors from 'cors';
 import listingRoutes from './routes/listingRoutes.js'
 import authRoutes from './routes/authRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
+import chatRoutes from './routes/chatRoutes.js'
+import resetPasswordRoutes from './routes/resetPasswordRoutes.js';
 
 
 dotenv.config();
@@ -21,8 +23,10 @@ app.use(cors({
 
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 app.use('/api/auth', authRoutes)
+app.use('/api/reset', resetPasswordRoutes)
 app.use('/api', profileRoutes)
 app.use('/api/listings', listingRoutes)
+app.use('/api/chats', chatRoutes)
 
 app.get('/api/ping', (req, res) => {
     res.json({ message: 'Backend connected'})

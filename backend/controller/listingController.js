@@ -24,7 +24,8 @@ export const createListing = async (req, res) => {
     });
 
     await newListing.save();
-    res.status(201).json(newListing)
+
+    res.status(201).json(newListing);
   } catch (error) {
     console.error("Error in createListing:", error);
     res.status(500).json({ message: error.message || "Failed to create listing" });
@@ -43,10 +44,17 @@ export const updateListing = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to update this listing" });
     }
 
-    let updatedImages = listing.images;
-    if (req.files && req.files.length > 0) {
-      updatedImages = [...listing.images, ...req.files.map(file => file.filename)];
+    let keepImages = req.body.keepImages;
+    if (!Array.isArray(keepImages)) {
+      keepImages = keepImages ? [keepImages] : [];
     }
+
+    let newImages = [];
+    if (req.files && req.files.length > 0) {
+      newImages = req.files.map((file) => `/uploads/${file.filename}`);
+    }
+
+    const updatedImages = [...keepImages, ...newImages];
 
     const updates = {
       title: req.body.title || listing.title,
@@ -73,7 +81,11 @@ export const updateListing = async (req, res) => {
       { new: true }
     );
 
-    res.json({ updatedListing });
+    res.json({
+      ...updatedListing.toObject(),
+    images: updatedListing.images.map(
+      (img) => `${req.protocol}://${req.get('host')}/uploads/${img}`)
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message || "Failed to update" });
@@ -101,9 +113,30 @@ export const deleteListing = async (req, res) => {
 
 export const getLitsing = async (req, res) => {
     try {
-        const listings = await Listing.find().sort({ createdAt: -1});
+        const { search, minPrice, maxPrice, state, location, bedrooms } = req.query;
+        let query = {};
+
+        if (search) {
+          query.$or = [
+            { title: { $regex: search, $options: 'i' } },
+            { state: { $regex: search, $options: 'i' } },
+            { location: { $regex: search, $options: 'i' } },
+          ];
+        }
+
+        if (minPrice || maxPrice) {
+          query.price = {};
+          if (minPrice) query.price.$gte = Number(minPrice);
+          if (maxPrice) query.price.$lte = Number(maxPrice);
+        }
+
+        if (state) query.state = state;
+        if (location) query.location = location;
+        if (bedrooms) query.bedrooms = Number(bedrooms)
+        const listings = await Listing.find(query).sort({ createdAt: -1});
         res.status(200).json(listings) 
     } catch (error) {
+      console.error(error)
         res.status(500).json({ message: error.message || 'Failed to fetch listings' });
     }
 };

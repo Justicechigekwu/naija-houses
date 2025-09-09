@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import api from '@/libs/api';
+import { AxiosError} from 'axios'
 
 export default function DeleteListing({ listingId }: { listingId: string}) {
     const router = useRouter();
@@ -12,7 +13,8 @@ export default function DeleteListing({ listingId }: { listingId: string}) {
             await api.delete(`/listings/${listingId}`);
             alert('listing deleted successfully');
             router.push('/listings');
-        } catch (err: any) {
+        } catch (err: unknown) {
+            if (err instanceof AxiosError) 
             alert(err?.response?.data?.message || 'Failed to delete listing')
         }
     };

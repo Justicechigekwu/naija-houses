@@ -16,7 +16,8 @@ export const updateProfile = async (req, res) => {
             user.email = req.body.email;
         }
 
-        user.name = req.body.name || user.name;
+        user.firstName = req.body.firstName || user.firstName;
+        user.lastName = req.body.lastName || user.lastName;
         user.phone = req.body.phone || user.phone;
         user.location = req.body.location || user.location;
         user.bio = req.body.bio || user.bio;
@@ -32,7 +33,8 @@ export const updateProfile = async (req, res) => {
             message: "Profile updated successfully",
             user: {
                 id: updatedUser._id,
-                name: updatedUser.name,
+                firstName: updatedUser.firstName,
+                lastName: updatedUser.lastName,
                 email: updatedUser.email,
                 avatar: updatedUser.avatar,
                 phone: updatedUser.phone,
@@ -58,7 +60,8 @@ export const getProfile = async (req, res) => {
         }
         res.json({
             id: user.id,
-            name: user.name,
+            firstName: user.firstName,
+            lastName: user.lastName,
             email: user.email,
             avatar: user.avatar,
             phone: user.phone,

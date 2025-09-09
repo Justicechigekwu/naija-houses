@@ -57,33 +57,35 @@ export default function Home() {
       )}
 
       {listings.length > 0 ? (
-        <div className="grid grid-rows-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 w-full sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {listings.map((listing) => (
             <div
               key={listing._id}
               onClick={() => handleCardClick(listing._id)}
-              className="border rounded shadow hover:shadow-lg transition bg-white cursor-pointer p-4"
+              className=" w-full rounded shadow hover:shadow-lg transition bg-white cursor-pointer p-4"
             >
-              <img
-                src={
-                  listing.images?.[0]
-                    ? `http://localhost:5000${listing.images[0]}`
-                    : '/placeholder.jpg'
-                }
-                alt={listing.title}
-                className="w-full h-48 object-cover rounded mb-3"
-              />
+              <div className="w-full  flex justify-center items-center mb-3 bg-gray-100 rounded">
+                <img
+                  src={
+                    listing.images?.[0]
+                      ? `http://localhost:5000${listing.images[0]}`
+                      : '/placeholder.jpg'
+                  }
+                  alt={listing.title}
+                  className="w-full h-48 object-fit rounded"
+                />
+              </div>
               <h2 className="text-xl font-semibold">{listing.title}</h2>
               <p className="text-green-600 ">
                 ₦
-                {listing.price && !isNaN (Number(listing.price))
-                ? Number(listing.price).toLocaleString()
-                 : listing.price || 'N/A'}
+                {listing.price && !isNaN(Number(listing.price))
+                  ? Number(listing.price).toLocaleString()
+                  : listing.price || 'N/A'}
               </p>
               <MapPin className="w-5 h-5 text-green-300 inline" />
-              <p className="text-gray-500 text-sm inline">{listing.state}</p>,<span> </span> 
+              <p className="text-gray-500 text-sm inline">{listing.state}</p>,{" "}
+              <span> </span>
               <p className="text-gray-500 text-sm inline">{listing.location}</p>
-              
             </div>
           ))}
         </div>
@@ -93,4 +95,3 @@ export default function Home() {
     </div>
   );
 }
-

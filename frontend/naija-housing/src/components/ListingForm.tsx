@@ -1,11 +1,8 @@
-// 
-
-
-
-
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import api from "@/libs/api";
 
 interface ListingFormProps {
   initialData?: Partial<{
@@ -22,6 +19,7 @@ interface ListingFormProps {
     state: string;
     furnished: string;
     postedBy: string;
+    images: string[];
   }>;
   onSubmit: (formData: FormData) => Promise<void>;
 }
@@ -30,7 +28,7 @@ type FormShape = {
   title: string;
   listingType: string;
   propertyType: string;
-  price: string;         // keep as string so it can include text (e.g. "per month")
+  price: string;     
   location: string;
   size: string | number;
   bedrooms: string | number;
@@ -44,6 +42,31 @@ type FormShape = {
 
 export default function ListingForm({ initialData, onSubmit }: ListingFormProps) {
   const [step, setStep] = useState(1);
+  const { id } = useParams();
+  const router = useRouter();
+
+const toAbs = (img: string) => {
+  if (!img) return "";
+  if (/^https?:\/\//i.test(img)) return img;
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const normalized = img.startsWith("/") ? img : `/${img}`;
+  return `${base}${normalized}`;
+};
+
+
+
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        const res = await api.get(`/listings/${id}`);
+        const data = res.data;
+        setExistingImages(data.images || []);
+      } catch (error) {
+        console.error('Failed to fetch listings:', error)
+      }
+    };
+    fetchListing();
+  }, [id]);
 
   const [formData, setFormData] = useState<FormShape>({
     title: initialData?.title || "",
@@ -61,19 +84,18 @@ export default function ListingForm({ initialData, onSubmit }: ListingFormProps)
     postedBy: initialData?.postedBy || "",
   });
 
+  const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || []);
+
   const [images, setImages] = useState<File[]>([]);
 
-  // Formats: "5000" -> "5,000", "5000 per apartment" -> "5,000 per apartment"
+  
   function formatPriceInput(value: string) {
-    const match = value.match(/^([\d\s,\.]*)(.*)$/); // numeric prefix + any trailing text
+    const match = value.match(/^([\d\s,\.]*)(.*)$/); 
     if (!match) return value;
-
-    const rawNum = match[1].replace(/[^\d]/g, ""); // keep digits only
+    const rawNum = match[1].replace(/[^\d]/g, "");
     const tail = match[2] ?? "";
-
     const formattedNum = rawNum ? Number(rawNum).toLocaleString() : "";
-    const trimmedTail = tail.replace(/^\s+/, ""); // trim only the leading space
-
+    const trimmedTail = tail.replace(/^\s+/, ""); 
     return trimmedTail ? `${formattedNum} ${trimmedTail}`.trim() : formattedNum;
   }
 
@@ -81,12 +103,10 @@ export default function ListingForm({ initialData, onSubmit }: ListingFormProps)
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-
     if (name === "price") {
       setFormData((prev) => ({ ...prev, price: formatPriceInput(value) }));
       return;
     }
-
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -97,8 +117,12 @@ export default function ListingForm({ initialData, onSubmit }: ListingFormProps)
     }
   };
 
-  const removeImage = (index: number) => {
+  const removeNewImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (img: string) => {
+    setExistingImages((prev) => prev.filter((i) => i !== img))
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,8 +134,12 @@ export default function ListingForm({ initialData, onSubmit }: ListingFormProps)
       data.append(String(key), val != null ? String(val) : "");
     });
 
+    existingImages.forEach((img) => {
+      data.append("keepImages", img);
+    });
+
     images.forEach((image) => {
-      data.append("images", image);
+      data.append('images', image)
     });
 
     await onSubmit(data);
@@ -318,6 +346,30 @@ export default function ListingForm({ initialData, onSubmit }: ListingFormProps)
                 className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl bg-white focus:ring-2 focus:ring-green-500 focus:outline-none"
               />
 
+              {existingImages.length > 0 && (
+                <div>
+                  <p className="text-xl text-gray-700 mb-2">Existing Images</p>
+                  <div className="mt-4 grid grid-cols-2 md:grid-cols-4">
+                    {existingImages.map((img, i) => (
+                      <div key={i} className="relative group">
+                        <img
+                        src={toAbs(img)}
+                        alt={`existing-${i}`}
+                        className="w-full h-32 object-cover rounded-md border"
+                        />
+                        <button
+                        type="button"
+                        onClick={() => removeExistingImage(img)}
+                        className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-80 hover:opacity-100"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {images.length > 0 && (
                 <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                   {images.map((img, index) => (
@@ -329,7 +381,7 @@ export default function ListingForm({ initialData, onSubmit }: ListingFormProps)
                       />
                       <button
                         type="button"
-                        onClick={() => removeImage(index)}
+                        onClick={() => removeNewImage(index)}
                         className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-80 hover:opacity-100"
                       >
                         <X size={16} />

@@ -4,13 +4,18 @@ import userModel from '../models/userModel.js';
 import generateToken from '../utils/generateTokenUtils.js';
 
 export const signup = async (req, res) => {
-    const {name, email, password} = req.body;
+    const {firstName, lastName, email, password, confirmPassword} = req.body;
 
     try {
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) return res.status(400).json({ message: 'User already exists'});
+        if (password !== confirmPassword) {
+            return res.status(404).json({ message: 'Password do not match' });
+        }
 
-        const newUser = new userModel({ name, email, password});
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists'});
+        }
+        const newUser = new userModel({ firstName, lastName, email, password});
         await newUser.save();
 
         const token = generateToken(newUser._id);
@@ -20,7 +25,8 @@ export const signup = async (req, res) => {
 
         user: {
             id: newUser._id,
-            name: newUser.name,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
             email: newUser.email,
             avatar: newUser.avatar || null
         }
@@ -50,7 +56,8 @@ export const login = async (req, res) => {
 
         user: {
             id: user._id,
-            name: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
             email: user.email,
             avatar: user.avatar || null
         }

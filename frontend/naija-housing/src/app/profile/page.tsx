@@ -40,7 +40,7 @@ export default function ProfilePage() {
     <div className="flex bg-[#EDEDED] justify-center gap-4 p-6">
 
       <div className="w-[60%]">
-        {profile && <UserListings userId={profile._id}/>}
+        {profile && <UserListings userId={profile.id}/>}
       </div>
 
       <div className="w-[30%] bg-white p-6 shadow rounded flex flex-col">

@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import Navbar from '@/components/Navbar'
 import {ReactNode} from 'react';
 import { AuthProvider } from '@/context/AuthContext'
+import { SearchProvider } from '@/context/SearchContext';
 
 export const metadata = {
   title: 'housing App',
@@ -13,8 +14,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <AuthProvider>
-          <Navbar/>
-          {children}
+          <SearchProvider>
+            <Navbar/>
+            {children}
+          </SearchProvider>
         </AuthProvider>
       </body>
     </html>

@@ -11,7 +11,10 @@ type Props = {
 
 export default function ProfileAvatar({ user, onAvatarUpdated }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const avatar = user?.avatar ? `${process.env.NEXT_PUBLIC_API_URL}${user.avatar}` : "/default-avatar.png";
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000';
+  const avatar = user?.avatar
+    ? `${API_BASE}${user.avatar}`
+    : "/default-avatar.png";
 
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

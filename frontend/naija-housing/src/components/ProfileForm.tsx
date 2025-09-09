@@ -7,7 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
 type ProfileFormData = {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   location?: string;
   phone?: number;
   bio?: string;
@@ -21,7 +22,8 @@ export default function ProfileForm() {
   const router = useRouter();
   const { register, handleSubmit } = useForm<ProfileFormData>({
     defaultValues: {
-      name: user?.userName || "",
+      firstName: user?.user || "",
+      lastName: user?.user || "",
       location: user?.location || "",
       bio: user?.bio || "",
       phone: user?.phone || "",
@@ -49,7 +51,8 @@ export default function ProfileForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <input {...register("name")} placeholder="Name" className="w-full border p-2 rounded" />
+      <input {...register("firstName")} placeholder="First name" className="w-full border p-2 rounded" />
+      <input {...register("lastName")} placeholder="Last name" className="w-full border p-2 rounded" />
       <input {...register("location")} placeholder="Location" className="w-full border p-2 rounded" />
       <input {...register("phone")} type="number" placeholder="phone" className="w-full border p-2 rounded" />
       <input {...register("dob")} type="date" className="w-full border p-2 rounded" />

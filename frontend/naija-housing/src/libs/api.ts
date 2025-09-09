@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AxiosError } from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -30,8 +31,10 @@ export async function apiRequest(endpoint: string, method: string, data?: any) {
       data,
     });
     return res.data;
-  } catch (err: any) {
-    throw new Error(err.response?.data?.message || "Something went wrong");
+  } catch (err: unknown) {
+    if (err instanceof AxiosError) {
+      Error(err.response?.data?.message || "Something went wrong");
+    }
   }
 }
 

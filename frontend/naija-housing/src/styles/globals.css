@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 body {
-  @apply text-xl;
+  background-color: #F5F5F5;
+  @apply text-sm sm:text-base md:text-lg lg:text-xl;
   scroll-behavior: smooth;
 }
