@@ -52,7 +52,7 @@ export default function AuthForm({ isLogin = false }: { isLogin?: boolean }) {
         {!isLogin && (
           <>
           <input
-            {...register("firstName", { required: "First ame is required" })}
+            {...register("firstName", { required: "First name is required" })}
             placeholder="First Name"
             className="border shadow p-2"
           />

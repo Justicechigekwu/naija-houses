@@ -7,7 +7,7 @@ type Props = {
 export default function ProfileDetails({ user }: Props) {
   return (
     <div className="space-y-4">
-      <p><span >Username</span> {user?.name}</p>
+      <p><span >Username</span> {user?.firstName} {user?.lastName}</p>
       <p><span className="">Email:</span> {user?.email}</p>
       {user?.location && <p><span>Location:</span> {user.location}</p>}
       {user?.phone && <p><span>phone:</span> {user.phone}</p>}

@@ -6,7 +6,7 @@ import generateToken from '../utils/generateTokenUtils.js';
 export const signup = async (req, res) => {
     const {firstName, lastName, email, password, confirmPassword} = req.body;
 
-    try {
+ try {
         if (password !== confirmPassword) {
             return res.status(404).json({ message: 'Password do not match' });
         }

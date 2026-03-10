@@ -64,6 +64,17 @@ export const getmessages = async (req, res) => {
     }
 };
 
+export const getChatById = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.chatId)
+      .populate("listing");
+
+    res.json(chat);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch chat" });
+  }
+};
+
 export const sendmessage = async (req, res) => {
     try {
         const { chatId, text } = req.body;

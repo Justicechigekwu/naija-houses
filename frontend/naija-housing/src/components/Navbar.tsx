@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useSearch } from '@/context/SearchContext';
 import { MessageSquare } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import SearchBar from './SearchBar';
+import { useState, useEffect, useRef } from 'react';
 
 export default function Navbar() {
-  const { query, setQuery, searchListings, results } = useSearch();
+  const { filters, setFilters, searchListings, suggestions } = useSearch();
   const router = useRouter();
   const { user, token } = useAuth(); 
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement | null>(null);
 
   const   API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000';
 
@@ -25,47 +25,69 @@ export default function Navbar() {
   };
   
   useEffect(() => {
-    if (query.trim()) {
+    if (filters.search?.trim()) {
       const delayDebounce = setTimeout(() => {
         searchListings();
         setShowSuggestions(true);
       }, 400);
+
       return () => clearTimeout(delayDebounce);
     } else {
       setShowSuggestions(false);
     }
-  }, [query, searchListings]);
+  }, [filters.search, searchListings]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleSelect = (id: string) => {
     setShowSuggestions(false);
-    setQuery('');
+    setFilters({ ...filters, search: '' });
     router.push(`/listings/${id}`)
-  }
+  };
 
   return (
-    <nav className="bg-white shadow p-4 flex  justify-between items-center">
-      <Link href="/" className="text-2xl font-bold text-green-600">
-        Housing App
+    <nav className="bg-white shadow p-8 flex  justify-between items-center">
+      <Link href="/" className="text-3xl font-bold text-[#8A715D]">
+        Velora
       </Link>
 
-      <div className='flex-1 mx-4 flex relative'>
+      <div ref={searchRef} className='flex-1 mx-4 flex relative'>
         <input
           type='search'
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          value={filters.search || ""}
+          onChange={(e) =>
+             setFilters({ ...filters, search: e.target.value })}
           placeholder='What are you looking for?'
           className='w-full border px-3 py-2 rounded-md'
-          onFocus={() => setShowSuggestions(true)} 
+          onFocus={() => {
+            if (filters.search?.trim()) {
+             setShowSuggestions(true)
+            }
+          }}
         />
 
         {showSuggestions && (
           <div className='absolute top-full mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-y-auto z-50'>
-            {results.length > 0 ? (
-              results.map((item: any) => (
+            {suggestions.length > 0 ? (
+              suggestions.map((item: any) => (
                 <div
                 key={item._id}
                 onClick={() => handleSelect(item._id)}
-                className='flex items-center gap-3 p-2 curso-pointer hover:bg-gray-100'
+                className='flex items-center gap-3 p-2 cursor-pointer hover:bg-gray-100'
                 >
                   <img
                     src={item.images?.[0] ? `${API_BASE}${item.images[0]}` : "/placeholder.jpg"}
@@ -89,7 +111,7 @@ export default function Navbar() {
 
         <button
           onClick={handleSellClick}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          className="bg-[#8A715D] hover:bg-[#7A6352] text-white px-4 py-2 rounded "
         >
           Sell
         </button>
@@ -119,7 +141,6 @@ export default function Navbar() {
                 ) : (
                   <div className='w-8 h-8 rounded-full bg-gray-300'></div>
                 )}
-                <span className='text-gray-700'>Hi, {user?.firstName || "User"}</span>
               </div>
             </Link>
           </>

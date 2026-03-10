@@ -4,14 +4,10 @@ import { useEffect, useState } from "react";
 import ProfileAvatar from "@/components/ProfileAvatar";
 import ProfileDetails from "@/components/ProfileDetails";
 import UserListings from "@/components/UserListings";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/libs/api";
-import { useAuth } from "@/context/AuthContext";
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const { logout, token } = useAuth();  
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -23,44 +19,80 @@ export default function ProfilePage() {
         console.error("Failed to fetch profile", error);
       }
     };
+
     fetchProfile();
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    router.push("/");
-  };
 
   const handleAvatarUpdate = (newAvatar: string) => {
     setProfile((prev: any) => ({ ...prev, avatar: newAvatar }));
   };
 
   return (
-    
-    <div className="flex bg-[#EDEDED] justify-center gap-4 p-6">
+    <div className="bg-[#EDEDED] min-h-screen p-6">
+      <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-6 items-start">
+        
+        {/* LEFT SIDEBAR */}
+        <div className="w-full lg:w-[30%] bg-white rounded-2xl shadow overflow-hidden self-start">
+          
+          {/* Profile Top */}
+          <div className="p-6 flex flex-col items-center text-center border-b">
+            {profile && (
+              <>
+                <ProfileAvatar user={profile} onAvatarUpdated={handleAvatarUpdate} />
+                <div className="mt-4 w-full">
+                  <ProfileDetails user={profile} />
+                </div>
+              </>
+            )}
+          </div>
 
-      <div className="w-[60%]">
-        {profile && <UserListings userId={profile.id}/>}
-      </div>
-
-      <div className="w-[30%] bg-white p-6 shadow rounded flex flex-col">
-        <div className="flex justify-end mb-4">
-          <Link href="/profile/update">
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-              Settings
-            </button>
-          </Link>
-        </div>
-          <ProfileAvatar user={profile} onAvatarUpdated={handleAvatarUpdate} />
-          <ProfileDetails user={profile} />
-          {token && (
-            <button
-            onClick={handleLogout}
-            className="bg-red-500 mt-4 w-full text-white py-2 rounded hover:bg-red-600"
+          {/* Quick Links */}
+          <div className="flex flex-col">
+            <Link
+              href="/messages"
+              className="px-6 py-4 border-b hover:bg-gray-50 transition"
             >
-              Logout
-            </button>
-          )}
+              My messages
+            </Link>
+
+            <Link
+              href="/drafts"
+              className="px-6 py-4 border-b hover:bg-gray-50 transition"
+            >
+              Drafts
+            </Link>
+
+            <Link
+              href="/feedback"
+              className="px-6 py-4 border-b hover:bg-gray-50 transition"
+            >
+              Feedbacks
+            </Link>
+
+            <Link
+              href="/pending"
+              className="px-6 py-4 border-b hover:bg-gray-50 transition"
+            >
+              Pending listings
+            </Link>
+          </div>
+
+          {/* Settings */}
+          <div className="p-6">
+            <Link href="/profile/update">
+              <button className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition">
+                Settings
+              </button>
+            </Link>
+          </div>
+        </div>
+
+        {/* RIGHT CONTENT */}
+        <div className="w-full lg:w-[70%] bg-white rounded-2xl shadow overflow-hidden">
+          <div className="p-6">
+            {profile && <UserListings userId={profile.id} />}
+          </div>
+        </div>
       </div>
     </div>
   );

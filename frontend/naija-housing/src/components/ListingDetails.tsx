@@ -3,28 +3,34 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import api from "@/libs/api";
+import { CATEGORY_TREE } from "@/libs/listingFormConfig";
 import RelatedListing from "@/components/RelatedListing";
 import deleteListing from "@/controllers/Delete";
 import { useAuth } from "@/context/AuthContext";
+import ReviewsList from "./reviews/ReviewList";
 
 interface Listing {
   _id: string;
   title: string;
   listingType: string;
-  propertyType: string;
   price: number;
   location: string;
-  size: number;
-  bedrooms: number;
-  bathrooms: number;
-  parkingSpaces: number;
   city: string;
   state: string;
-  furnished: boolean;
+  description: string;
   images: string[];
-  status: string;
-  owner: string;
+  publishStatus: string;
+  category: keyof typeof CATEGORY_TREE;
+  subcategory: string;
+  attributes: Record<string, any>;
+  owner: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  }
 }
+
 const quickMessage = [
    "Is this still available?",
    "What's the last price?",
@@ -54,7 +60,7 @@ export default function ListingDetails() {
 
       const chatRes = await api.post('/chats/start', {
         listingId: listing?._id,
-        ownerId: listing?.owner
+        ownerId: listing?.owner._id
       });
       const chatId = chatRes.data._id
 
@@ -72,32 +78,49 @@ export default function ListingDetails() {
     }
   };
 
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [maxThumbs, setMaxThumbs] = useState(6);
-
+  
   useEffect(() => {
     if (id) {
       api.get(`/listings/${id}`)
-        .then((res) => setListing(res.data))
-        .catch((err) => console.error("Error fetching listing:", err));
+      .then((res) => setListing(res.data))
+      .catch((err) => console.error("Error fetching listing:", err));
     }
   }, [id]);
-
+  
   useEffect(() => {
     const handleResize = () => {
       setMaxThumbs(window.innerWidth < 640 ? 3 : 6);
     };
-
+    
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   if (!listing) return <p className="p-6">Loading...</p>;
+  console.log("listing.images:", listing.images);
+  
+  const categoryConfig = CATEGORY_TREE[listing.category as keyof typeof CATEGORY_TREE];
+  const subcategoryConfig = categoryConfig?.subcategories?.[
+    listing?.subcategory as keyof typeof categoryConfig.subcategories
+  ];
+  const dynamicFields = subcategoryConfig?.fields || [];
 
-  const isOwner = user?.id === listing.owner;
-
+  const formAttributeValue = (value: any) => {
+    if (value === undefined || value === null || value === "") return "_";
+    if (Array.isArray(value)) return value.join(",");
+    if (typeof value === "boolean") return value ? "yes" : "no";
+    return String(value);
+  };
+  
+  console.log("OWNER:", listing.owner);
+  
+  const isOwner = user?.id === listing.owner._id;
+  
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this ad?")) {
       try {
@@ -115,7 +138,7 @@ export default function ListingDetails() {
   };
 
   return (
-  <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
     {isModalOpen && (
       <div
         className="fixed inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-50"
@@ -212,102 +235,140 @@ export default function ListingDetails() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <h1 className="text-2xl md:text-3xl font-bold">{listing.title}</h1>
-          <p className="text-green-600 font-bold text-lg">
-            ₦{listing.price.toLocaleString()}
-          </p>
-          <p>
-            <strong>Type:</strong> {listing.listingType}
-          </p>
-          <p>
-            <strong>Property Type:</strong> {listing.propertyType}
-          </p>
-          <p>
-            <strong>Location:</strong> {listing.location}, {listing.city},{" "}
-            {listing.state}
-          </p>
-          <p>
-            <strong>Size:</strong> {listing.size} sqm
-          </p>
-          <p>
-            <strong>Bedrooms:</strong> {listing.bedrooms}
-          </p>
-          <p>
-            <strong>Bathrooms:</strong> {listing.bathrooms}
-          </p>
-          <p>
-            <strong>Parking Spaces:</strong> {listing.parkingSpaces}
-          </p>
-          <p>
-            <strong>Furnished:</strong> {listing.furnished ? "Yes" : "No"}
-          </p>
-          <p>
-            <strong>Status:</strong> {listing.status}
-          </p>
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> */}
+      <div className="bg-white shadow rounded-lg p-4 md:p-6">
 
-          {isOwner && (
-            // <div className="flex gap-4 mt-4">
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <button
-                onClick={() => router.push(`/listings/edit/${listing._id}`)}
-                className="bg-yellow-500 sm:w-auto text-white px-4 py-2 rounded hover:bg-yellow-600"
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleDelete}
-                className="bg-red-600 sm:w-auto text-white px-4 py-2 rounded hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          )}
+          <div className="mb-6 divider">
+              <h1 className="text-2xl md:text-3xl font-bold">{listing.title}</h1>
+              <p className="text-green-600 font-bold text-lg">
+                ₦{listing.price.toLocaleString()}
+              </p>
+          </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4 pb-6 border-b border-gray-200 border-t">
+
+          <div className="space-y-3">
+            <p className="text-base"><span className="block text-[10px] text-gray-500 uppercase">state</span> {listing.state}</p>
+          </div>
+        
+            <p className="text-base">
+               <span className="block text-[10px] text-gray-500 uppercase">city</span> {listing.city}
+            </p>
+
+            <p className="text-base">
+               <span className="block text-[10px] text-gray-500 uppercase">location</span> {listing.location}
+            </p>
         </div>
 
-        {!isOwner && (
-          <div className="border rounded p-4 bg-gray-50">
-            <p className="font-semibold mb-2">Message Owner</p>
-
-            <div className="flex flex-wrap gap-2 mb-3">
-              {quickMessage.map((msg) => (
-                <button
-                  key={msg}
-                  onClick={() => sendMessage(msg)}
-                  disabled={sending}
-                  className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 text-sm"
-                >
-                  {msg}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 border rounded px-3 py-2"
-              />
-              <button
-                onClick={() => sendMessage(newMessage)}
-                disabled={sending}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                {sending ? "Sending..." : "Send"}
-              </button>
-            </div>
-
-            {status && (
-              <p className="mt-2 text-sm text-gray-600">{status}</p>
-            )}
+        <div  className="mt-6 border-6 pt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+            {dynamicFields.map((field) => (
+              <div key={field.key} className="text-base">
+                <span className="block text-[10px] text-gray-500 uppercase">
+                  {field.label}
+                </span>
+                <span>{formAttributeValue(listing.attributes?.[field.key])}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+
+        <div  className="pt-6 border-t">
+          <p className="text-base">
+            <span className="block text-[10px] text-gray-500 uppercase">Description</span>
+             {listing.description}, 
+          </p>
+        </div>
+
+        <div className="flex flex-col lg:flex-row w-full gap-6 items-start">
+          <div className="w-full lg:w-1/2">
+            {isOwner && (
+              // <div className="flex gap-4 mt-4">
+              <div className="flex flex-col base:flex-row gap-3 mt-4">
+                <button
+                  onClick={() => router.push(`/listings/edit/${listing._id}`)}
+                  className="bg-yellow-500 base:w-auto text-white px-4 py-2 rounded hover:bg-yellow-600"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="bg-red-600 base:w-auto text-white px-4 py-2 rounded hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          
+            {!isOwner && (
+              <div className="w-full ">
+                <div className="bg-white shadow rounded-lg p-4 md:p-6">
+                  <p className="font-semibold mb-4 text-lg">Message Owner</p>
+            
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {quickMessage.map((msg) => (
+                      <button
+                        key={msg}
+                        onClick={() => sendMessage(msg)}
+                        disabled={sending}
+                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 text-sm"
+                      >
+                        {msg}
+                      </button>
+                    ))}
+                  </div>
+            
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type your message..."
+                      className="flex-1 border rounded px-3 py-2"
+                    />
+                    <button
+                      onClick={() => sendMessage(newMessage)}
+                      disabled={sending}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                      {sending ? "Sending..." : "Send"}
+                    </button>
+                  </div>
+            
+                  {status && (
+                    <p className="mt-2 text-sm text-gray-600">{status}</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>  
+          <div className="pt-6 w-full lg:w-1/2 ">
+            <div className=" flex items-center gap-2">
+              <img
+               src={
+                listing.owner.avatar
+                ? listing.owner.avatar.startsWith('http')
+                ? listing.owner.avatar
+                : `http://localhost:5000${listing.owner.avatar}`
+                : "/default-avatar.png"
+              } className="w-8 h-8 rounded-full object-cover border"
+                alt={`${listing.owner?.firstName} ${listing.owner?.lastName}`}
+              />
+
+              <span className="text-sm font-medium text-gray-800">
+                {listing.owner.firstName} {listing.owner.lastName}
+              </span>
+            </div>
+            <h2 className="text-lg font-semibold mb-4">
+              Reviews
+            </h2>
+        
+            <ReviewsList ownerId={listing.owner._id} previewCount={1} owner={listing.owner} />
+          </div>
+        </div>
+
       </div>
     </div>
-
     <RelatedListing listingId={listing._id} />
   </div>
   );

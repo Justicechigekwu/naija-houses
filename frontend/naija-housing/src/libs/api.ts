@@ -35,6 +35,7 @@ export async function apiRequest(endpoint: string, method: string, data?: any) {
     if (err instanceof AxiosError) {
       Error(err.response?.data?.message || "Something went wrong");
     }
+    throw err;
   }
 }
 

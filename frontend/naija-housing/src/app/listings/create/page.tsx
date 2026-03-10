@@ -6,27 +6,34 @@ import api from "@/libs/api";
 
 export default function CreateListingPage() {
   const router = useRouter();
+
   const handleCreateListing = async (formData: FormData) => {
     try {
       const res = await api.post("/listings", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("Listing created successfully!");
-      router.push('/')
+      const listingId = res.data?.listingId || res.data?.listing?._id;
 
-      console.log(res.data);
+      if (!listingId) {
+        throw new Error("Listing ID not returned");
+      }
+
+      router.push(`/listings/${listingId}/payment`);
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || "Something went wrong");
+      alert(error.response?.data?.message || "Failed to create listing");
     }
   };
 
   return (
-    <div className="">
+    <div>
       <h1 className="text-center py-5 font-medium text-xl">Create Listing</h1>
-      <ListingForm onSubmit={handleCreateListing} />
+
+      <ListingForm
+        onSubmit={handleCreateListing}
+        isEditMode={false}
+      />
     </div>
   );
 }
-

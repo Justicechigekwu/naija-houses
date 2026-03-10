@@ -12,3 +12,4 @@ router.put('/profile/update', verifyToken, updateProfile)
 router.put('/profile', verifyToken, upload.single('avatar'), updateProfile)
 
 export default router;
+ 

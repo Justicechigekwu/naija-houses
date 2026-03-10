@@ -62,6 +62,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+
+    trialUsed: {
+      type: Map,
+      of: Boolean,
+      default: {},
+    },
+
     resetPasswordToken: String,
     resetPasswordExpire: Date
 }, { timestamps: true });
@@ -84,7 +91,7 @@ userSchema.methods.getResetPasswordToken = function () {
     this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
     return resetToken;
 };
+
 const userModel =
   mongoose.models.userModel || mongoose.model("userModel", userSchema);
-
 export default userModel;

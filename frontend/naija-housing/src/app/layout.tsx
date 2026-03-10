@@ -3,6 +3,8 @@ import Navbar from '@/components/Navbar'
 import {ReactNode} from 'react';
 import { AuthProvider } from '@/context/AuthContext'
 import { SearchProvider } from '@/context/SearchContext';
+import { AdminAuthProvider } from '@/context/AdminAuthContext';
+import { UIProvider } from '@/context/UiContext';
 
 export const metadata = {
   title: 'housing App',
@@ -14,10 +16,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <AuthProvider>
-          <SearchProvider>
+          <AdminAuthProvider>
+            <SearchProvider>
             <Navbar/>
-            {children}
+            <UIProvider>
+              {children}
+            </UIProvider>
           </SearchProvider>
+          </AdminAuthProvider>
         </AuthProvider>
       </body>
     </html>

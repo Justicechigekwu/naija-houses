@@ -1,55 +1,58 @@
 "use client";
+
 import { createContext, useContext, useState, ReactNode } from "react";
 import api from "@/libs/api";
 
 interface Filters {
-  minPrice?: number;
-  maxPrice?: number;
-  state?: string;
-  location?: string;
-  bedrooms?: number;
+  category?: string;
+  subcategory?: string;
+  search?: string;
 }
 
 interface SearchContextType {
-  query: string;
   filters: Filters;
   results: any[];
-  setQuery: (query: string) => void;
+  suggestions: any[];
   setFilters: (filters: Filters) => void;
-  searchListings: () => Promise<void>; 
-  filterListings: () => Promise<void>; 
+  searchListings: () => Promise<void>;
+  filterListings: () => Promise<void>;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
 export function SearchProvider({ children }: { children: ReactNode }) {
-  const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<Filters>({});
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
 
   const searchListings = async () => {
-    if (!query.trim()) {
-      setResults([]);
+    if (!filters.search?.trim()) {
+      setSuggestions([]);
       return;
     }
+
     try {
-      const res = await api.get(`/listings/search?q=${query}`);
-      setResults(res.data);
+      const params = new URLSearchParams();
+      params.append("search", filters.search);
+
+      if (filters.category) params.append("category", filters.category);
+      if (filters.subcategory) params.append("subcategory", filters.subcategory);
+
+      const res = await api.get(`/listings?${params.toString()}`);
+      setSuggestions(res.data);
     } catch (error) {
       console.error("Instant search failed:", error);
-      setResults([]);
+      setSuggestions([]);
     }
   };
 
   const filterListings = async () => {
     try {
       const params = new URLSearchParams();
-      if (query) params.append("search", query);
-      if (filters.minPrice) params.append("minPrice", filters.minPrice.toString());
-      if (filters.maxPrice) params.append("maxPrice", filters.maxPrice.toString());
-      if (filters.state) params.append("state", filters.state);
-      if (filters.location) params.append("location", filters.location);
-      if (filters.bedrooms) params.append("bedrooms", filters.bedrooms.toString());
+
+      if (filters.search) params.append("search", filters.search);
+      if (filters.category) params.append("category", filters.category);
+      if (filters.subcategory) params.append("subcategory", filters.subcategory);
 
       const res = await api.get(`/listings?${params.toString()}`);
       setResults(res.data);
@@ -60,7 +63,14 @@ export function SearchProvider({ children }: { children: ReactNode }) {
 
   return (
     <SearchContext.Provider
-      value={{ query, filters, results, setQuery, setFilters, searchListings, filterListings }}
+      value={{
+        filters,
+        results,
+        suggestions,
+        setFilters,
+        searchListings,
+        filterListings,
+      }}
     >
       {children}
     </SearchContext.Provider>
