@@ -36,3 +36,23 @@ body {
 .animate-modal-in {
   animation: modal-in 0.2s ease-out;
 }
+
+
+:root {
+  --bg: #ffffff;
+  --text: #111111;
+  --card: #f8f8f8;
+  --border: #dddddd;
+}
+
+html.dark {
+  --bg: #0f0f0f;
+  --text: #ffffff;
+  --card: #181818;
+  --border: #2a2a2a;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+}

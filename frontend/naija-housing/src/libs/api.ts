@@ -23,6 +23,27 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const code = error?.response?.data?.code;
+    const message = error?.response?.data?.message;
+
+    if (typeof window !== "undefined" && code === "ACCOUNT_BANNED") {
+      alert(
+        message ||
+          "Your account has been banned for violating marketplace/community standards."
+      );
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export async function apiRequest(endpoint: string, method: string, data?: any) {
   try {
     const res = await api({
@@ -33,7 +54,7 @@ export async function apiRequest(endpoint: string, method: string, data?: any) {
     return res.data;
   } catch (err: unknown) {
     if (err instanceof AxiosError) {
-      Error(err.response?.data?.message || "Something went wrong");
+      throw new Error(err.response?.data?.message || "Something went wrong");
     }
     throw err;
   }

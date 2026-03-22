@@ -4,6 +4,7 @@ import getCategoryPricing from "../utils/getCategoryPricing.js";
 import generatePaymentCode from "../utils/generatePaymentCodeUtils.js";
 import assignBankAccount from "../utils/assignBankAccount.js";
 import userModel from "../models/userModel.js";
+import { clearDraftReminder } from "../utils/scheduleDraftReminder.js";
 
 const addDays = (date, days) =>
   new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
@@ -17,14 +18,18 @@ export const choosePublishPlan = async (req, res) => {
     const { plan } = req.body;
 
     const listing = await Listing.findById(id);
-    if (!listing) return res.status(404).json({ message: "Listing not found" });
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
 
     if (String(listing.owner) !== String(req.user.id)) {
       return res.status(403).json({ message: "Not your listing" });
     }
 
     if (["PUBLISHED", "PENDING_CONFIRMATION"].includes(listing.publishStatus)) {
-      return res.status(400).json({ message: `Listing is already ${listing.publishStatus}` });
+      return res
+        .status(400)
+        .json({ message: `Listing is already ${listing.publishStatus}` });
     }
 
     const category = (listing.category || "PROPERTY").toUpperCase();
@@ -33,33 +38,56 @@ export const choosePublishPlan = async (req, res) => {
 
     const pricing = await getCategoryPricing(category, subcategory);
     if (!pricing) {
-      return res.status(500).json({ message: "Pricing not configured. Contact admin." });
+      return res
+        .status(500)
+        .json({ message: "Pricing not configured. Contact admin." });
     }
+
+    // TEMP TEST MODE:
+    // Set TEST_LISTING_EXPIRY_MINUTES=5 in your backend .env when testing.
+    // Remove it or leave empty when you want normal duration back.
+    // const testExpiryMinutes = Number(process.env.TEST_LISTING_EXPIRY_MINUTES || 0);
+    // const useTestExpiry = Number.isFinite(testExpiryMinutes) && testExpiryMinutes > 0;
 
     if (plan === "TRIAL_14_DAYS") {
       const user = await userModel.findById(req.user.id).select("trialUsed");
       const alreadyUsed = user?.trialUsed?.get(trialKey) === true;
 
       if (!pricing.trialEnabled) {
-        return res.status(400).json({ message: "Trial disabled for this subcategory" });
+        return res
+          .status(400)
+          .json({ message: "Trial disabled for this subcategory" });
       }
 
       if (alreadyUsed) {
-        return res.status(400).json({ message: "Trial already used for this subcategory" });
+        return res
+          .status(400)
+          .json({ message: "Trial already used for this subcategory" });
       }
 
       const now = new Date();
+
       listing.publishPlan = "TRIAL_14_DAYS";
       listing.publishStatus = "PUBLISHED";
       listing.publishedAt = now;
-      listing.expiresAt = addDays(now, pricing.trialDays);
+      listing.expiresAt = useTestExpiry
+        ? addMinutes(now, testExpiryMinutes)
+        : addDays(now, pricing.trialDays);
+
+        clearDraftReminder(listing);
+
       await listing.save();
 
       if (!user.trialUsed) user.trialUsed = new Map();
       user.trialUsed.set(trialKey, true);
       await user.save();
 
-      return res.json({ message: `Published on ${pricing.trialDays}-day trial`, listing });
+      return res.json({
+        message: useTestExpiry
+          ? `Published in test mode. Listing will expire in ${testExpiryMinutes} minutes.`
+          : `Published on ${pricing.trialDays}-day trial`,
+        listing,
+      });
     }
 
     if (plan === "PAID_30_DAYS") {

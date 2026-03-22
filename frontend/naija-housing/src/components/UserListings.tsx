@@ -1,90 +1,3 @@
-// "use client";
-
-// import { useState, useEffect } from "react";
-// import { useRouter } from "next/navigation";
-// import api from "@/libs/api";
-
-// type Listing = {
-//   _id: string;
-//   title: string;
-//   price?: string;
-//   location?: string;
-//   images?: string[];
-// };
-
-// type Props = {
-//   userId: string;
-// };
-
-// export default function UserListings({ userId }: Props) {
-//   const [listings, setListings] = useState<Listing[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const router = useRouter();
-
-//   useEffect(() => {
-//     const fetchListings = async () => {
-//       try {
-//         const res = await api.get(`/profile/${userId}`);
-//         setListings(res.data);
-//       } catch (error) {
-//         console.error("Failed to fetch users listings", error);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     if (userId) {
-//       fetchListings();
-//     }
-//   }, [userId]);
-
-//   if (loading) return <p>Loading effects coming soon...</p>;
-//   if (listings.length === 0)
-//     return <p className="text-black-300">You have not created any Listings yet!</p>;
-
-//   return (
-//     <div className="mt-8">
-//       <div className="">
-//           <div className=" py-5 ">
-//           {/* <div className="px-6 py-5 "> */}
-//             <h2 className="text-3xl font-semibold">Active listings</h2>
-//           </div>
-//         <ul className="space-y-3">
-//           {listings.map((listing) => (
-//             <li
-//               key={listing._id}
-//               onClick={() => router.push(`/listings/${listing._id}`)}
-//               className="p-4 flex items-center gap-4 border rounded shadow-sm bg-gray-50 cursor-pointer hover:shadow-md transition"
-//             >
-//               <img
-//                 src={
-//                   listing.images?.[0]
-//                     ? `http://localhost:5000${listing.images[0]}`
-//                     : "/placeholder.jpg"
-//                 }
-//                 alt={listing.title}
-//                 className="w-20 h-20 object-cover rounded"
-//               />
-//               <div>
-//                 <h3 className="font-bold">{listing.title}</h3>
-//                 {/* {listing.description && (
-//                   <p className="text-sm text-gray-500">{listing.description}</p>
-//                 )} */}
-//                 <p className="text-green-600 text-sm">
-//                   ₦
-//                   {listing.price && !isNaN(Number(listing.price))
-//                     ? Number(listing.price).toLocaleString()
-//                     : listing.price || "N/A"}
-//                 </p>
-//               </div>
-//             </li>
-//           ))}
-//         </ul>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -92,12 +5,17 @@ import { useRouter } from "next/navigation";
 import api from "@/libs/api";
 import deleteListing from "@/controllers/Delete";
 
+type ListingImage = {
+  url: string;
+  public_id: string;
+};
+
 type Listing = {
   _id: string;
   title: string;
-  price?: string;
+  price?: number;
   location?: string;
-  images?: string[];
+  images?: ListingImage[];
 };
 
 type Props = {
@@ -160,7 +78,7 @@ export default function UserListings({ userId }: Props) {
   if (listings.length === 0) {
     return (
       <p className="text-black-300">
-        You have not created any Listings yet!
+        You have no active listings yet!
       </p>
     );
   }
@@ -169,7 +87,7 @@ export default function UserListings({ userId }: Props) {
     <div className="mt-8">
       <div>
         <div className="py-5">
-          <h2 className="text-3xl font-semibold">Active listings</h2>
+          <h2 className="text-3xl font-semibold text-center">Active listings</h2>
         </div>
 
         <ul className="space-y-3">
@@ -181,11 +99,7 @@ export default function UserListings({ userId }: Props) {
             >
               <div className="flex items-center gap-4 min-w-0">
                 <img
-                  src={
-                    listing.images?.[0]
-                      ? `http://localhost:5000${listing.images[0]}`
-                      : "/placeholder.jpg"
-                  }
+                  src={listing.images?.[0]?.url || "/placeholder.jpg"}
                   alt={listing.title}
                   className="w-20 h-20 object-cover rounded"
                 />
@@ -193,10 +107,7 @@ export default function UserListings({ userId }: Props) {
                 <div className="min-w-0">
                   <h3 className="font-bold truncate">{listing.title}</h3>
                   <p className="text-green-600 text-sm">
-                    ₦
-                    {listing.price && !isNaN(Number(listing.price))
-                      ? Number(listing.price).toLocaleString()
-                      : listing.price || "N/A"}
+                    ₦{Number(listing.price).toLocaleString()}
                   </p>
                   {listing.location && (
                     <p className="text-sm text-gray-500">{listing.location}</p>

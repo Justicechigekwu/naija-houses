@@ -87,7 +87,7 @@ export const CATEGORY_TREE = {
           { key: "trim", label: "Trim", type: "text" },
           { key: "interiorColor", label: "Interior color", type: "text" },
           { key: "drivetrain", label: "Drivetrain", type: "select", options: ["FWD","RWD","AWD","4WD"] },
-          { key: "rims", label: "Rims", type: "select", options: ["Alloy", "Iron", "Cabon Fibre"]},
+          { key: "wheels", label: "wheels", type: "select", options: ["Alloy", "Iron", "Cabon Fibre"]},
           { key: "vinChassisNumber", label: "Vin chasis number", type: "number" },
           { key: "registered", label: "Registered", type: "select", options: ["Yes","No"] },
           { key: "numberOfOwners", label: "Number of Owners", type: "number" },
@@ -172,7 +172,7 @@ export const CATEGORY_TREE = {
       },
       
       LAPTOPS_COMPUTERS: {
-        label: "Laptops Computers",
+        label: "Laptops & Computers",
         fields: [
           { key: "brand", label: "Brand", type: "text" },
           { key: "model", label: "Model", type: "text" },
@@ -351,9 +351,9 @@ export const CATEGORY_TREE = {
           { key: "storage", label: "Storage", type: "text" },
           { key: "color", label: "Color", type: "text" },
           { key: "batteryHealth", label: "Battery Health", type: "text" },
-          { key: "network", label: "Network", type: "select", options: ["2G", "3G", "4G","5G","WiFi Only"] },
+          { key: "network", label: "Network", type: "select", options: ["2G + Wifi", "3G + Wifi", "4G + Wifi","5G + Wifi","WiFi Only"] },
           { key: "simSlots", label: "SIM Slots", type: "number" },
-          // { key: "chargerIncluded", label: "Charger Included", type: "select", options: ["Yes","No"] },
+          { key: "chargerIncluded", label: "Charger Included", type: "select", options: ["Yes","No"] },
         ],
       },
 

@@ -14,14 +14,25 @@ export default function DraftList({
 }) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
 
-  const handleContinue = (draft: Listing) => {
-    if (draft.publishPlan === "PAID_30_DAYS") {
-      router.push(`/listings/${draft._id}/payment-details`);
-      return;
+  const handlePublish = async (draft: Listing) => {
+    try {
+      setPublishingId(draft._id);
+
+      const res = await api.post(`/listings/${draft._id}/choose-plan`, {
+        plan: "PAID_30_DAYS",
+      });
+
+      const code = res.data?.payment?.paymentCode || "";
+      router.push(
+        `/listings/${draft._id}/payment-details?code=${encodeURIComponent(code)}`
+      );
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Failed to continue to payment");
+    } finally {
+      setPublishingId(null);
     }
-
-    router.push(`/create-listing/${draft._id}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -41,7 +52,7 @@ export default function DraftList({
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
-      <h2 className="text-2xl font-semibold">Continue where you left off</h2>
+      <h3 className="text-2xl text-center font-semibold">Unpublished adverts</h3>
 
       <div className="space-y-3">
         {drafts.map((d) => (
@@ -61,10 +72,11 @@ export default function DraftList({
 
             <div className="flex gap-2">
               <button
-                onClick={() => handleContinue(d)}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                onClick={() => handlePublish(d)}
+                disabled={publishingId === d._id}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-60"
               >
-                {d.publishPlan === "PAID_30_DAYS" ? "Publish" : "Continue"}
+                {publishingId === d._id ? "Processing..." : "Publish"}
               </button>
 
               <button

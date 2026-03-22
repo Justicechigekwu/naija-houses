@@ -11,37 +11,41 @@ const seed = [
     category: "PROPERTY",
     subcategory: null,
     label: "Property Default",
-    publishPrice: 5999,
+    publishPrice: 3999,
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
   {
     category: "VEHICLES",
     subcategory: null,
     label: "Vehicles Default",
-    publishPrice: 4999,
+    publishPrice: 2999,
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
   {
     category: "PHONES",
     subcategory: null,
     label: "Phones Default",
-    publishPrice: 2999,
+    publishPrice: 1499,
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
   {
     category: "ELECTRONICS",
     subcategory: null,
     label: "Electronics Default",
-    publishPrice: 3499,
+    publishPrice: 1499,
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
 
   // SUBCATEGORY OVERRIDES
@@ -49,28 +53,31 @@ const seed = [
     category: "PROPERTY",
     subcategory: "HOUSES_APARTMENTS",
     label: "Houses & Apartments",
-    publishPrice: 7999,
+    publishPrice: 4999,
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
   {
     category: "PROPERTY",
     subcategory: "LANDS_PLOTS",
     label: "Lands & Plots",
-    publishPrice: 9999,
+    publishPrice: 4999,
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
   {
     category: "VEHICLES",
     subcategory: "CARS_TRUCKS",
     label: "Cars & Trucks",
-    publishPrice: 6999,
+    publishPrice: 3999,
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
   {
     category: "PHONES",
@@ -80,6 +87,7 @@ const seed = [
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
   {
     category: "ELECTRONICS",
@@ -89,6 +97,7 @@ const seed = [
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
   {
     category: "ELECTRONICS",
@@ -98,6 +107,7 @@ const seed = [
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
+    isActive: true,
   },
 ];
 
@@ -107,7 +117,12 @@ for (const item of seed) {
       category: item.category,
       subcategory: item.subcategory,
     },
-    { $set: item },
+    {
+      $set: {
+        ...item,
+        isActive: true,
+      },
+    },
     { upsert: true }
   );
 }

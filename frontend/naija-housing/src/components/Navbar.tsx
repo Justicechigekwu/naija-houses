@@ -5,16 +5,23 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useSearch } from '@/context/SearchContext';
 import { MessageSquare } from 'lucide-react';
+import BadgeDot from "@/components/ui/BadgeDot";
 import { useState, useEffect, useRef } from 'react';
+import useUnreadMessages from "@/hooks/useUnreadMessage";
+import IconWithBadge from './ui/IconWithBadge';
+import NotificationBell from "@/components/NotificationBell";
+
 
 export default function Navbar() {
+  const hasUnreadMessages = false;
+  const unreadCount = useUnreadMessages();
   const { filters, setFilters, searchListings, suggestions } = useSearch();
   const router = useRouter();
   const { user, token } = useAuth(); 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement | null>(null);
 
-  const   API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000';
+  // const   API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000';
 
   const handleSellClick = () => {
     if (!token) {
@@ -90,7 +97,7 @@ export default function Navbar() {
                 className='flex items-center gap-3 p-2 cursor-pointer hover:bg-gray-100'
                 >
                   <img
-                    src={item.images?.[0] ? `${API_BASE}${item.images[0]}` : "/placeholder.jpg"}
+                    src={item.images?.[0]?.url || "/placeholder.jpg"}
                     alt={item.title}
                     className="w-10 h-10 rounded object-cover"
                     />
@@ -116,10 +123,16 @@ export default function Navbar() {
           Sell
         </button>
 
+        <div className="relative inline-flex hover:text-green-600">
+          <NotificationBell/>
+          <BadgeDot show={hasUnreadMessages} />
+        </div>
+
         {token && (
-          <Link href="/messages" 
-          className='relative hover:text-green-600'>
-            <MessageSquare className='w-6 h-6' />
+          <Link href="/messages" className="hover:text-green-600">
+            <IconWithBadge count={unreadCount}>
+              <MessageSquare className="w-6 h-6" />
+            </IconWithBadge>
           </Link>
         )}
 
@@ -134,9 +147,9 @@ export default function Navbar() {
               <div className='flex items-center gap-3'>
                 {user?.avatar ? (
                   <img
-                  src={`${API_BASE}${user.avatar}`}
+                  src={user.avatar}
                   alt='avatar'
-                  className='w-8 h-8 rounded-full object-cover'
+                  className='w-8 h-8 rounded-full object-fit'
                   />
                 ) : (
                   <div className='w-8 h-8 rounded-full bg-gray-300'></div>
@@ -149,3 +162,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

@@ -30,7 +30,7 @@ export const notifyPayment = async (req, res) => {
       return res.status(400).json({ message: "This listing is not on a paid plan" });
     }
 
-    if (!["DRAFT", "REJECTED"].includes(listing.publishStatus)) {
+    if (!["DRAFT", "REJECTED", "EXPIRED"].includes(listing.publishStatus)) {
       return res.status(400).json({ message: `Listing is currently ${listing.publishStatus}` });
     }
 

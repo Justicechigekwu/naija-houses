@@ -28,7 +28,7 @@ export default function ResetPassword() {
     try {
       const res = await api.put(`/reset/reset-password/${token}`, { password });
       setMessage(res.data.message || "Password reset successful!");
-      setTimeout(() => router.push("/login"), 2000); // redirect after success
+      setTimeout(() => router.push("/login"), 2000);
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
         setError(err.response?.data?.message || "Something went wrong.");

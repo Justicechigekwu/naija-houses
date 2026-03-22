@@ -1,8 +1,11 @@
 import userModel from "../models/userModel.js";
 import Listing from "../models/listingModels.js";
+import markExpiredListings from "../utils/markExpiredListings.js";
 
 export const usersWithListing = async (req, res) => {
   try {
+     await markExpiredListings();
+     
     const now = new Date();
 
     const counts = await Listing.aggregate([
@@ -75,6 +78,8 @@ export const listingsForUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
+    await markExpiredListings(userId);
+
     const listings = await Listing.find({ owner: userId })
       .sort({ createdAt: -1 })
       .populate("owner", "firstName lastName email avatar");
@@ -82,10 +87,11 @@ export const listingsForUser = async (req, res) => {
     const now = new Date();
     res.json(
       listings.map((l) => {
-        const isExpired = l.expiresAt ? l.expiresAt <= now : false;
-        const daysLeft = l.expiresAt
-          ? Math.ceil((l.expiresAt - now) / (1000 * 60 * 60 * 24))
-          : null;
+        const isExpired = l.publishStatus === "EXPIRED" || (l.expiresAt ? l.expiresAt <= now : false);
+        const daysLeft =
+          l.expiresAt && l.expiresAt > now
+            ? Math.ceil((l.expiresAt - now) / (1000 * 60 * 60 * 24))
+            : 0;
 
         return { ...l.toObject(), isExpired, daysLeft };
       })

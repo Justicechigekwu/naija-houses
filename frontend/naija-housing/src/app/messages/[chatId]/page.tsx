@@ -1,10 +1,15 @@
-// "use client";
+import ChatPage from "@/components/chat/ChatPage";
 
-// import ChatPage from "@/components/ChatPage";
-// import { useParams } from "next/navigation";
+export default async function SingleChatPage({
+  params,
+}: {
+  params: Promise<{ chatId: string }>;
+}) {
+  const { chatId } = await params;
 
-// export default function MessagePage() {
-//   const { chatId } = useParams();
-//   if (!chatId || typeof chatId !== "string") return <p>Invalid chat</p>;
-//   return <ChatPage chatId={chatId} />;
-// }
+  return (
+    <div className="h-[100dvh] bg-white md:hidden">
+      <ChatPage chatId={chatId} showBackButton />
+    </div>
+  );
+}

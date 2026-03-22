@@ -8,4 +8,4 @@ router.get("/payments/pending", verifyAdmin, pendingPayments);
 router.post("/payments/:paymentId/confirm", verifyAdmin, confirmPaymentAndPublish);
 router.post("/payments/:paymentId/reject", verifyAdmin, rejectPayment);
 
-export default router;
+export default router; 

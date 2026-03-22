@@ -12,6 +12,8 @@ interface User {
   location?: string;
   bio?: string;
   dob?: string;
+  sex?: string;
+  provider?: "local" | "google";
 }
 
 interface AuthContextProps {
@@ -30,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
+
     if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
       setToken(storedToken);
@@ -62,4 +65,3 @@ export const useAuth = () => {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };
-

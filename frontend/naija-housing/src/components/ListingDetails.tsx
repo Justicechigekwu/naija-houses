@@ -8,6 +8,7 @@ import RelatedListing from "@/components/RelatedListing";
 import deleteListing from "@/controllers/Delete";
 import { useAuth } from "@/context/AuthContext";
 import ReviewsList from "./reviews/ReviewList";
+import FavoriteButton from "@/components/FavoriteButton";
 
 interface Listing {
   _id: string;
@@ -18,7 +19,7 @@ interface Listing {
   city: string;
   state: string;
   description: string;
-  images: string[];
+  images: { url: string; public_id: string }[];
   publishStatus: string;
   category: keyof typeof CATEGORY_TREE;
   subcategory: string;
@@ -86,7 +87,7 @@ export default function ListingDetails() {
   useEffect(() => {
     if (id) {
       api.get(`/listings/${id}`)
-      .then((res) => setListing(res.data))
+      .then((res) => setListing(res.data.listing))
       .catch((err) => console.error("Error fetching listing:", err));
     }
   }, [id]);
@@ -102,7 +103,6 @@ export default function ListingDetails() {
   }, []);
 
   if (!listing) return <p className="p-6">Loading...</p>;
-  console.log("listing.images:", listing.images);
   
   const categoryConfig = CATEGORY_TREE[listing.category as keyof typeof CATEGORY_TREE];
   const subcategoryConfig = categoryConfig?.subcategories?.[
@@ -116,8 +116,6 @@ export default function ListingDetails() {
     if (typeof value === "boolean") return value ? "yes" : "no";
     return String(value);
   };
-  
-  console.log("OWNER:", listing.owner);
   
   const isOwner = user?.id === listing.owner._id;
   
@@ -165,7 +163,7 @@ export default function ListingDetails() {
         </button>
 
         <img
-          src={`http://localhost:5000${listing.images[currentImageIndex]}`}
+          src={listing.images[currentImageIndex]?.url}
           alt={`Image ${currentImageIndex + 1}`}
           className="relative z-10 max-w-full max-h-screen"
           // className="rounded object-contain shadow-lg  w-auto h-auto max-w[90vw] max-h-[90vh]"
@@ -190,7 +188,7 @@ export default function ListingDetails() {
       {listing.images?.[0] && (
         <div className="flex justify-center mb-4">
           <img
-            src={`http://localhost:5000${listing.images[0]}`}
+            src={listing.images[0]?.url}
             alt={listing.title}
             className="w-full md:w-[80%] max-h-[400px] object-cover rounded cursor-pointer shadow-md"
             onClick={() => {
@@ -206,8 +204,8 @@ export default function ListingDetails() {
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 w-full gap-3 md:w-[80%]">
             {listing.images.slice(1, maxThumbs).map((img, index) => (
               <img
-                key={index + 1}
-                src={`http://localhost:5000${img}`}
+                key={img.public_id}
+                src={img.url}
                 alt={`Thumb ${index + 1}`}
                 className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-80 aspect-ratio"
                 // className="w-full aspect-square object-cover rounded cursor-pointer hover:opacity-80"
@@ -238,12 +236,24 @@ export default function ListingDetails() {
       {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> */}
       <div className="bg-white shadow rounded-lg p-4 md:p-6">
 
+        <div className="flex justify-between">
           <div className="mb-6 divider">
-              <h1 className="text-2xl md:text-3xl font-bold">{listing.title}</h1>
-              <p className="text-green-600 font-bold text-lg">
-                ₦{listing.price.toLocaleString()}
-              </p>
+            <h1 className="text-2xl md:text-3xl font-bold">{listing.title}</h1>
+            <p className="text-green-600 font-bold text-lg">
+              ₦{Number(listing.price).toLocaleString()}
+            </p>
           </div>
+        
+          <div>
+            {!isOwner && (
+              <FavoriteButton
+                listingId={listing._id}
+                showText
+                className="shrink-10"
+              />
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-2 gap-4 pb-6 border-b border-gray-200 border-t">
 
@@ -343,18 +353,16 @@ export default function ListingDetails() {
             )}
           </div>  
           <div className="pt-6 w-full lg:w-1/2 ">
-            <div className=" flex items-center gap-2">
+            <div
+              onClick={() => router.push(`/profile/${listing.owner._id}`)}
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80"
+            >
               <img
-               src={
-                listing.owner.avatar
-                ? listing.owner.avatar.startsWith('http')
-                ? listing.owner.avatar
-                : `http://localhost:5000${listing.owner.avatar}`
-                : "/default-avatar.png"
-              } className="w-8 h-8 rounded-full object-cover border"
+                src={listing.owner.avatar || "/default-avatar.png"}
                 alt={`${listing.owner?.firstName} ${listing.owner?.lastName}`}
+                className="w-8 h-8 rounded-full object-cover border"
               />
-
+            
               <span className="text-sm font-medium text-gray-800">
                 {listing.owner.firstName} {listing.owner.lastName}
               </span>
@@ -363,7 +371,8 @@ export default function ListingDetails() {
               Reviews
             </h2>
         
-            <ReviewsList ownerId={listing.owner._id} previewCount={1} owner={listing.owner} />
+            {/* <ReviewsList ownerId={listing.owner._id} previewCount={1} owner={listing.owner} /> */}
+            <ReviewsList ownerId={listing.owner._id} previewCount={3} />
           </div>
         </div>
 

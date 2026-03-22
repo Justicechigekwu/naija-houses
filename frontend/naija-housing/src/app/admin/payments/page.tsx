@@ -92,13 +92,13 @@ export default function AdminPaymentsPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-100">
               <tr>
+                <th className="text-left p-3">User(S)</th>
+                <th className="text-left p-3">Listings</th>
                 <th className="text-left p-3">Assigned Bank</th>
-                <th className="text-left p-3">User</th>
-                <th className="text-left p-3">Listing</th>
+                <th className="text-left p-3">Expires</th>
                 <th className="text-left p-3">Amount</th>
                 <th className="text-left p-3">Payment Code</th>
                 <th className="text-left p-3">Actions</th>
-                <th className="text-left p-3">Expires</th>
               </tr>
             </thead>
             <tbody>

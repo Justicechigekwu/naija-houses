@@ -1,6 +1,7 @@
 import express from 'express';
 import verifyToken from '../middleware/authMiddleware.js';
 import {signup, login} from '../controller/authController.js';
+import { googleAuth } from '../controller/googleAuthController.js';
 
 const router = express.Router()
 
@@ -13,6 +14,6 @@ router.get('/profile', verifyToken, (req, res) => {
 
 router.post('/register', signup)
 router.post('/login', login)
-// router.post('/google', googleAuth)
+router.post('/google', googleAuth)
 
 export default router;

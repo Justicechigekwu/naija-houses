@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/libs/api";
+import { useUI } from "@/hooks/useUi";
 
 export default function PublishPlanPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { showToast } = useUI();
   const [options, setOptions] = useState<any>(null);
 
   useEffect(() => {
@@ -15,7 +17,7 @@ export default function PublishPlanPage() {
         const res = await api.get(`/listings/${id}/publish-options`);
         setOptions(res.data);
       } catch (err: any) {
-        alert(err?.response?.data?.message || "Failed to load publish options");
+        showToast(err?.response?.data?.message || "Failed to load publish options", "error");
       }
     })();
   }, [id]);
@@ -23,11 +25,11 @@ export default function PublishPlanPage() {
   const choosePlan = async (plan: "TRIAL_14_DAYS" | "PAID_30_DAYS") => {
     try {
       const res = await api.post(`/listings/${id}/choose-plan`, { plan });
-      alert(res?.data?.message || "Done");
+      showToast(res?.data?.message || "Done", "error");
       router.push("/pending"); 
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Failed to choose plan";
-      alert(msg);
+      showToast(msg);
     }
   };
 

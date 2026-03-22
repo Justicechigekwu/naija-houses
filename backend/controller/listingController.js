@@ -1,35 +1,188 @@
 import Listing from "../models/listingModels.js";
+import markExpiredListings from "../utils/markExpiredListings.js";
+import cloudinary from "../config/cloudinaryConfig.js";
+import userModel from "../models/userModel.js";
+import { scheduleDraftReminder } from "../utils/scheduleDraftReminder.js";
+
+// export const createListing = async (req, res) => {
+//   try {
+
+//     const imagePaths = req.files
+//       ? req.files.map((file) => ({
+//           url: file.path,        
+//           public_id: file.filename,
+//         }))
+//       : [];
+
+//     const newListing = new Listing({
+//       title: req.body.title,
+//       listingType: req.body.listingType,
+//       price: Number(String(req.body.price).replace(/[^\d]/g, "")),
+//       location: req.body.location,
+//       state: req.body.state,
+//       city: req.body.city || "",
+//       description: req.body.description,
+//       postedBy: req.body.postedBy,
+//       owner: req.user.id,
+//       images: imagePaths,
+
+//       publishStatus:  'DRAFT',
+//       publishPlan: null,
+//       publishedAt: null,
+//       expiresAt: null,
+
+//       category: req.body.category,
+//       subcategory: req.body.subcategory,
+//       attributes: req.body.attributes ? JSON.parse(req.body.attributes) : {},
+//     });
+
+//     scheduleDraftReminder(newListing, 1);
+//     await newListing.save();
+
+//     res.status(201).json({
+//       message: "Listing created. Pay to publish.",
+//       listingId: newListing._id,
+//       listing: newListing,
+//     });
+//   } catch (error) {
+//     console.error("Error in createListing:", error);
+//     res.status(500).json({ message: error.message || "Failed to create listing" });
+//   }
+// };
+
+// export const updateListing = async (req, res) => {
+//   try {
+//     const listing = await Listing.findById(req.params.id);
+
+//     if (!listing) {
+//       return res.status(404).json({ message: "Listing not found" });
+//     }
+
+//     if (listing.owner.toString() !== req.user.id) {
+//       return res.status(403).json({ message: "Not authorized to update this listing" });
+//     }
+
+//     delete req.body.publishStatus;
+//     delete req.body.publishPlan;
+//     delete req.body.publishedAt;
+//     delete req.body.expiresAt;
+//     delete req.body.owner;
+
+//     let keepImages = [];
+//     if (req.body.keepImages) {
+//       if (Array.isArray(req.body.keepImages)) {
+//         keepImages = req.body.keepImages.map((img) =>
+//           typeof img === "string" ? JSON.parse(img) : img
+//         );
+//       } else {
+//         keepImages = [
+//           typeof req.body.keepImages === "string"
+//             ? JSON.parse(req.body.keepImages)
+//             : req.body.keepImages,
+//         ];
+//       }
+//     }
+
+//     let newImages = [];
+//     if (req.files && req.files.length > 0) {
+//       newImages = req.files.map((file) => ({
+//         url: file.path,
+//         public_id: file.filename,
+//       }));
+//     }
+
+//     const removedImages = listing.images.filter(
+//       (oldImg) => !keepImages.some((kept) => kept.public_id === oldImg.public_id)
+//     );
+    
+//     if (removedImages.length) {
+//       await Promise.all(
+//         removedImages.map((img) => cloudinary.uploader.destroy(img.public_id))
+//       );
+//     }
+
+//     const updatedImages = [...keepImages, ...newImages];
+
+//     const updates = {
+//       title: req.body.title || listing.title,
+//       listingType: req.body.listingType || listing.listingType,
+//       price: req.body.price
+//         ? Number(String(req.body.price).replace(/[^\d]/g, ""))
+//         : listing.price,
+//       location: req.body.location || listing.location,
+//       description: req.body.description || listing.description,
+//       state: req.body.state || listing.state,
+//       city: req.body.city ?? listing.city,
+//       postedBy: req.body.postedBy || listing.postedBy,
+//       images: updatedImages,
+//       attributes: req.body.attributes
+//         ? JSON.parse(req.body.attributes)
+//         : listing.attributes,
+//     };
+
+//     if (listing.publishStatus === "DRAFT") {
+//       updates.category = req.body.category || listing.category;
+//       updates.subcategory = req.body.subcategory || listing.subcategory;
+
+//       updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000); // test
+//       updates.draftReminderSentAt = null;
+//     }
+
+//     const updatedListing = await Listing.findByIdAndUpdate(
+//       req.params.id,
+//       { $set: updates },
+//       { new: true, runValidators: true }
+//     );
+
+//     res.json(updatedListing);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: error.message || "Failed to update" });
+//   }
+// };
+
 
 export const createListing = async (req, res) => {
   try {
+    const imagePaths = req.files
+      ? req.files.map((file) => ({
+          url: file.path,
+          public_id: file.filename,
+        }))
+      : [];
 
-    console.log("REQ BODY:", req.body);
-    console.log("REQ FILES:", req.files);
+    const price = Number(String(req.body.price).replace(/[^\d]/g, ""));
 
-    const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+    const locationPayload = {
+      location: req.body.location || "",
+      city: req.body.city || "",
+      state: req.body.state || "",
+    };
+
+    const geo = await geocodeAddress(locationPayload);
 
     const newListing = new Listing({
       title: req.body.title,
       listingType: req.body.listingType,
-      price: req.body.price,
-      location: req.body.location,
-      state: req.body.state,
-      city: req.body.city || "",
+      price,
+      location: locationPayload.location,
+      state: locationPayload.state,
+      city: locationPayload.city,
+      geo: geo || undefined,
       description: req.body.description,
       postedBy: req.body.postedBy,
       owner: req.user.id,
       images: imagePaths,
-
-      publishStatus:  'DRAFT',
+      publishStatus: "DRAFT",
       publishPlan: null,
       publishedAt: null,
       expiresAt: null,
-
       category: req.body.category,
       subcategory: req.body.subcategory,
       attributes: req.body.attributes ? JSON.parse(req.body.attributes) : {},
     });
 
+    scheduleDraftReminder(newListing, 1);
     await newListing.save();
 
     res.status(201).json({
@@ -46,7 +199,7 @@ export const createListing = async (req, res) => {
 export const updateListing = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
-    
+
     if (!listing) {
       return res.status(404).json({ message: "Listing not found" });
     }
@@ -61,52 +214,94 @@ export const updateListing = async (req, res) => {
     delete req.body.expiresAt;
     delete req.body.owner;
 
-    let keepImages = req.body.keepImages;
-    if (!Array.isArray(keepImages)) {
-      keepImages = keepImages ? [keepImages] : [];
+    let keepImages = [];
+    if (req.body.keepImages) {
+      if (Array.isArray(req.body.keepImages)) {
+        keepImages = req.body.keepImages.map((img) =>
+          typeof img === "string" ? JSON.parse(img) : img
+        );
+      } else {
+        keepImages = [
+          typeof req.body.keepImages === "string"
+            ? JSON.parse(req.body.keepImages)
+            : req.body.keepImages,
+        ];
+      }
     }
 
     let newImages = [];
     if (req.files && req.files.length > 0) {
-      newImages = req.files.map((file) => `/uploads/${file.filename}`);
+      newImages = req.files.map((file) => ({
+        url: file.path,
+        public_id: file.filename,
+      }));
+    }
+
+    const removedImages = listing.images.filter(
+      (oldImg) => !keepImages.some((kept) => kept.public_id === oldImg.public_id)
+    );
+
+    if (removedImages.length) {
+      await Promise.all(
+        removedImages.map((img) => cloudinary.uploader.destroy(img.public_id))
+      );
     }
 
     const updatedImages = [...keepImages, ...newImages];
 
+    const nextLocation = req.body.location ?? listing.location;
+    const nextCity = req.body.city ?? listing.city;
+    const nextState = req.body.state ?? listing.state;
+
+    let nextGeo = listing.geo;
+    const locationChanged =
+      nextLocation !== listing.location ||
+      nextCity !== listing.city ||
+      nextState !== listing.state;
+
+    if (locationChanged) {
+      nextGeo = await geocodeAddress({
+        location: nextLocation,
+        city: nextCity,
+        state: nextState,
+      });
+    }
+
     const updates = {
       title: req.body.title || listing.title,
       listingType: req.body.listingType || listing.listingType,
-      price: req.body.price || listing.price,
-      location: req.body.location || listing.location,
+      price: req.body.price
+        ? Number(String(req.body.price).replace(/[^\d]/g, ""))
+        : listing.price,
+      location: nextLocation,
       description: req.body.description || listing.description,
-      state: req.body.state || listing.state,
-      city: req.body.city ?? listing.city,
+      state: nextState,
+      city: nextCity,
+      geo: nextGeo || undefined,
       postedBy: req.body.postedBy || listing.postedBy,
       images: updatedImages,
       attributes: req.body.attributes
         ? JSON.parse(req.body.attributes)
-        : listing.attributes
+        : listing.attributes,
     };
 
     if (listing.publishStatus === "DRAFT") {
       updates.category = req.body.category || listing.category;
       updates.subcategory = req.body.subcategory || listing.subcategory;
+      updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000);
+      updates.draftReminderSentAt = null;
     }
 
     const updatedListing = await Listing.findByIdAndUpdate(
-      req.params.id, 
+      req.params.id,
       { $set: updates },
       { new: true, runValidators: true }
     );
 
-    res.json({
-      ...updatedListing.toObject(),
-    images: updatedListing.images.map(
-      (img) => `${req.protocol}://${req.get('host')}/uploads/${img}`)
-    });
+    res.json(updatedListing);
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: error.message || "Failed to update" });
+    console.error(error);
+    res.status(500).json({ message: error.message || "Failed to update" });
   }
 };
 
@@ -122,7 +317,19 @@ export const deleteListing = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to delete this listing" });
     }
 
+    if (listing.images?.length) {
+      await Promise.all(
+        listing.images.map((img) => cloudinary.uploader.destroy(img.public_id))
+      );
+    }
+
+    await userModel.updateMany(
+      { favorites: listing._id },
+      { $pull: { favorites: listing._id } }
+    );
+
     await listing.deleteOne();
+
     res.json({ message: "Listing deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message || "Failed to delete listing" });
@@ -135,6 +342,8 @@ export const getLitsing = async (req, res) => {
 
     const filter = {};
     const now = new Date();
+
+    await markExpiredListings();
 
     filter.publishStatus = "PUBLISHED";
 
@@ -171,7 +380,6 @@ export const getLitsing = async (req, res) => {
   }
 };
 
-
 export const getListingById = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id)
@@ -187,11 +395,33 @@ export const getListingById = async (req, res) => {
 
     const now = new Date();
     const isExpired = listing.expiresAt && listing.expiresAt <= now;
+
+    if (isExpired && listing.publishStatus === "PUBLISHED") {
+      listing.publishStatus = "EXPIRED";
+      listing.expiredAt = now;
+      listing.autoDeleteAt = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+      await listing.save();
+    }
+
     if (isExpired && !isOwner) {
       return res.status(403).json({ message: "Listing expired" });
     }
 
-    res.status(200).json(listing);
+    let isFavorited = false;
+
+    if (req.user) {
+      const user = await userModel.findById(req.user.id).select("favorites");
+      if (user) {
+        isFavorited = user.favorites.some(
+          (favId) => favId.toString() === listing._id.toString()
+        );
+      }
+    } 
+
+    res.status(200).json({
+      listing,
+      isFavorited
+    });
   } catch (error) {
     res.status(500).json({ message: error.message || "Failed to fetch listing" });
   }

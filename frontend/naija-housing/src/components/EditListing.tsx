@@ -1,48 +1,59 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ListingForm from "@/components/ListingForm";
-import editListing from "@/controllers/Edit";
-import api from "@/libs/api";
 import { useParams, useRouter } from "next/navigation";
+import api from "@/libs/api";
+import ListingForm from "@/components/ListingForm";
+import { useUI } from "@/hooks/useUi";
 
 export default function EditListing() {
   const { id } = useParams();
   const router = useRouter();
-  const [initialData, setInitialData] = useState(null);
+  const { showToast } = useUI();
+  const [listing, setListing] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchListing() {
+    const fetchListing = async () => {
       try {
         const res = await api.get(`/listings/${id}`);
-        setInitialData(res.data);
+        setListing(res.data?.listing || res.data);
       } catch (error) {
-        console.error(error);
+        console.error("Failed to fetch listing", error);
+      } finally {
+        setLoading(false);
       }
-    }
-    fetchListing();
+    };
+
+    if (id) fetchListing();
   }, [id]);
 
-  const handleUpdateListing = async (formData: FormData) => {
+  const handleUpdate = async (formData: FormData) => {
     try {
-      await editListing(id as string, formData);
-      alert("Listing updated successfully!");
+      await api.put(`/listings/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      showToast("Listing updated successfully", "error");
       router.push(`/listings/${id}`);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else {
-        alert("Something went wrong");
-      }
+    } catch (error: any) {
+      console.error("Failed to update listing", error);
+      showToast(error?.response?.data?.message || "Failed to update listing", "error");
     }
   };
 
-  if (!initialData) return <p>Loading...</p>;
+  if (loading) return <p className="p-6">Loading...</p>;
+  if (!listing) return <p className="p-6">Listing not found</p>;
 
   return (
-    <div>
-      <h1>Edit Listing</h1>
-      <ListingForm initialData={initialData} onSubmit={handleUpdateListing} />
+    <div className="p-4 md:p-6">
+      <ListingForm
+        initialData={listing}
+        onSubmit={handleUpdate}
+        isEditMode={true}
+      />
     </div>
   );
 }

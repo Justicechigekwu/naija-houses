@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import ListingForm from "@/components/ListingForm";
 import api from "@/libs/api";
+import { useUI } from "@/hooks/useUi";
 
 export default function CreateListingPage() {
   const router = useRouter();
+  const { showToast } = useUI();
 
   const handleCreateListing = async (formData: FormData) => {
     try {
@@ -22,7 +24,7 @@ export default function CreateListingPage() {
       router.push(`/listings/${listingId}/payment`);
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to create listing");
+      showToast(error.response?.data?.message || "Failed to create listing", "error");
     }
   };
 

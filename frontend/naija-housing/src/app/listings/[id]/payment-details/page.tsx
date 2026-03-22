@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useParams, useRouter } from "next/navigation";
 import api from "@/libs/api";
 import PlanOptions from "@/components/PlanOptions";
+import { useUI } from "@/hooks/useUi";
 
 type PublishOptions = {
   listingId: string;
@@ -39,6 +40,7 @@ type PaymentMethodsRes = {
 export default function PaymentDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { showToast } = useUI();
   const params = useSearchParams();
   const queryPaymentCode = params.get("code");
 
@@ -48,6 +50,7 @@ export default function PaymentDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState("");
 
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
@@ -82,12 +85,34 @@ export default function PaymentDetailsPage() {
     if (id) load();
   }, [id]);
 
+  useEffect(() => {
+    if (!opts?.activePayment?.accountExpiresAt) return;
+  
+    const interval = setInterval(() => {
+      const end = new Date(opts.activePayment!.accountExpiresAt).getTime();
+      const now = Date.now();
+      const diff = end - now;
+  
+      if (diff <= 0) {
+        setTimeLeft("Expired");
+        clearInterval(interval);
+        return;
+      }
+  
+      const mins = Math.floor(diff / 1000 / 60);
+      const secs = Math.floor((diff / 1000) % 60);
+      setTimeLeft(`${mins}:${secs.toString().padStart(2, "0")}`);
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, [opts?.activePayment?.accountExpiresAt]);
+
   const copy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert("Copied!");
+      showToast("Copied!", "error");
     } catch {
-      alert("Copy failed. Please copy manually.");
+      showToast("Copy failed. Please copy manually.", "error");
     }
   };
 
@@ -103,7 +128,7 @@ export default function PaymentDetailsPage() {
         return;
       }
 
-      if (!["DRAFT", "REJECTED"].includes(opts.publishStatus)) {
+      if (!["DRAFT", "REJECTED", "EXPIRED"].includes(opts.publishStatus)) {
         setError(`You can't submit payment while listing is ${opts.publishStatus}`);
         return;
       }
@@ -120,7 +145,7 @@ export default function PaymentDetailsPage() {
         note,
       });
 
-      alert("Payment submitted! Waiting for admin confirmation.");
+      showToast("Submitted! Waiting for confirmation, This usually take 5 mins to 2 hours to be reviewed", "error");
       router.push("/pending");
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Failed to submit payment");
@@ -143,20 +168,27 @@ export default function PaymentDetailsPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">Publish Fee</h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-base text-gray-600">
                   ₦<span className="font-semibold">{price.toLocaleString()}</span> for{" "}
                   {opts.paidDays} days.
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Status: <span className="font-medium">{opts.publishStatus}</span>
-                </p>
               </div>
 
-              <span className="rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white">
+              <span className="rounded-full bg-[#8A715D] px-3 py-1 text-xs font-medium text-white">
                 Paid Plan
               </span>
             </div>
           </div>
+
+          {opts?.activePayment?.isAccountActive && (
+            <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-800">
+              <div className="font-medium">Make payment within 30 minutes</div>
+              <div className="mt-1">
+                Do not save this account for future use. This account expires in{" "}
+                <span className="font-semibold">{timeLeft}</span>.
+              </div>
+            </div>
+          )}
 
           <div className="rounded-xl border border-gray-200 p-4">
             <div className="flex items-center justify-between">
@@ -165,6 +197,16 @@ export default function PaymentDetailsPage() {
                 {methods?.recommended === "BANK_TRANSFER" ? "Bank Transfer" : methods?.recommended}
               </span>
             </div>
+
+            {opts?.activePayment && !opts.activePayment.isAccountActive && (
+             <button
+               type="button"
+               onClick={() => router.push(`/listings/${id}/payment`)}
+               className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white"
+             >
+               Get New Payment Account
+             </button>
+           )}
 
             {!bank ? (
               <div className="mt-3 text-sm text-gray-600">No bank details available.</div>
@@ -265,7 +307,7 @@ export default function PaymentDetailsPage() {
             <button
               disabled={submitting}
               onClick={notify}
-              className="w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+              className="w-full rounded-lg bg-[#8A715D] px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
             >
               {submitting ? "Submitting..." : "I have made payment"}
             </button>

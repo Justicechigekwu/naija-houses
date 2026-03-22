@@ -31,10 +31,8 @@ export default function ProfilePage() {
     <div className="bg-[#EDEDED] min-h-screen p-6">
       <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-6 items-start">
         
-        {/* LEFT SIDEBAR */}
         <div className="w-full lg:w-[30%] bg-white rounded-2xl shadow overflow-hidden self-start">
           
-          {/* Profile Top */}
           <div className="p-6 flex flex-col items-center text-center border-b">
             {profile && (
               <>
@@ -46,7 +44,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Quick Links */}
           <div className="flex flex-col">
             <Link
               href="/messages"
@@ -63,10 +60,31 @@ export default function ProfilePage() {
             </Link>
 
             <Link
+              href="/favorites"
+              className="px-6 py-4 border-b hover:bg-gray-50 transition"
+            >
+              Favorites
+            </Link>
+
+            <Link
+              href="/expired"
+              className="px-6 py-4 border-b hover:bg-gray-50 transition"
+            >
+              Expired listings
+            </Link>
+
+            <Link
               href="/feedback"
               className="px-6 py-4 border-b hover:bg-gray-50 transition"
             >
               Feedbacks
+            </Link>
+
+            <Link
+              href="/notification"
+              className="px-6 py-4 border-b hover:bg-gray-50 transition"
+            >
+              Notifications
             </Link>
 
             <Link
@@ -77,7 +95,6 @@ export default function ProfilePage() {
             </Link>
           </div>
 
-          {/* Settings */}
           <div className="p-6">
             <Link href="/profile/update">
               <button className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition">
@@ -87,7 +104,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RIGHT CONTENT */}
         <div className="w-full lg:w-[70%] bg-white rounded-2xl shadow overflow-hidden">
           <div className="p-6">
             {profile && <UserListings userId={profile.id} />}
