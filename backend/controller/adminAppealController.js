@@ -20,67 +20,6 @@ export const getPendingAppeals = async (req, res) => {
   }
 };
 
-// export const approveAppeal = async (req, res) => {
-//   try {
-//     const { listingId } = req.params;
-
-//     const listing = await Listing.findById(listingId);
-//     if (!listing) {
-//       return res.status(404).json({ message: "Listing not found" });
-//     }
-
-//     if (
-//       listing.publishStatus !== "APPEAL_PENDING" ||
-//       listing.appealStatus !== "PENDING"
-//     ) {
-//       return res.status(400).json({
-//         message: "This listing is not awaiting appeal review",
-//       });
-//     }
-
-//     listing.publishStatus = "PUBLISHED";
-//     listing.appealStatus = "APPROVED";
-//     listing.appealReviewedAt = new Date();
-//     listing.appealReviewNote = "";
-//     listing.isArchivedByAdmin = false;
-//     listing.adminRemovedAt = null;
-//     listing.adminRemovalReason = "";
-
-//     await listing.save();
-
-//     await createNotification({
-//       userId: listing.owner,
-//       type: "LISTING_APPEAL_APPROVED",
-//       title: "Appeal approved",
-//       message: `Your appeal for "${listing.title}" has been approved and your listing is live again.`,
-//       listingId: listing._id,
-//       metadata: {
-//         listingId: listing._id,
-//         publishStatus: listing.publishStatus,
-//         appealStatus: listing.appealStatus,
-//         route: `/listings/${listing._id}`,
-//         actionLabel: "View listing",
-//       },
-//     });
-
-//     emitListingUpdated(listing.owner.toString(), {
-//       listingId: listing._id,
-//       publishStatus: listing.publishStatus,
-//       appealStatus: listing.appealStatus,
-//     });
-
-//     res.json({
-//       message: "Appeal approved successfully",
-//       listing,
-//     });
-//   } catch (error) {
-//     console.error("approveAppeal error:", error);
-//     res.status(500).json({
-//       message: error.message || "Failed to approve appeal",
-//     });
-//   }
-// };
-
 export const approveAppeal = async (req, res) => {
   try {
     const { listingId } = req.params;

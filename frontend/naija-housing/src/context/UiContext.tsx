@@ -62,7 +62,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       setTimeout(() => {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
-      }, 3000);
+      }, 2600);
     },
     []
   );
@@ -114,15 +114,22 @@ export function UIProvider({ children }: { children: ReactNode }) {
     <UIContext.Provider value={value}>
       {children}
 
-      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-3">
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
+      {/* Bottom-center floating toast area */}
+      <div
+        className="pointer-events-none fixed left-0 right-0 z-[100] flex justify-center"
+        style={{ bottom: "30vh" }}
+      >
+        <div className="flex flex-col items-center gap-3">
+          {toasts.map((toast) => (
+            <div key={toast.id} className="pointer-events-auto">
+              <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => removeToast(toast.id)}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <ConfirmModal

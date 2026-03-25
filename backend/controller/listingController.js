@@ -3,144 +3,7 @@ import markExpiredListings from "../utils/markExpiredListings.js";
 import cloudinary from "../config/cloudinaryConfig.js";
 import userModel from "../models/userModel.js";
 import { scheduleDraftReminder } from "../utils/scheduleDraftReminder.js";
-
-// export const createListing = async (req, res) => {
-//   try {
-
-//     const imagePaths = req.files
-//       ? req.files.map((file) => ({
-//           url: file.path,        
-//           public_id: file.filename,
-//         }))
-//       : [];
-
-//     const newListing = new Listing({
-//       title: req.body.title,
-//       listingType: req.body.listingType,
-//       price: Number(String(req.body.price).replace(/[^\d]/g, "")),
-//       location: req.body.location,
-//       state: req.body.state,
-//       city: req.body.city || "",
-//       description: req.body.description,
-//       postedBy: req.body.postedBy,
-//       owner: req.user.id,
-//       images: imagePaths,
-
-//       publishStatus:  'DRAFT',
-//       publishPlan: null,
-//       publishedAt: null,
-//       expiresAt: null,
-
-//       category: req.body.category,
-//       subcategory: req.body.subcategory,
-//       attributes: req.body.attributes ? JSON.parse(req.body.attributes) : {},
-//     });
-
-//     scheduleDraftReminder(newListing, 1);
-//     await newListing.save();
-
-//     res.status(201).json({
-//       message: "Listing created. Pay to publish.",
-//       listingId: newListing._id,
-//       listing: newListing,
-//     });
-//   } catch (error) {
-//     console.error("Error in createListing:", error);
-//     res.status(500).json({ message: error.message || "Failed to create listing" });
-//   }
-// };
-
-// export const updateListing = async (req, res) => {
-//   try {
-//     const listing = await Listing.findById(req.params.id);
-
-//     if (!listing) {
-//       return res.status(404).json({ message: "Listing not found" });
-//     }
-
-//     if (listing.owner.toString() !== req.user.id) {
-//       return res.status(403).json({ message: "Not authorized to update this listing" });
-//     }
-
-//     delete req.body.publishStatus;
-//     delete req.body.publishPlan;
-//     delete req.body.publishedAt;
-//     delete req.body.expiresAt;
-//     delete req.body.owner;
-
-//     let keepImages = [];
-//     if (req.body.keepImages) {
-//       if (Array.isArray(req.body.keepImages)) {
-//         keepImages = req.body.keepImages.map((img) =>
-//           typeof img === "string" ? JSON.parse(img) : img
-//         );
-//       } else {
-//         keepImages = [
-//           typeof req.body.keepImages === "string"
-//             ? JSON.parse(req.body.keepImages)
-//             : req.body.keepImages,
-//         ];
-//       }
-//     }
-
-//     let newImages = [];
-//     if (req.files && req.files.length > 0) {
-//       newImages = req.files.map((file) => ({
-//         url: file.path,
-//         public_id: file.filename,
-//       }));
-//     }
-
-//     const removedImages = listing.images.filter(
-//       (oldImg) => !keepImages.some((kept) => kept.public_id === oldImg.public_id)
-//     );
-    
-//     if (removedImages.length) {
-//       await Promise.all(
-//         removedImages.map((img) => cloudinary.uploader.destroy(img.public_id))
-//       );
-//     }
-
-//     const updatedImages = [...keepImages, ...newImages];
-
-//     const updates = {
-//       title: req.body.title || listing.title,
-//       listingType: req.body.listingType || listing.listingType,
-//       price: req.body.price
-//         ? Number(String(req.body.price).replace(/[^\d]/g, ""))
-//         : listing.price,
-//       location: req.body.location || listing.location,
-//       description: req.body.description || listing.description,
-//       state: req.body.state || listing.state,
-//       city: req.body.city ?? listing.city,
-//       postedBy: req.body.postedBy || listing.postedBy,
-//       images: updatedImages,
-//       attributes: req.body.attributes
-//         ? JSON.parse(req.body.attributes)
-//         : listing.attributes,
-//     };
-
-//     if (listing.publishStatus === "DRAFT") {
-//       updates.category = req.body.category || listing.category;
-//       updates.subcategory = req.body.subcategory || listing.subcategory;
-
-//       updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000); // test
-//       updates.draftReminderSentAt = null;
-//     }
-
-//     const updatedListing = await Listing.findByIdAndUpdate(
-//       req.params.id,
-//       { $set: updates },
-//       { new: true, runValidators: true }
-//     );
-
-//     res.json(updatedListing);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: error.message || "Failed to update" });
-//   }
-// };
-
+import { geocodeAddress } from "../utils/geocodeAddress.js";
 
 export const createListing = async (req, res) => {
   try {
@@ -205,7 +68,9 @@ export const updateListing = async (req, res) => {
     }
 
     if (listing.owner.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Not authorized to update this listing" });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this listing" });
     }
 
     delete req.body.publishStatus;
@@ -213,6 +78,18 @@ export const updateListing = async (req, res) => {
     delete req.body.publishedAt;
     delete req.body.expiresAt;
     delete req.body.owner;
+
+    if (
+      listing.publishStatus === "PUBLISHED" &&
+      (
+        (req.body.category && req.body.category !== listing.category) ||
+        (req.body.subcategory && req.body.subcategory !== listing.subcategory)
+      )
+    ) {
+      return res.status(400).json({
+        message: "Category and subcategory cannot be changed after publication",
+      });
+    }
 
     let keepImages = [];
     if (req.body.keepImages) {
@@ -274,10 +151,10 @@ export const updateListing = async (req, res) => {
         ? Number(String(req.body.price).replace(/[^\d]/g, ""))
         : listing.price,
       location: nextLocation,
-      description: req.body.description || listing.description,
-      state: nextState,
       city: nextCity,
-      geo: nextGeo || undefined,
+      state: nextState,
+      geo: nextGeo || listing.geo,
+      description: req.body.description || listing.description,
       postedBy: req.body.postedBy || listing.postedBy,
       images: updatedImages,
       attributes: req.body.attributes
@@ -285,7 +162,7 @@ export const updateListing = async (req, res) => {
         : listing.attributes,
     };
 
-    if (listing.publishStatus === "DRAFT") {
+if (listing.publishStatus === "DRAFT") {
       updates.category = req.body.category || listing.category;
       updates.subcategory = req.body.subcategory || listing.subcategory;
       updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000);
@@ -298,12 +175,17 @@ export const updateListing = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    res.json(updatedListing);
+    return res.status(200).json(updatedListing);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message || "Failed to update" });
+    console.error("updateListing error:", error);
+    return res
+      .status(500)
+      .json({ message: error.message || "Failed to update listing" });
   }
 };
+
+
+
 
 export const deleteListing = async (req, res) => {
   try {
@@ -338,7 +220,18 @@ export const deleteListing = async (req, res) => {
 
 export const getLitsing = async (req, res) => {
   try {
-    const { search, state, location, category, subcategory, listingType } = req.query;
+    const {
+      search,
+      state,
+      location,
+      category,
+      subcategory,
+      listingType,
+    } = req.query;
+
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 20, 50);
+    const skip = (page - 1) * limit;
 
     const filter = {};
     const now = new Date();
@@ -359,6 +252,7 @@ export const getLitsing = async (req, res) => {
           { title: { $regex: search, $options: "i" } },
           { state: { $regex: search, $options: "i" } },
           { location: { $regex: search, $options: "i" } },
+          { city: { $regex: search, $options: "i" } },
           { description: { $regex: search, $options: "i" } },
         ],
       });
@@ -372,8 +266,22 @@ export const getLitsing = async (req, res) => {
     if (subcategory) filter.subcategory = subcategory;
     if (listingType) filter.listingType = listingType;
 
-    const listings = await Listing.find(filter).sort({ createdAt: -1 });
-    res.status(200).json(listings);
+    const listings = await Listing.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit + 1)
+      .lean();
+
+    const hasMore = listings.length > limit;
+    const items = hasMore ? listings.slice(0, limit) : listings;
+
+    res.status(200).json({
+      items,
+      page,
+      limit,
+      hasMore,
+      nextPage: hasMore ? page + 1 : null,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message || "Failed to fetch listings" });

@@ -1,17 +1,21 @@
-'use client'
+"use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 
-export default function requireAuth(action?: string) {
-    const router = useRouter();
-    const params = useSearchParams();
+export default function useRequireAuth(action?: string) {
+  const router = useRouter();
+  const { user, isHydrated } = useAuth();
 
-    useEffect( () => {
-        const token = localStorage.getItem('token');
-         if (!token) {
-        const redirectTo = action ? `?redirect=${encodeURIComponent(action)}` : "";
-        router.push(`/register${redirectTo}`);
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user) {
+      const redirectTo = action
+        ? `?redirect=${encodeURIComponent(action)}`
+        : "";
+      router.push(`/register${redirectTo}`);
     }
-    }, [router, params])
+  }, [user, isHydrated, router, action]);
 }

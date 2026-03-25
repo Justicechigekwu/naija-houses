@@ -2,6 +2,7 @@ import cron from "node-cron";
 import markExpiredListings from "../utils/markExpiredListings.js";
 
 const startExpireListingsJob = () => {
+  // console.log("expired listing running...");
   cron.schedule("* * * * *", async () => {
     try {
       await markExpiredListings();

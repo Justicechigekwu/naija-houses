@@ -7,7 +7,7 @@ import api from "@/libs/api";
 import { useAuth } from "@/context/AuthContext";
 import { AxiosError } from "axios";
 import Link from "next/link";
-import GoogleAuthButton from "@/components/GoogleAuthButton";
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
 type FormData = {
   firstName?: string;
@@ -22,6 +22,7 @@ export default function AuthForm({ isLogin = false }: { isLogin?: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const {
     register,
@@ -30,14 +31,45 @@ export default function AuthForm({ isLogin = false }: { isLogin?: boolean }) {
     formState: { errors, isSubmitting }
   } = useForm<FormData>();
 
+
+  // const onSubmit = async (data: FormData) => {
+  //   if (!isLogin && !agreedToTerms) {
+  //     setError("You must agree to the Terms & Conditions to create an account.");
+  //     return;
+  //   }
+  
+  //   try {
+  //     setError("");
+  //     const endpoint = isLogin ? "/auth/login" : "/auth/register";
+  
+  //     const res = await api.post(endpoint, data);
+  //     login(res.data.user, res.data.token);
+  
+  //     const redirectUrl = params.get("redirect");
+  //     router.push(redirectUrl || "/");
+  //   } catch (err: unknown) {
+  //     if (err instanceof AxiosError) {
+  //       setError(err.response?.data?.message || "Something went wrong");
+  //     } else {
+  //       setError("Something went wrong");
+  //     }
+  //   }
+  // };
+
   const onSubmit = async (data: FormData) => {
+
+    if (!isLogin && !agreedToTerms) {
+      setError("You must agree to the Terms & Conditions to create an account.");
+      return;
+    }
     try {
       setError("");
+      
       const endpoint = isLogin ? "/auth/login" : "/auth/register";
-
       const res = await api.post(endpoint, data);
-      login(res.data.user, res.data.token);
-
+  
+      login(res.data.user);
+  
       const redirectUrl = params.get("redirect");
       router.push(redirectUrl || "/");
     } catch (err: unknown) {
@@ -123,6 +155,27 @@ export default function AuthForm({ isLogin = false }: { isLogin?: boolean }) {
         )}
 
         {error && <p className="text-red-500">{error}</p>}
+
+        {!isLogin && (
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              I agree to the{" "}
+              <Link href="/terms" className="text-blue-500 underline">
+                Terms & Conditions
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="text-blue-500 underline">
+                Privacy Policy
+              </Link>.
+            </span>
+          </label>
+        )}
 
         <button
           type="submit"

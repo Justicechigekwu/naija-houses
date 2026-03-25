@@ -15,6 +15,7 @@ export type ListingCardItem = {
   distanceMeters?: number;
   category?: string;
   subcategory?: string;
+  postedBy?: "Owner" | "Agent" | "Dealer" | "Seller";
 };
 
 export default function useLocationFeed() {
@@ -45,8 +46,20 @@ export default function useLocationFeed() {
         if (userLocation.city) params.city = userLocation.city;
         if (userLocation.state) params.state = userLocation.state;
 
-        const res = await api.get("/listings/feed/location", { params });
-        setListings(res.data?.listings || []);
+        try {
+          const res = await api.get("/listings/feed/location", { params });
+          const locationListings = res.data?.listings || [];
+
+          if (locationListings.length > 0) {
+            setListings(locationListings);
+            return;
+          }
+        } catch (locationError) {
+          console.error("Location feed failed, falling back:", locationError);
+        }
+
+        const fallbackRes = await api.get("/listings");
+        setListings(fallbackRes.data || []);
       } catch (error: any) {
         setError(error?.response?.data?.message || "Failed to load listings");
       } finally {

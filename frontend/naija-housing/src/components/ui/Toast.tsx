@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { CheckCircle, AlertCircle, Info, TriangleAlert, X } from "lucide-react";
-import { ToastType } from "@/context/UIContext";
+import { ToastType } from "@/context/UiContext";
 
 type ToastProps = {
   message: string;
@@ -10,43 +11,45 @@ type ToastProps = {
 };
 
 export default function Toast({ message, type, onClose }: ToastProps) {
-  const styles = {
-    success: {
-      container: "bg-green-600 text-white",
-      icon: <CheckCircle className="w-5 h-5" />,
-    },
-    error: {
-      container: "bg-red-600 text-white",
-      icon: <AlertCircle className="w-5 h-5" />,
-    },
-    warning: {
-      container: "bg-yellow-500 text-black",
-      icon: <TriangleAlert className="w-5 h-5" />,
-    },
-    info: {
-      container: "bg-blue-600 text-white",
-      icon: <Info className="w-5 h-5" />,
-    },
+  const icons = {
+    success: <CheckCircle className="h-3 w-3 text-emerald-400" />,
+    error: <AlertCircle className="h-3 w-3 text-red-400" />,
+    warning: <TriangleAlert className="h-3 w-3 text-yellow-400" />,
+    info: <Info className="h-3 w-3 text-sky-400" />,
   };
 
   return (
     <div
-      className={`
-        min-w-[280px] max-w-sm rounded-xl shadow-lg px-4 py-3
-        flex items-start gap-3 animate-toast-in
-        ${styles[type].container}
-      `}
+      className="
+        animate-toast-float
+        min-w-[280px] max-w-[92vw]
+        rounded-full
+        border border-white/10
+        bg-[#1b1b1b]
+        px-5 py-3
+        shadow-2xl
+      "
     >
-      <div className="shrink-0 mt-0.5">{styles[type].icon}</div>
+      <div className="flex items-center gap-3">
+        {/* Logo */}
+        <div className="flex h-10 w-10 items-center justify-center shrink-0">
+          <Image
+            src="/symbol.png"
+            alt="Velora"
+            width={40}
+            height={40}
+            className="h-10 w-10 object-contain"
+            priority
+          />
+        </div>
 
-      <div className="flex-1 text-sm font-medium leading-5">{message}</div>
+        <div className="flex-1 text-sm font-medium text-white">
+          {message}
+        </div>
 
-      <button
-        onClick={onClose}
-        className="shrink-0 opacity-80 hover:opacity-100 transition"
-      >
-        <X className="w-4 h-4" />
-      </button>
+        <div className="shrink-0">{icons[type]}</div>
+
+      </div>
     </div>
   );
 }

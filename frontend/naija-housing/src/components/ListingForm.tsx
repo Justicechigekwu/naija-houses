@@ -3,7 +3,21 @@
 import { useState, useEffect, useMemo } from "react";
 import { X } from "lucide-react";
 import { CATEGORY_TREE } from "@/libs/listingFormConfig";
+import { NIGERIA_STATES, getCitiesByState } from "@/libs/nigeriaLocations";
 import { validateListingForm } from "@/libs/validateListingForm";
+import { useUI } from "@/hooks/useUi";
+
+type DynamicField = {
+  key: string;
+  label: string;
+  type: string;
+  options?: string[];
+};
+
+type SubcategoryConfig = {
+  label: string;
+  fields: DynamicField[];
+};
 
 interface ListingImage {
   url: string;
@@ -22,7 +36,7 @@ interface ListingFormProps {
     postedBy: string;
     category: string;
     subcategory: string;
-    attributes: Record<string, any>;
+    attributes: Record<string, string>;
     images: ListingImage[];
   }>;
   isEditMode?: boolean;
@@ -42,6 +56,14 @@ type FormShape = {
   subcategory: string;
 };
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+
 export default function ListingForm({
   initialData,
   isEditMode = false,
@@ -52,7 +74,13 @@ export default function ListingForm({
   const [existingImages, setExistingImages] = useState<ListingImage[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [agreedToListingPolicy, setAgreedToListingPolicy] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [draggedExistingImageIndex, setDraggedExistingImageIndex] = useState<number | null>(null);
+  const [draggedNewImageIndex, setDraggedNewImageIndex] = useState<number | null>(null);
+
+  const { showToast } = useUI();
 
   const [formData, setFormData] = useState<FormShape>({
     title: "",
@@ -67,7 +95,11 @@ export default function ListingForm({
     subcategory: "HOUSES_APARTMENTS",
   });
 
-  const [attributes, setAttributes] = useState<Record<string, any>>({});
+  const [attributes, setAttributes] = useState<Record<string, string>>({});
+
+  const cityOptions = useMemo(() => {
+    return getCitiesByState(formData.state);
+  }, [formData.state]);
 
   useEffect(() => {
     if (!initialData) return;
@@ -115,13 +147,14 @@ export default function ListingForm({
     }));
   }, [categoryConfig]);
 
-  const fieldConfig = useMemo(() => {
+  const fieldConfig = useMemo<DynamicField[]>(() => {
     if (!categoryConfig) return [];
-    const sub =
-      categoryConfig.subcategories[
-        formData.subcategory as keyof typeof categoryConfig.subcategories
-      ];
-    return sub?.fields || [];
+
+    const sub = categoryConfig.subcategories[
+      formData.subcategory as keyof typeof categoryConfig.subcategories
+    ] as SubcategoryConfig | undefined;
+
+    return sub?.fields ?? [];
   }, [categoryConfig, formData.subcategory]);
 
   const listingTypeOptions = useMemo(() => {
@@ -157,6 +190,10 @@ export default function ListingForm({
       return;
     }
 
+    if (isEditMode && (name === "catagory" || name === "subcategory")) {
+      return;
+    }
+
     if (name === "category") {
       const nextCategory = value;
       const nextCategoryConfig =
@@ -188,6 +225,15 @@ export default function ListingForm({
       return;
     }
 
+    if (name === "state") {
+      setFormData((prev) => ({
+        ...prev,
+        state: value,
+        city: "",
+      }));
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -210,9 +256,36 @@ export default function ListingForm({
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { files } = e.target;
-    if (files && files.length > 0) {
-      setImages((prev) => [...prev, ...Array.from(files)]);
+    if (!files || files.length === 0) return;
+
+    const selectedFiles = Array.from(files);
+    const validFiles: File[] = [];
+
+    for (const file of selectedFiles) {
+      const isValidType = ALLOWED_IMAGE_TYPES.includes(file.type);
+      const isValidSize = file.size <= MAX_IMAGE_SIZE;
+
+      if (!isValidType) {
+        showToast(
+          `${file.name} is not allowed. Use JPG, JPEG, PNG or WEBP.`,
+          "error"
+        );
+        continue;
+      }
+
+      if (!isValidSize) {
+        showToast(`${file.name} is larger than 5MB.`, "error");
+        continue;
+      }
+
+      validFiles.push(file);
     }
+
+    if (validFiles.length > 0) {
+      setImages((prev) => [...prev, ...validFiles]);
+    }
+
+    e.target.value = "";
   };
 
   const removeNewImage = (index: number) => {
@@ -222,13 +295,73 @@ export default function ListingForm({
 
   const removeExistingImage = (publicId: string) => {
     if (isSubmitting) return;
-    setExistingImages((prev) =>
-      prev.filter((img) => img.public_id !== publicId)
-    );
+    setExistingImages((prev) => prev.filter((img) => img.public_id !== publicId));
+  };
+
+  const handleExistingDragStart = (index: number) => {
+    if (isSubmitting) return;
+    setDraggedExistingImageIndex(index);
+  };
+
+  const handleExistingDrop = (index: number) => {
+    if (isSubmitting) return;
+    if (draggedExistingImageIndex === null || draggedExistingImageIndex === index) return;
+
+    setExistingImages((prev) => {
+      const updated = [...prev];
+      const draggedItem = updated[draggedExistingImageIndex];
+
+      if (!draggedItem) return prev;
+
+      updated.splice(draggedExistingImageIndex, 1);
+      updated.splice(index, 0, draggedItem);
+
+      return updated;
+    });
+
+    setDraggedExistingImageIndex(null);
+  };
+
+  const handleNewDragStart = (index: number) => {
+    if (isSubmitting) return;
+    setDraggedNewImageIndex(index);
+  };
+
+  const handleNewDrop = (index: number) => {
+    if (isSubmitting) return;
+    if (draggedNewImageIndex === null || draggedNewImageIndex === index) return;
+
+    setImages((prev) => {
+      const updated = [...prev];
+      const draggedItem = updated[draggedNewImageIndex];
+
+      if (!draggedItem) return prev;
+
+      updated.splice(draggedNewImageIndex, 1);
+      updated.splice(index, 0, draggedItem);
+
+      return updated;
+    });
+
+    setDraggedNewImageIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDragEnd = () => {
+    setDraggedExistingImageIndex(null);
+    setDraggedNewImageIndex(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!agreedToListingPolicy) {
+      showToast("You must agree to the listing rules before publishing.", "error");
+      return;
+    }
 
     if (isSubmitting) return;
 
@@ -336,8 +469,8 @@ export default function ListingForm({
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                disabled={isSubmitting}
-                className={getFieldClass("category")}
+                disabled={isSubmitting || isEditMode}
+                className={`${getFieldClass("category")} ${isEditMode ? "cursor-not-allowed bg-gray-100" : ""}`}
               >
                 {Object.entries(CATEGORY_TREE).map(([key, value]) => (
                   <option key={key} value={key}>
@@ -347,14 +480,21 @@ export default function ListingForm({
               </select>
             </div>
 
+              {isEditMode && (
+                <p className="text-sm text-gray-500 mt-1">
+                  You cannot edit category or subcategory after creating a listing.
+                </p>
+              )}
+              
+
             <div>
               <label className="block text-xl text-gray-700 mb-2">Subcategory</label>
               <select
                 name="subcategory"
                 value={formData.subcategory}
                 onChange={handleChange}
-                disabled={isSubmitting}
-                className={getFieldClass("subcategory")}
+                disabled={isSubmitting || isEditMode}
+                className={`${getFieldClass("subcategory")} ${isEditMode ? "cursor-not-allowed bg-gray-100" : ""}`}
               >
                 {subcategoryOptions.map((sub) => (
                   <option key={sub.key} value={sub.key}>
@@ -363,6 +503,7 @@ export default function ListingForm({
                 ))}
               </select>
             </div>
+
 
             <div>
               <label className="block text-xl text-gray-700 mb-2">Listing Type</label>
@@ -458,7 +599,7 @@ export default function ListingForm({
               <input
                 type="text"
                 name="location"
-                placeholder="Enter location"
+                placeholder="Enter area, street, estate or neighborhood"
                 value={formData.location}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -468,27 +609,41 @@ export default function ListingForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-2xl text-gray-700 mb-2">City</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                  className={getFieldClass("city")}
-                />
-              </div>
-
-              <div>
                 <label className="block text-2xl text-gray-700 mb-2">State</label>
-                <input
-                  type="text"
+                <select
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
                   disabled={isSubmitting}
                   className={getFieldClass("state")}
-                />
+                >
+                  <option value="">Select State</option>
+                  {NIGERIA_STATES.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-2xl text-gray-700 mb-2">LGA</label>
+                <select
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  disabled={isSubmitting || !formData.state}
+                  className={getFieldClass("city")}
+                >
+                  <option value="">
+                    {formData.state ? "Select City / LGA" : "Select State First"}
+                  </option>
+                  {cityOptions.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -526,22 +681,48 @@ export default function ListingForm({
                 type="file"
                 name="images"
                 multiple
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                 onChange={handleImageChange}
                 disabled={isSubmitting}
                 className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl bg-white focus:ring-2 focus:ring-green-500 focus:outline-none disabled:opacity-60"
               />
 
+              <p className="mt-2 text-sm text-gray-600">
+                Max image size 5MB allowed. File types: JPG, PNG, JPEG and WEBP.
+              </p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Drag any image to the front. The first image becomes the title image.
+              </p>
+
               {existingImages.length > 0 && (
                 <div>
-                  <p className="text-xl text-gray-700 mb-2">Existing Images</p>
+                  <p className="text-xl text-gray-700 mb-2 mt-4">Existing Images</p>
                   <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                     {existingImages.map((img, i) => (
-                      <div key={img.public_id || i} className="relative group">
+                      <div
+                        key={img.public_id || i}
+                        draggable={!isSubmitting}
+                        onDragStart={() => handleExistingDragStart(i)}
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleExistingDrop(i)}
+                        onDragEnd={handleDragEnd}
+                        className={`relative group cursor-move rounded-md border bg-white transition ${
+                          draggedExistingImageIndex === i ? "opacity-50 scale-[0.98]" : ""
+                        }`}
+                      >
+                        {i === 0 && (
+                          <span className="absolute top-2 left-2 z-10 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                            Title Image
+                          </span>
+                        )}
+
                         <img
                           src={img.url}
                           alt={`existing-${i}`}
-                          className="w-full h-32 object-cover rounded-md border"
+                          className="w-full h-32 object-cover rounded-md"
                         />
+
                         <button
                           type="button"
                           onClick={() => removeExistingImage(img.public_id)}
@@ -557,24 +738,45 @@ export default function ListingForm({
               )}
 
               {images.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {images.map((img, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={URL.createObjectURL(img)}
-                        alt={`preview-${index}`}
-                        className="w-full h-32 object-cover rounded-md border"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeNewImage(index)}
-                        disabled={isSubmitting}
-                        className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-80 hover:opacity-100 disabled:opacity-50"
+                <div className="mt-4">
+                  <p className="text-xl text-gray-700 mb-2">Selected Images</p>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {images.map((img, index) => (
+                      <div
+                        key={`${img.name}-${index}`}
+                        draggable={!isSubmitting}
+                        onDragStart={() => handleNewDragStart(index)}
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleNewDrop(index)}
+                        onDragEnd={handleDragEnd}
+                        className={`relative group cursor-move rounded-md border bg-white transition ${
+                          draggedNewImageIndex === index ? "opacity-50 scale-[0.98]" : ""
+                        }`}
                       >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))}
+                        {existingImages.length === 0 && index === 0 && (
+                          <span className="absolute top-2 left-2 z-10 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                            Title Image
+                          </span>
+                        )}
+
+                        <img
+                          src={URL.createObjectURL(img)}
+                          alt={`preview-${index}`}
+                          className="w-full h-32 object-cover rounded-md"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => removeNewImage(index)}
+                          disabled={isSubmitting}
+                          className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-80 hover:opacity-100 disabled:opacity-50"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -589,6 +791,28 @@ export default function ListingForm({
                 </ul>
               </div>
             )}
+
+            <div className="rounded-md border border-gray-300 bg-white p-4 text-sm">
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={agreedToListingPolicy}
+                  onChange={(e) => setAgreedToListingPolicy(e.target.checked)}
+                  disabled={isSubmitting}
+                  className="mt-1"
+                />
+                <span>
+                  I confirm this listing is legal, accurate, and follows Velora’s{" "}
+                  <a href="/community-guidelines" className="text-blue-600 underline">
+                    Community Guidelines
+                  </a>{" "}
+                  and{" "}
+                  <a href="/prohibited-items" className="text-blue-600 underline">
+                    Prohibited Items Policy
+                  </a>.
+                </span>
+              </label>
+            </div>
 
             <div className="flex justify-between">
               <button

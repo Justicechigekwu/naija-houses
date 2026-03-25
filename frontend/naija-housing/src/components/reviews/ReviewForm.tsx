@@ -2,8 +2,12 @@
 import { useState } from "react";
 import api from "@/libs/api";
 import StarRating from "./StarRating";
+import { AxiosError } from "axios";
 
-export default function ReviewForm({ listingId, existingReview }: {
+export default function ReviewForm({
+  listingId,
+  existingReview,
+}: {
   listingId: string;
   existingReview?: { rating: number; comment: string; _id: string };
 }) {
@@ -13,30 +17,39 @@ export default function ReviewForm({ listingId, existingReview }: {
   const [status, setStatus] = useState("");
 
   const handleSubmit = async () => {
-    if (!rating) return setStatus ('Please select rating')
+    if (!rating) return setStatus("Please select rating");
 
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
 
-        if (existingReview) {
-          await api.put(`/reviews/${existingReview._id}`, {
-            rating,
-            comment
-          });
-          setStatus('Review updated');
-        } else {
-          await api.post(`/reviews`, {
-            listingId,
-            rating,
-            comment
-          });
-          setStatus('Review added');
-        }
-      } catch (err:any) {
-        setStatus(err?.response?.data?.message || "Failed to submit review");
-      } finally {
-        setLoading(false);
+      if (existingReview) {
+        await api.put(`/reviews/${existingReview._id}`, {
+          rating,
+          comment,
+        });
+        setStatus("Review updated");
+      } else {
+        await api.post(`/reviews`, {
+          listingId,
+          rating,
+          comment,
+        });
+        setStatus("Review added");
       }
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setStatus(
+          (err.response?.data as { message?: string })?.message ||
+            "Failed to submit review"
+        );
+      } else if (err instanceof Error) {
+        setStatus(err.message || "Failed to submit review");
+      } else {
+        setStatus("Failed to submit review");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

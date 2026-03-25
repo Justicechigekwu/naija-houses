@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 body {
-  background-color: #F5F5F5;
+  /* background-color: #F5F5F5; */
   scroll-behavior: smooth;
 }
 
-@keyframes toast-in {
+/* @keyframes toast-in {
   from {
     opacity: 0;
     transform: translateX(30px) translateY(-10px);
@@ -35,24 +35,72 @@ body {
 
 .animate-modal-in {
   animation: modal-in 0.2s ease-out;
+} */
+
+@keyframes toast-float {
+  from {
+    opacity: 0;
+    transform: translateY(80px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-toast-float {
+  animation: toast-float 0.35s ease-out;
+}
+
+.animate-modal-in {
+  animation: modal-in 0.2s ease-out;
+}
 
 :root {
   --bg: #ffffff;
   --text: #111111;
-  --card: #f8f8f8;
-  --border: #dddddd;
+  --card: #F5F5F5;   /* light gray */
+  --border: #e5e7eb;
 }
 
 html.dark {
-  --bg: #0f0f0f;
+  --bg: #0f0f0f;     /* page background (almost black) */
   --text: #ffffff;
-  --card: #181818;
-  --border: #2a2a2a;
+  --card: #374151;   /* gray-700 */
+  --border: #4b5563; /* gray-600 */
 }
 
 body {
   background-color: var(--bg);
   color: var(--text);
+}
+
+
+.bg-theme {
+  background-color: var(--bg);
+}
+
+.text-theme {
+  color: var(--text);
+}
+
+.card-theme {
+  background-color: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.border-theme {
+  border-color: var(--border);
 }

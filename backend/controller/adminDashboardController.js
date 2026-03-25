@@ -3,6 +3,7 @@ import Listing from "../models/listingModels.js";
 import markExpiredListings from "../utils/markExpiredListings.js";
 
 export const usersWithListing = async (req, res) => {
+  console.log("Admin users controller hit");
   try {
      await markExpiredListings();
      

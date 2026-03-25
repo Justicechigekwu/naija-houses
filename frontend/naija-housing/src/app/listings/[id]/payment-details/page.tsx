@@ -110,7 +110,7 @@ export default function PaymentDetailsPage() {
   const copy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      showToast("Copied!", "error");
+      showToast("Copied!", "success");
     } catch {
       showToast("Copy failed. Please copy manually.", "error");
     }
@@ -145,7 +145,7 @@ export default function PaymentDetailsPage() {
         note,
       });
 
-      showToast("Submitted! Waiting for confirmation, This usually take 5 mins to 2 hours to be reviewed", "error");
+      showToast("Submitted! Waiting for confirmation, This usually take 5 mins to 2 hours to be reviewed", "success");
       router.push("/pending");
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Failed to submit payment");

@@ -7,7 +7,6 @@ import AnalyticsEvent from "../models/analyticsEventModel.js";
 export const getAdminOverview = async (req, res) => {
   try {
     const now = new Date();
-
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(now.getDate() - 7);
 

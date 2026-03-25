@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useRef,
+} from "react";
+import api from "@/libs/api";
 
 interface User {
-  id: string;
+  id?: string;
+  _id?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -18,43 +27,81 @@ interface User {
 
 interface AuthContextProps {
   user: User | null;
-  token: string | null;
-  login: (userData: User, token: string) => void;
-  logout: () => void;
+  isHydrated: boolean;
+  login: (userData: User) => void;
+  updateUser: (userData: Partial<User>) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const authRequestVersion = useRef(0);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
+    let active = true;
+    const requestVersion = ++authRequestVersion.current;
 
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
-    }
+    const loadUser = async () => {
+      try {
+        const res = await api.get("/auth/me");
+
+        if (!active || requestVersion !== authRequestVersion.current) return;
+
+        setUser(res.data.user);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      } catch {
+        if (!active || requestVersion !== authRequestVersion.current) return;
+
+        localStorage.removeItem("user");
+        setUser(null);
+      } finally {
+        if (!active || requestVersion !== authRequestVersion.current) return;
+        setIsHydrated(true);
+      }
+    };
+
+    loadUser();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const login = (userData: User, token: string) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', token);
+  const login = (userData: User) => {
+    authRequestVersion.current += 1;
+    localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
-    setToken(token);
+    setIsHydrated(true);
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    setUser(null);
-    setToken(null);
+  const updateUser = (userData: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...userData };
+      localStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      authRequestVersion.current += 1;
+      localStorage.removeItem("user");
+      setUser(null);
+      setIsHydrated(true);
+      window.location.href = "/login";
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, isHydrated, login, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -62,6 +109,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };

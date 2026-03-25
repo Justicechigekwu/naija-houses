@@ -4,8 +4,12 @@ import { useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import api from "@/libs/api";
 
+type UserAvatar = {
+  avatar?: string;
+};
+
 type Props = {
-  user: any;
+  user: UserAvatar | null;
   onAvatarUpdated: (avatar: string) => void;
 };
 

@@ -1,7 +1,15 @@
 "use client";
 
+type UserProfile = {
+  firstName?: string;
+  lastName?: string;
+  location?: string;
+  phone?: string;
+  bio?: string;
+};
+
 type Props = {
-  user: any;
+  user: UserProfile | null;
 };
 
 export default function PublicProfileDetails({ user }: Props) {

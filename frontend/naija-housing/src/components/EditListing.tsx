@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/libs/api";
 import ListingForm from "@/components/ListingForm";
 import { useUI } from "@/hooks/useUi";
+import PageReadyLoader from "@/components/pages/PageReadyLoader";
 
 export default function EditListing() {
   const { id } = useParams();
@@ -36,7 +37,7 @@ export default function EditListing() {
         },
       });
 
-      showToast("Listing updated successfully", "error");
+      showToast("Listing updated successfully", "success");
       router.push(`/listings/${id}`);
     } catch (error: any) {
       console.error("Failed to update listing", error);
@@ -44,16 +45,19 @@ export default function EditListing() {
     }
   };
 
-  if (loading) return <p className="p-6">Loading...</p>;
-  if (!listing) return <p className="p-6">Listing not found</p>;
-
   return (
-    <div className="p-4 md:p-6">
-      <ListingForm
-        initialData={listing}
-        onSubmit={handleUpdate}
-        isEditMode={true}
-      />
-    </div>
+    <PageReadyLoader ready={!loading}>
+      {!listing ? (
+        <p className="p-6">Listing not found</p>
+      ) : (
+        <div className="p-4 md:p-6">
+          <ListingForm
+            initialData={listing}
+            onSubmit={handleUpdate}
+            isEditMode={true}
+          />
+        </div>
+      )}
+    </PageReadyLoader>
   );
 }

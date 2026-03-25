@@ -3,11 +3,11 @@ import Navbar from '@/components/Navbar'
 import {ReactNode} from 'react';
 import { AuthProvider } from '@/context/AuthContext'
 import { SearchProvider } from '@/context/SearchContext';
-import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { UIProvider } from '@/context/UiContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import AppQueryProvider from '@/components/providers/QueryProvider';
 
 export const metadata = {
   title: 'Velora Marketplace',
@@ -23,18 +23,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <ThemeProvider>
           <GoogleOAuthProvider clientId={googleClientId}>
-            <AuthProvider>
-              <NotificationProvider>
-                <AdminAuthProvider>
-                  <SearchProvider>
-                  <Navbar/>
-                  <UIProvider>
-                    {children}
-                  </UIProvider>
-                </SearchProvider>
-                </AdminAuthProvider>
-              </NotificationProvider>
-            </AuthProvider>
+            <AppQueryProvider>
+              <AuthProvider>
+                <NotificationProvider>
+                    <SearchProvider>
+                    <Navbar/>
+                    <UIProvider>
+                      {children}
+                    </UIProvider>
+                  </SearchProvider>
+                </NotificationProvider>
+              </AuthProvider>
+            </AppQueryProvider>  
            </GoogleOAuthProvider>
         </ThemeProvider>    
       </body>

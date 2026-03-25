@@ -8,20 +8,8 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
-
-api.interceptors.request.use(
-  (config) => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 api.interceptors.response.use(
   (response) => response,
@@ -35,7 +23,6 @@ api.interceptors.response.use(
           "Your account has been banned for violating marketplace/community standards."
       );
 
-      localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
@@ -44,7 +31,28 @@ api.interceptors.response.use(
   }
 );
 
-export async function apiRequest(endpoint: string, method: string, data?: any) {
+// export async function apiRequest(endpoint: string, method: string, data?: unknown) {
+//   try {
+//     const res = await api({
+//       method,
+//       url: endpoint,
+//       data,
+//     });
+//     return res.data;
+//   } catch (err: unknown) {
+//     if (err instanceof AxiosError) {
+//       throw new Error(err.response?.data?.message || "Something went wrong");
+//     }
+//     throw err;
+//   }
+// }
+
+
+export async function apiRequest(
+  endpoint: string,
+  method: string,
+  data?: unknown
+) {
   try {
     const res = await api({
       method,
@@ -54,10 +62,12 @@ export async function apiRequest(endpoint: string, method: string, data?: any) {
     return res.data;
   } catch (err: unknown) {
     if (err instanceof AxiosError) {
-      throw new Error(err.response?.data?.message || "Something went wrong");
+      throw new Error(
+        (err.response?.data as { message?: string })?.message ||
+          "Something went wrong"
+      );
     }
     throw err;
   }
 }
-
 export default api;

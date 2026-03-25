@@ -15,6 +15,7 @@ type ListingItem = {
   distanceMeters?: number;
   category?: string;
   subcategory?: string;
+  postedBy?: "Owner" | "Agent" | "Dealer" | "Seller";
 };
 
 export default function useLocationSearch(
@@ -60,12 +61,38 @@ export default function useLocationSearch(
         if (userLocation.city) params.city = userLocation.city;
         if (userLocation.state) params.state = userLocation.state;
 
-        const res = await api.get("/listings/search/location", { params });
+        try {
+          const locationRes = await api.get("/listings/search/location", {
+            params,
+          });
 
-        setResults(res.data?.listings || []);
-        setSimilarListings(res.data?.similarListings || []);
+          const locationListings = locationRes.data?.listings || [];
+          const locationSimilar = locationRes.data?.similarListings || [];
+
+          if (locationListings.length > 0 || locationSimilar.length > 0) {
+            setResults(locationListings);
+            setSimilarListings(locationSimilar);
+            return;
+          }
+        } catch (locationError) {
+          console.error("Location search failed, falling back:", locationError);
+        }
+
+        const fallbackParams = new URLSearchParams();
+
+        if (query.trim()) fallbackParams.append("search", query.trim());
+        if (category) fallbackParams.append("category", category);
+        if (subcategory) fallbackParams.append("subcategory", subcategory);
+
+        const fallbackRes = await api.get(`/listings?${fallbackParams.toString()}`);
+
+        setResults(fallbackRes.data || []);
+        setSimilarListings([]);
       } catch (error: any) {
+        console.error("Search failed:", error);
         setError(error?.response?.data?.message || "Search failed");
+        setResults([]);
+        setSimilarListings([]);
       } finally {
         setLoading(false);
       }

@@ -6,6 +6,7 @@ import DraftList from "@/components/DraftsList";
 import type { Listing } from "@/types/listing";
 import { useRouter } from "next/navigation";
 import { useUI } from "@/hooks/useUi";
+import PageReadyLoader from "@/components/pages/PageReadyLoader";
 
 export default function DraftPage() {
   const [drafts, setDrafts] = useState<Listing[]>([]);
@@ -24,22 +25,22 @@ export default function DraftPage() {
     }
   };
 
-
   useEffect(() => {
     fetchDrafts();
   }, []);
 
-  if (loading) {
-    return <div className="max-w-3xl mx-auto p-4">Loading drafts...</div>;
-  }
-
   return (
-    <div className="p-4">
-      <button
-        className="border px-3 py-2 rounded bg-[#8A715D]"
-        onClick={() => router.push("/profile")}
-      >back to home</button>
-      <DraftList drafts={drafts} onDeleted={fetchDrafts} />
-    </div>
+    <PageReadyLoader ready={!loading}>
+      <div className="p-4">
+        <button
+          className="border px-3 py-2 rounded bg-[#8A715D]"
+          onClick={() => router.push("/profile")}
+        >
+          back to home
+        </button>
+
+        <DraftList drafts={drafts} onDeleted={fetchDrafts} />
+      </div>
+    </PageReadyLoader>
   );
 }

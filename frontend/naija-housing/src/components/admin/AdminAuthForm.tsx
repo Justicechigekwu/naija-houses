@@ -32,23 +32,49 @@ export default function AdminAuthForm({
     formState: { errors, isSubmitting },
   } = useForm<AdminFormData>();
 
+  // const onSubmit = async (data: AdminFormData) => {
+  //   try {
+  //     setError("");
+
+  //     const endpoint = isLogin ? "/admin/auth/login" : "/admin/auth/register";
+
+  //     // For register: ensure setupKey exists
+  //     if (!isLogin && !data.setupKey) {
+  //       setError("Setup key is required to create admin.");
+  //       return;
+  //     }
+
+  //     const res = await adminApi.post(endpoint, data);
+
+  //     // store via context (context already saves to localStorage)
+  //     adminLogin(res.data.admin, res.data.token);
+
+  //     const redirectUrl = params.get("redirect");
+  //     router.push(redirectUrl || "/admin/dashboard");
+  //   } catch (err: unknown) {
+  //     if (err instanceof AxiosError) {
+  //       setError(err.response?.data?.message || "Something went wrong");
+  //     } else {
+  //       setError("Something went wrong");
+  //     }
+  //   }
+  // };
+
   const onSubmit = async (data: AdminFormData) => {
     try {
       setError("");
-
+  
       const endpoint = isLogin ? "/admin/auth/login" : "/admin/auth/register";
-
-      // For register: ensure setupKey exists
+  
       if (!isLogin && !data.setupKey) {
         setError("Setup key is required to create admin.");
         return;
       }
-
+  
       const res = await adminApi.post(endpoint, data);
-
-      // store via context (context already saves to localStorage)
-      adminLogin(res.data.admin, res.data.token);
-
+  
+      adminLogin(res.data.admin);
+  
       const redirectUrl = params.get("redirect");
       router.push(redirectUrl || "/admin/dashboard");
     } catch (err: unknown) {

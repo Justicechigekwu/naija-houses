@@ -1,9 +1,24 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import api from "@/libs/api";
 import StarRating from "./StarRating";
+
+type Review = {
+  _id: string;
+  rating: number;
+  comment: string;
+  reviewer?: {
+    firstName?: string;
+    lastName?: string;
+    avatar?: string;
+  };
+};
+
+type ReviewsAverageResponse = {
+  averageRating?: number;
+  totalReviews?: number;
+};
 
 export default function ReviewsList({
   ownerId,
@@ -12,7 +27,7 @@ export default function ReviewsList({
   ownerId: string;
   previewCount?: number;
 }) {
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [avgRating, setAvgRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
   const [open, setOpen] = useState(false);
@@ -23,11 +38,11 @@ export default function ReviewsList({
     const fetch = async () => {
       try {
         const [reviewsRes, avgRes] = await Promise.all([
-          api.get(`/reviews/owner/${ownerId}`),
-          api.get(`/reviews/owner/${ownerId}/average`),
+          api.get<Review[]>(`/reviews/owner/${ownerId}`),
+          api.get<ReviewsAverageResponse>(`/reviews/owner/${ownerId}/average`),
         ]);
 
-        setReviews(reviewsRes.data);
+        setReviews(reviewsRes.data || []);
         setAvgRating(avgRes.data.averageRating || 0);
         setTotalReviews(avgRes.data.totalReviews || reviewsRes.data.length || 0);
       } catch (err) {
@@ -47,7 +62,6 @@ export default function ReviewsList({
 
   return (
     <div className="space-y-4">
-
       <div className="flex items-center gap-2">
         <StarRating value={avgRating} />
         <span className="text-gray-600 text-sm">
@@ -63,19 +77,20 @@ export default function ReviewsList({
             <div key={r._id} className="border-b pb-3">
               <StarRating value={r.rating} size={20} />
               <p className="text-gray-700">{r.comment}</p>
-              
+
               <div className="flex items-center gap-2 mt-1">
-                <img src={
-                  r.reviewer?.avatar
-                  ? r.reviewer.avatar.startsWith('http')
-                  ? r.reviewer.avatar
-                  : `http://localhost:5000${r.reviewer.avatar}`
-                  : '/default-avatar.png'
-                }
-                 alt={`${r.reviewer?.firstName} ${r.reviewer?.lastName}`} 
-                 className="h-6 w-6 rounded-full"
+                <img
+                  src={
+                    r.reviewer?.avatar
+                      ? r.reviewer.avatar.startsWith("http")
+                        ? r.reviewer.avatar
+                        : `http://localhost:5000${r.reviewer.avatar}`
+                      : "/default-avatar.png"
+                  }
+                  alt={`${r.reviewer?.firstName || ""} ${r.reviewer?.lastName || ""}`.trim() || "Reviewer avatar"}
+                  className="h-6 w-6 rounded-full object-cover"
                 />
-                <span className="text-xs text-gray-800 object-cover">
+                <span className="text-xs text-gray-800">
                   {r.reviewer?.firstName} {r.reviewer?.lastName}
                 </span>
               </div>

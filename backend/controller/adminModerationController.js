@@ -1,16 +1,15 @@
 import Listing from "../models/listingModels.js";
 import userModel from "../models/userModel.js";
 import Report from "../models/reportModel.js";
-import Payment from "../models/paymentModel.js";
-import cloudinary from "../config/cloudinaryConfig.js";
 import { createNotification } from "../service/notificationService.js";
-// import { emitNotification } from "../service/realtimeService.js";
+import { POLICY_LINKS, POLICY_LABELS } from "../utils/policyLinks.js";
 
 export const adminDeleteListing = async (req, res) => {
   try {
     const { listingId } = req.params;
     const reason =
       req.body?.reason || "This listing was removed for violating marketplace rules.";
+    const violationPolicy = req.body?.violationPolicy || "OTHER";
 
     const listing = await Listing.findById(listingId);
     if (!listing) {
@@ -19,8 +18,8 @@ export const adminDeleteListing = async (req, res) => {
 
     listing.publishStatus = "REMOVED_BY_ADMIN";
     listing.adminRemovedAt = new Date();
-    listing.adminRemovalReason =
-      reason || "This listing was removed for violating marketplace rules.";
+    listing.adminRemovalReason = reason;
+    listing.violationPolicy = violationPolicy;
     listing.appealStatus = "NONE";
     listing.appealMessage = "";
     listing.appealSubmittedAt = null;
@@ -56,6 +55,9 @@ export const adminDeleteListing = async (req, res) => {
         actionLabel: "Appeal",
         listingId: listing._id,
         reason: listing.adminRemovalReason,
+        violationPolicy: listing.violationPolicy,
+        policyRoute: POLICY_LINKS[listing.violationPolicy] || "/appeal-policy",
+        policyLabel: POLICY_LABELS[listing.violationPolicy] || "Appeal Policy",
       },
     });
 
@@ -93,6 +95,7 @@ export const adminDeleteUser = async (req, res) => {
           publishStatus: "REMOVED_BY_ADMIN",
           adminRemovedAt: new Date(),
           adminRemovalReason: "Owner account was banned by admin.",
+          violationPolicy: "OTHER",
           appealStatus: "NONE",
           appealMessage: "",
           appealSubmittedAt: null,

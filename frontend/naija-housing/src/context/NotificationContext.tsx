@@ -1,3 +1,4 @@
+// changes made here token to user
 "use client";
 
 import {
@@ -33,7 +34,7 @@ export interface AppNotification {
   metadata?: {
     route?: string;
     action?: string;
-    [key: string]: any;
+    [key: string]: string | number | boolean | null | undefined | string[];
   };
 }
 
@@ -56,13 +57,14 @@ export const NotificationProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const { token } = useAuth();
+  const { user } = useAuth();
+  // const { token } = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const refreshNotifications = useCallback(async () => {
-    if (!token) {
+    if (!user) {
       setNotifications([]);
       setUnreadCount(0);
       return;
@@ -83,7 +85,7 @@ export const NotificationProvider = ({
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [user]);
 
   const markOneAsRead = async (id: string) => {
     try {

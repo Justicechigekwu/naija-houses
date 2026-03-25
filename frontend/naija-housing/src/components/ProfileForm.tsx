@@ -5,7 +5,7 @@ import { useState } from "react";
 import api from "@/libs/api";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import ChangePasswordForm from "@/components/ChangePasswordForm";
+import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 
 type ProfileFormData = {
   firstName?: string;
@@ -43,7 +43,8 @@ export default function ProfileForm() {
 
       const res = await api.put("/profile/update", rest);
 
-      login(res.data.user, localStorage.getItem("token") || "");
+      // login(res.data.user, localStorage.getItem("token") || "");
+      login(res.data.user);
       setMessage("Profile updated!");
       router.push("/profile");
     } catch {

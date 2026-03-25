@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import api from "@/libs/api";
 import { connectSocket } from "@/libs/socket";
 
+type Chat = {
+  unreadCount?: number;
+};
+
 const SOCKET_EVENTS = {
   CHAT_UNREAD_COUNT: "chat:unread-count",
 };
@@ -20,7 +24,7 @@ export default function useUnreadMessages() {
 
         const totalUnread = Array.isArray(res.data)
           ? res.data.reduce(
-              (sum: number, chat: any) => sum + (chat.unreadCount || 0),
+              (sum: number, chat: Chat) => sum + (chat.unreadCount || 0),
               0
             )
           : 0;

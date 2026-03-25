@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import adminApi from "@/libs/adminApi";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { AxiosError } from "axios";
+import { useUI } from "@/hooks/useUi";
 
 type PaymentRow = {
   _id: string;
@@ -25,7 +26,8 @@ type PaymentRow = {
 
 export default function AdminPaymentsPage() {
   const router = useRouter();
-  const { adminToken } = useAdminAuth();
+  const { admin, isHydrated } = useAdminAuth();
+  const { showToast, showConfirm } = useUI();
 
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,48 +40,94 @@ export default function AdminPaymentsPage() {
       const res = await adminApi.get("/admin/payments/pending");
       setRows(res.data);
     } catch (e: unknown) {
-      if (e instanceof AxiosError) setErr(e.response?.data?.message || "Failed to load payments");
-      else setErr("Failed to load payments");
+      if (e instanceof AxiosError) {
+        setErr(e.response?.data?.message || "Failed to load payments");
+        showToast(e.response?.data?.message || "Failed to load payments", "error");
+      } else {
+        setErr("Failed to load payments");
+        showToast("Failed to load payments", "error");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!adminToken) {
-      router.push("/admin/login");
+    if (!isHydrated) return;
+
+    if (!admin) {
+      router.replace("/admin/login");
       return;
     }
-    load();
-  }, [adminToken]);
 
-  const confirmPayment = async (paymentId: string) => {
-    const ok = window.confirm("Confirm this payment and publish listing?");
-    if (!ok) return;
-  
-    await adminApi.post(`/admin/payments/${paymentId}/confirm`);
-    await load();
+    load();
+  }, [admin, isHydrated, router]);
+
+  const confirmPayment = (paymentId: string) => {
+    showConfirm(
+      {
+        title: "Confirm Payment",
+        message: "Confirm this payment and publish listing?",
+        confirmText: "Confirm",
+        cancelText: "Cancel",
+        confirmVariant: "primary",
+      },
+      async () => {
+        try {
+          await adminApi.post(`/admin/payments/${paymentId}/confirm`);
+          showToast("Payment confirmed & listing published", "success");
+          await load();
+        } catch (e) {
+          showToast("Failed to confirm payment", "error");
+        }
+      }
+    );
   };
 
-  const reject = async (paymentId: string) => {
-    await adminApi.post(`/admin/payments/${paymentId}/reject`);
-    await load();
+  const reject = (paymentId: string) => {
+    showConfirm(
+      {
+        title: "Reject Payment",
+        message: "Are you sure you want to reject this payment?",
+        confirmText: "Reject",
+        cancelText: "Cancel",
+        confirmVariant: "danger",
+      },
+      async () => {
+        try {
+          await adminApi.post(`/admin/payments/${paymentId}/reject`);
+          showToast("Payment rejected", "success");
+          await load();
+        } catch (e) {
+          showToast("Failed to reject payment", "error");
+        }
+      }
+    );
   };
 
   const copy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert("Copied!");
+      showToast("Copied to clipboard", "success");
     } catch {
-      alert("Copy failed");
+      showToast("Copy failed", "error");
     }
   };
+
+  if (!isHydrated) {
+    return <div className="max-w-6xl mx-auto mt-8">Checking admin session...</div>;
+  }
+
+  if (!admin) return null;
 
   return (
     <div className="max-w-6xl mx-auto mt-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Pending Payments</h1>
-        <button className="border px-3 py-2 rounded" onClick={() => router.push("/admin/dashboard")}>
+        <button
+          className="border px-3 py-2 rounded"
+          onClick={() => router.push("/admin/dashboard")}
+        >
           Back to Dashboard
         </button>
       </div>
@@ -121,7 +169,7 @@ export default function AdminPaymentsPage() {
                     <div className="text-gray-600">{p.assignedBank?.accountName || "-"}</div>
                     <div className="text-gray-600">{p.assignedBank?.accountNumber || "-"}</div>
                   </td>
-                  
+
                   <td className="p-3">
                     {p.accountExpiresAt ? new Date(p.accountExpiresAt).toLocaleString() : "-"}
                   </td>
@@ -132,7 +180,10 @@ export default function AdminPaymentsPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">{p.paymentCode || "-"}</span>
                       {p.paymentCode && (
-                        <button className="border px-2 py-1 rounded text-xs" onClick={() => copy(p.paymentCode!)}>
+                        <button
+                          className="border px-2 py-1 rounded text-xs"
+                          onClick={() => copy(p.paymentCode!)}
+                        >
                           Copy
                         </button>
                       )}
@@ -141,10 +192,16 @@ export default function AdminPaymentsPage() {
 
                   <td className="p-3">
                     <div className="flex gap-2">
-                      <button className="bg-green-600 text-white px-3 py-2 rounded" onClick={() => confirmPayment(p._id)}>
+                      <button
+                        className="bg-green-600 text-white px-3 py-2 rounded"
+                        onClick={() => confirmPayment(p._id)}
+                      >
                         Confirm
                       </button>
-                      <button className="bg-red-600 text-white px-3 py-2 rounded" onClick={() => reject(p._id)}>
+                      <button
+                        className="bg-red-600 text-white px-3 py-2 rounded"
+                        onClick={() => reject(p._id)}
+                      >
                         Reject
                       </button>
                     </div>
@@ -154,7 +211,7 @@ export default function AdminPaymentsPage() {
 
               {rows.length === 0 && (
                 <tr>
-                  <td className="p-3" colSpan={5}>
+                  <td className="p-3" colSpan={7}>
                     No pending payments.
                   </td>
                 </tr>

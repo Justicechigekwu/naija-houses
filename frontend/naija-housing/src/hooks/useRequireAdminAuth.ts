@@ -1,24 +1,29 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 
 export default function useRequireAdminAuth() {
+  const { admin, isHydrated } = useAdminAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const { adminToken, isHydrated } = useAdminAuth();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
     if (!isHydrated) return;
 
-    if (!adminToken) {
+    if (!admin) {
       router.replace(`/admin/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
     }
-  }, [adminToken, isHydrated, pathname, router]);
+
+    setIsCheckingAuth(false);
+  }, [admin, isHydrated, router, pathname]);
 
   return {
-    isAuthenticated: !!adminToken,
-    isCheckingAuth: !isHydrated,
+    admin,
+    isAuthenticated: !!admin,
+    isCheckingAuth: !isHydrated || isCheckingAuth,
   };
 }

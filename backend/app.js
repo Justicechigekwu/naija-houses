@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { createServer } from "node:http";
+import cookieParser from "cookie-parser";
 
 import dbConnect from "./config/databaseConfig.js";
 import startExpireListingsJob from "./jobs/expireListingsJob.js";
@@ -40,6 +41,7 @@ startDeleteExpiredRemovedListingsJob();
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.use(
   cors({

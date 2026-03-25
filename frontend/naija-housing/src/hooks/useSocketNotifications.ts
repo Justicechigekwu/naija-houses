@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { connectSocket } from "@/libs/socket";
+import type { AppNotification } from "@/context/NotificationContext";
 
 type UseSocketNotificationsProps = {
-  onNewNotification?: (notification: any) => void;
+  onNewNotification?: (notification: AppNotification) => void;
   onUnreadCount?: (payload: { unreadCount: number }) => void;
 };
 
@@ -15,7 +16,7 @@ export default function useSocketNotifications({
   useEffect(() => {
     const socket = connectSocket();
 
-    const handleNewNotification = (notification: any) => {
+    const handleNewNotification = (notification: AppNotification) => {
       onNewNotification?.(notification);
     };
 

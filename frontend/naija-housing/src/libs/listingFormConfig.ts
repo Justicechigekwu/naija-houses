@@ -43,7 +43,7 @@ export const CATEGORY_TREE = {
           { key: "toilets", label: "Toilets", type: "number" },
           { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
           { key: "furnished", label: "Furnished", type: "select", options: ["Yes","No"] },
-          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction"]},
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"]},
           { key: "petAllowed", label: "Pet Allowed", type: "select", options: ["Yes","No"] },
           { key: "legalFees", label: "Legal Fees", type: "number" },
           { key: "size", label: "Size (sqm)", type: "number" },

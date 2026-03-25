@@ -22,12 +22,13 @@ type UserRow = {
 
 export default function AdminUsersTable() {
   const router = useRouter();
-  const { adminToken } = useAdminAuth();
+  const { admin, isHydrated } = useAdminAuth();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!adminToken) return;
+    if (!isHydrated) return;
+    if (!admin) return;
 
     const load = async () => {
       try {
@@ -44,7 +45,7 @@ export default function AdminUsersTable() {
     };
 
     load();
-  }, [adminToken]);
+  }, [admin, isHydrated]);
 
   return (
     <div className="bg-white border rounded overflow-hidden">
@@ -70,11 +71,21 @@ export default function AdminUsersTable() {
               </td>
               <td className="p-3">{u.email}</td>
               <td className="p-3 flex flex-wrap gap-2">
-                <span className="px-2 py-1 rounded bg-gray-200">Total: {u.badges.total}</span>
-                <span className="px-2 py-1 rounded bg-green-200">Active: {u.badges.active}</span>
-                <span className="px-2 py-1 rounded bg-yellow-200">Pending: {u.badges.pending}</span>
-                <span className="px-2 py-1 rounded bg-blue-200">Awaiting: {u.badges.awaitingPayment}</span>
-                <span className="px-2 py-1 rounded bg-red-200">Expired: {u.badges.expired}</span>
+                <span className="px-2 py-1 rounded bg-gray-200">
+                  Total: {u.badges.total}
+                </span>
+                <span className="px-2 py-1 rounded bg-green-200">
+                  Active: {u.badges.active}
+                </span>
+                <span className="px-2 py-1 rounded bg-yellow-200">
+                  Pending: {u.badges.pending}
+                </span>
+                <span className="px-2 py-1 rounded bg-blue-200">
+                  Awaiting: {u.badges.awaitingPayment}
+                </span>
+                <span className="px-2 py-1 rounded bg-red-200">
+                  Expired: {u.badges.expired}
+                </span>
               </td>
             </tr>
           ))}

@@ -3,16 +3,9 @@ import axios from "axios";
 export const geocodeAddress = async ({ location = "", city = "", state = "" }) => {
   const query = [location, city, state, "Nigeria"].filter(Boolean).join(", ");
 
-  if (!query.trim()) {
-    return null;
-  }
+  if (!query.trim()) return null;
 
-  // Production note:
-  // Replace this with Google Maps, Mapbox, or LocationIQ in production.
-  // Nominatim is okay for development/small usage but not best for high traffic.
-  const url = "https://nominatim.openstreetmap.org/search";
-
-  const response = await axios.get(url, {
+  const response = await axios.get("https://nominatim.openstreetmap.org/search", {
     params: {
       q: query,
       format: "jsonv2",
@@ -20,7 +13,7 @@ export const geocodeAddress = async ({ location = "", city = "", state = "" }) =
       countrycodes: "ng",
     },
     headers: {
-      "User-Agent": "Velora/1.0 (location-search)",
+      "User-Agent": "Velora/1.0",
     },
     timeout: 10000,
   });
@@ -40,3 +33,8 @@ export const geocodeAddress = async ({ location = "", city = "", state = "" }) =
     coordinates: [lng, lat],
   };
 };
+
+
+// Production note:
+  // Replace this with Google Maps, Mapbox, or LocationIQ in production.
+  // Nominatim is okay for development/small usage but not best for high traffic.

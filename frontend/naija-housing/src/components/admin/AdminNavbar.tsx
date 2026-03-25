@@ -12,22 +12,24 @@ type AdminProfile = {
 };
 
 export default function AdminNavbar() {
-  const { adminToken, adminLogout } = useAdminAuth();
+  const { admin, isHydrated, adminLogout } = useAdminAuth();
   const [profile, setProfile] = useState<AdminProfile | null>(null);
 
   useEffect(() => {
+    if (!isHydrated) return;
+    if (!admin) return;
+
     const loadProfile = async () => {
-      if (!adminToken) return;
       try {
         const res = await adminApi.get("/admin/auth/me");
-        setProfile(res.data);
+        setProfile(res.data.admin);
       } catch (error) {
         console.error("Failed to load admin profile", error);
       }
     };
 
     loadProfile();
-  }, [adminToken]);
+  }, [admin, isHydrated]);
 
   return (
     <nav className="border-b bg-white">
@@ -42,12 +44,13 @@ export default function AdminNavbar() {
           <Link href="/admin/dashboard" className="text-sm hover:underline">
             Dashboard
           </Link>
+
           <Link href="/admin/payments" className="text-sm hover:underline">
             Payments
           </Link>
 
           <div className="text-sm text-gray-600">
-            {profile?.email || "Admin"}
+            {profile?.email || admin?.email || "Admin"}
           </div>
 
           <button
