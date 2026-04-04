@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";
 import api from "@/libs/api";
 import type { Listing } from "@/types/listing";
+
+type ChoosePlanResponse = {
+  payment?: {
+    paymentCode?: string;
+  };
+};
 
 export default function DraftList({
   drafts,
@@ -20,16 +27,20 @@ export default function DraftList({
     try {
       setPublishingId(draft._id);
 
-      const res = await api.post(`/listings/${draft._id}/choose-plan`, {
-        plan: "PAID_30_DAYS",
-      });
+      const res = await api.post<ChoosePlanResponse>(
+        `/listings/${draft._id}/choose-plan`,
+        {
+          plan: "PAID_30_DAYS",
+        }
+      );
 
       const code = res.data?.payment?.paymentCode || "";
       router.push(
         `/listings/${draft._id}/payment-details?code=${encodeURIComponent(code)}`
       );
-    } catch (err: any) {
-      alert(err?.response?.data?.message || "Failed to continue to payment");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
+      alert(error?.response?.data?.message || "Failed to continue to payment");
     } finally {
       setPublishingId(null);
     }
@@ -43,8 +54,9 @@ export default function DraftList({
     try {
       await api.delete(`/listings/drafts/${id}`);
       onDeleted();
-    } catch (err: any) {
-      alert(err?.response?.data?.message || "Failed to delete draft");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
+      alert(error?.response?.data?.message || "Failed to delete draft");
     } finally {
       setDeletingId(null);
     }

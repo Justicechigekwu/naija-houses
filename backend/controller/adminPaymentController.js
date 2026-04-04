@@ -2,7 +2,7 @@ import Payment from "../models/paymentModel.js";
 import Listing from "../models/listingModels.js";
 import getCategoryPricing from "../utils/getCategoryPricing.js";
 import { createNotification } from "../service/notificationService.js";
-import { emitListingUpdated, emitPaymentUpdated,} from "../service/realtimeService.js";
+import { emitListingUpdated, emitPaymentUpdated } from "../service/realtimeService.js";
 
 const addDays = (date, days) => {
   const d = new Date(date);
@@ -17,6 +17,32 @@ export const pendingPayments = async (req, res) => {
     .populate("listing", "title publishStatus createdAt category subcategory");
 
   res.json(payments);
+};
+
+export const getPendingPaymentDetails = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    const payment = await Payment.findById(paymentId)
+      .populate("user", "firstName lastName email avatar")
+      .populate({
+        path: "listing",
+        populate: {
+          path: "owner",
+          select: "firstName lastName email avatar",
+        },
+      });
+
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    res.json(payment);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to load payment details",
+    });
+  }
 };
 
 export const confirmPaymentAndPublish = async (req, res) => {
@@ -50,7 +76,7 @@ export const confirmPaymentAndPublish = async (req, res) => {
       status: payment.status,
       listingId: listing._id,
     });
-    
+
     emitListingUpdated(listing.owner.toString(), {
       listingId: listing._id,
       publishStatus: listing.publishStatus,
@@ -96,7 +122,7 @@ export const rejectPayment = async (req, res) => {
       listing.publishStatus = "DRAFT";
       await listing.save();
 
-        await createNotification({
+      await createNotification({
         userId: listing.owner,
         type: "PAYMENT_REJECTED",
         title: "Payment rejected",

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   ShieldCheck,
   FileText,
@@ -15,7 +14,20 @@ import {
   Building2,
   MessageCircle,
   Search,
+  ArrowLeft,
 } from "lucide-react";
+
+import AppealPolicyContent from "@/components/help-content/AppealPolicyContent";
+import TermsContent from "@/components/help-content/TermsContent";
+import PrivacyContent from "@/components/help-content/PrivacyContent";
+import UserAgreementContent from "@/components/help-content/UserAgreementContent";
+import CommunityGuidelinesContent from "@/components/help-content/CommunityGuidelinesContent";
+import ProhibitedItemsContent from "@/components/help-content/ProhibitedItemsContent";
+import CookiePolicyContent from "@/components/help-content/CookiePolicyContent";
+import RefundPolicyContent from "@/components/help-content/RefundPolicyContent";
+import SafetyTipsContent from "@/components/help-content/SafetyTipsContent";
+import AboutContent from "@/components/help-content/AboutContent";
+// import ContactContent from "@/components/help-content/ContactContent";
 
 type HelpItem = {
   id: string;
@@ -128,9 +140,39 @@ const HELP_ITEMS: HelpItem[] = [
   },
 ];
 
+function renderSelectedContent(selectedId: string) {
+  switch (selectedId) {
+    case "about":
+      return <AboutContent />;
+    case "support":
+      // return <ContactContent />;
+    case "terms":
+      return <TermsContent embedded />;
+    case "privacy":
+      return <PrivacyContent embedded />;
+    case "user-agreement":
+      return <UserAgreementContent embedded />;
+    case "community-guidelines":
+      return <CommunityGuidelinesContent embedded />;
+    case "prohibited-items":
+      return <ProhibitedItemsContent embedded />;
+    case "appeal-policy":
+      return <AppealPolicyContent embedded />;
+    case "cookie-policy":
+      return <CookiePolicyContent embedded />;
+    case "refund-policy":
+      return <RefundPolicyContent embedded />;
+    case "safety-tips":
+      return <SafetyTipsContent embedded />;
+    default:
+      return <AboutContent />;
+  }
+}
+
 export default function HelpCenterPage() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState("about");
+  const [mobileView, setMobileView] = useState<"list" | "details">("list");
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -145,27 +187,34 @@ export default function HelpCenterPage() {
     );
   }, [search]);
 
-  const selectedItem =
-    HELP_ITEMS.find((item) => item.id === selectedId) || HELP_ITEMS[0];
-
   const groupedItems = useMemo(() => {
     const groups: Record<string, HelpItem[]> = {};
 
     filteredItems.forEach((item) => {
-      if (!groups[item.category]) {
-        groups[item.category] = [];
-      }
+      if (!groups[item.category]) groups[item.category] = [];
       groups[item.category].push(item);
     });
 
     return groups;
   }, [filteredItems]);
 
+  const selectedItem =
+    HELP_ITEMS.find((item) => item.id === selectedId) || HELP_ITEMS[0];
+
+  const handleSelectItem = (id: string) => {
+    setSelectedId(id);
+    setMobileView("details");
+  };
+
+  const handleBackToList = () => {
+    setMobileView("list");
+  };
+
   return (
     <main className="min-h-screen bg-[#F5F5F5] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+          <h1 className="text-2xl text-gray-900 sm:text-2xl">
             Help, Policies & About Velora
           </h1>
           <p className="mt-2 text-sm text-gray-600 sm:text-base">
@@ -174,9 +223,12 @@ export default function HelpCenterPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
-          {/* LEFT PANEL */}
-          <aside className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)] items-start">
+          <aside
+            className={`rounded-2xl border border-gray-200 bg-white p-4 shadow-sm ${
+              mobileView === "details" ? "hidden lg:block" : "block"
+            }`}
+          >
             <div className="relative mb-4">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
@@ -203,17 +255,27 @@ export default function HelpCenterPage() {
                         <button
                           key={item.id}
                           type="button"
-                          onClick={() => setSelectedId(item.id)}
+                          onClick={() => handleSelectItem(item.id)}
                           className={`flex w-full items-center gap-3 px-4 py-3 text-left transition ${
                             active
-                              ? "bg-[#EEF5EF] text-[#2C6B3F]"
+                              ? "bg-[#EEF5EF] text-[#8A715D]"
                               : "bg-white text-gray-800 hover:bg-gray-50"
-                          } ${index !== items.length - 1 ? "border-b border-gray-200" : ""}`}
+                          } ${
+                            index !== items.length - 1
+                              ? "border-b border-gray-200"
+                              : ""
+                          }`}
                         >
-                          <span className={active ? "text-[#2C6B3F]" : "text-gray-500"}>
+                          <span
+                            className={
+                              active ? "text-[#8A715D]" : "text-gray-500"
+                            }
+                          >
                             {item.icon}
                           </span>
-                          <span className="text-sm font-medium">{item.title}</span>
+                          <span className="text-sm font-medium">
+                            {item.title}
+                          </span>
                         </button>
                       );
                     })}
@@ -229,85 +291,23 @@ export default function HelpCenterPage() {
             </div>
           </aside>
 
-          {/* RIGHT PANEL */}
-          <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-5 py-4 sm:px-6">
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl bg-[#EEF5EF] p-2 text-[#2C6B3F]">
-                  {selectedItem.icon}
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 sm:text-2xl">
-                    {selectedItem.title}
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {selectedItem.category}
-                  </p>
-                </div>
-              </div>
+          <section
+            className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${
+              mobileView === "list" ? "hidden lg:block" : "block"
+            }`}
+          >
+            <div className="border-b border-gray-200 px-4 py-3 lg:hidden">
+              <button
+                type="button"
+                onClick={handleBackToList}
+                className="inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
             </div>
 
-            <div className="px-5 py-6 sm:px-6">
-              <p className="max-w-3xl text-sm leading-7 text-gray-700 sm:text-base">
-                {selectedItem.description}
-              </p>
-
-              <div className="mt-6 rounded-2xl bg-gray-50 p-4 sm:p-5">
-                {selectedItem.id === "about" && (
-                  <div className="space-y-3 text-sm leading-7 text-gray-700 sm:text-base">
-                    <p>
-                      Velora is a digital marketplace where users can buy, sell,
-                      rent, and connect across different categories.
-                    </p>
-                    <p>
-                      Our goal is to create a marketplace that is simple,
-                      trustworthy, and safe for both buyers and sellers.
-                    </p>
-                    <p>
-                      Velora may also review listings, reports, payments, and
-                      appeals to help maintain marketplace quality and trust.
-                    </p>
-                  </div>
-                )}
-
-                {selectedItem.id === "support" && (
-                  <div className="space-y-3 text-sm leading-7 text-gray-700 sm:text-base">
-                    <p>
-                      You can contact Velora support for listing issues, account
-                      help, reports, moderation questions, payment concerns, and
-                      general assistance.
-                    </p>
-                    <p>
-                      For best results, provide full details of the issue so the
-                      support team can help faster.
-                    </p>
-                  </div>
-                )}
-
-                {!["about", "support"].includes(selectedItem.id) && (
-                  <div className="space-y-3 text-sm leading-7 text-gray-700 sm:text-base">
-                    <p>
-                      Open this page to read the full document and understand how
-                      it applies to your use of Velora Marketplace.
-                    </p>
-                    <p>
-                      These pages are important for account use, listing rules,
-                      moderation, safety, privacy, and marketplace behavior.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6">
-                <Link
-                  href={selectedItem.href}
-                  className="inline-flex items-center rounded-xl bg-[#8A715D] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#7A6352]"
-                >
-                  Open {selectedItem.title}
-                </Link>
-              </div>
-            </div>
+            <div id={selectedItem.id}>{renderSelectedContent(selectedId)}</div>
           </section>
         </div>
       </div>

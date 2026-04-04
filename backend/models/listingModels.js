@@ -82,17 +82,6 @@ const listingSchema = new mongoose.Schema(
       ],
     },
 
-    location: {
-      type: String,
-      required: [
-        function () {
-          return this.publishStatus !== "DRAFT";
-        },
-        "Please enter a location",
-      ],
-      trim: true,
-    },
-
     state: {
       type: String,
       required: [
@@ -206,7 +195,8 @@ const listingSchema = new mongoose.Schema(
     subcategory: {
       type: String,
       enum: [
-        "CARS_TRUCKS",
+        "CARS",
+        "TRUCKS_TRAILERS",
         "MOTORCYCLES",
         "BICYCLES",
         "TRAILERS",

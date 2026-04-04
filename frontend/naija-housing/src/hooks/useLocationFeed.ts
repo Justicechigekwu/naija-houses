@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
 import api from "@/libs/api";
 import useUserLocation from "./useUserLocation";
 
@@ -10,12 +11,15 @@ export type ListingCardItem = {
   price?: number;
   city?: string;
   state?: string;
-  location?: string;
   images?: { url: string }[];
   distanceMeters?: number;
   category?: string;
   subcategory?: string;
   postedBy?: "Owner" | "Agent" | "Dealer" | "Seller";
+};
+
+type ErrorResponse = {
+  message?: string;
 };
 
 export default function useLocationFeed() {
@@ -60,8 +64,9 @@ export default function useLocationFeed() {
 
         const fallbackRes = await api.get("/listings");
         setListings(fallbackRes.data || []);
-      } catch (error: any) {
-        setError(error?.response?.data?.message || "Failed to load listings");
+      } catch (error: unknown) {
+        const err = error as AxiosError<ErrorResponse>;
+        setError(err.response?.data?.message || "Failed to load listings");
       } finally {
         setLoading(false);
       }

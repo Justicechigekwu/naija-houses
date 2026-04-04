@@ -71,8 +71,32 @@ export const CATEGORY_TREE = {
     label: "Vehicles",
     subcategories: {
 
-      CARS_TRUCKS: {
-        label: "Cars & Trucks",
+      CARS: {
+        label: "Cars",
+        fields: [
+          { key: "make", label: "Make", type: "text" },
+          { key: "model", label: "Model", type: "text" },
+          { key: "year", label: "Year", type: "number" },
+          { key: "condition", label: "Condition", type: "select", options: ["New","Local Used","Foreign Used"] },
+          { key: "mileage", label: "Mileage (km)", type: "number" },
+          { key: "fuelType", label: "Fuel Type", type: "select", options: ["Petrol","Diesel","Hybrid","Electric"] },
+          { key: "transmission", label: "Transmission", type: "select", options: ["Automatic","Manual", "DCT", "CVT"] },
+          { key: "bodyType", label: "Body Type", type: "select", options: ["Sedan","SUV","Pickup","Truck","Van","Bus", "Hatch Back", "Coupe", "Hypercar", "Supercar", "Mini Van"] },
+          { key: "engineSize", label: "Engine Size", type: "text" },
+          { key: "color", label: "Color", type: "text" },
+          { key: "trim", label: "Trim", type: "text" },
+          { key: "interiorColor", label: "Interior color", type: "text" },
+          { key: "drivetrain", label: "Drivetrain", type: "select", options: ["FOUR WHEEL DRIVE","REAR WHEEL DRIVE","ALL WHEEL DRIVE","4X4"] },
+          { key: "wheels", label: "wheels", type: "select", options: ["Alloy", "Iron", "Cabon Fibre"]},
+          { key: "vinChassisNumber", label: "Vin chasis number", type: "number" },
+          { key: "registered", label: "Registered", type: "select", options: ["Yes","No"] },
+          { key: "numberOfOwners", label: "Number of Owners", type: "number" },
+          { key: "exchangePossible", label: "Exchange Possible", type: "select", options: ["Yes","No"] },
+        ],
+      },
+
+      TRUCKS_TRAILERS: {
+        label: "Trucks & Trailers",
         fields: [
           { key: "make", label: "Make", type: "text" },
           { key: "model", label: "Model", type: "text" },
@@ -92,6 +116,23 @@ export const CATEGORY_TREE = {
           { key: "registered", label: "Registered", type: "select", options: ["Yes","No"] },
           { key: "numberOfOwners", label: "Number of Owners", type: "number" },
           { key: "exchangePossible", label: "Exchange Possible", type: "select", options: ["Yes","No"] },
+        ],
+      },
+
+      BOATS: {
+        label: "Boats",
+        fields: [
+          { key: "boatType", label: "Boat Type", type: "select", options: ["Speedboat","Fishing Boat","Yacht","Canoe","Jet Ski","Pontoon","Sailboat","Other"] },
+          { key: "brand", label: "Brand", type: "text" },
+          { key: "model", label: "Model", type: "text" },
+          { key: "year", label: "Year", type: "number" },
+          { key: "condition", label: "Condition", type: "select", options: ["New","Foreign Used","Local Used"] },
+          { key: "engineType", label: "Engine Type", type: "select", options: ["Outboard","Inboard","Jet","Electric"] },
+          { key: "enginePower", label: "Engine Power (HP)", type: "number" },
+          { key: "fuelType", label: "Fuel Type", type: "select", options: ["Petrol","Diesel","Electric"] },
+          { key: "length", label: "Length (ft)", type: "number" },
+          { key: "color", label: "Color", type: "text" },
+          { key: "registrationStatus", label: "Registered", type: "select", options: ["Yes","No"] },
         ],
       },
 

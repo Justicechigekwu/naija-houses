@@ -10,7 +10,6 @@ const searchController = async (req, res) => {
     const listings = await Listing.find({
       $or: [
         { title: { $regex: q, $options: "i" } },
-        { location: { $regex: q, $options: "i" } },
         { state: { $regex: q, $options: "i" } },
         { city: { $regex: q, $options: "i" } },
         { propertyType: { $regex: q, $options: "i" } },

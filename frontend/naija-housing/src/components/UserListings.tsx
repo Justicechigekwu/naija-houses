@@ -16,7 +16,9 @@ type Listing = {
   _id: string;
   title: string;
   price?: number;
-  location?: string;
+  description?: string;
+  state: string;
+  city: string;
   images?: ListingImage[];
 };
 
@@ -131,10 +133,6 @@ export default function UserListings({ userId }: Props) {
   return (
     <div className="mt-8">
       <div>
-        <div className="py-5">
-          <h2 className="text-3xl font-semibold text-center">Active listings</h2>
-        </div>
-
         <ul className="space-y-3">
           {listings.map((listing) => (
             <li
@@ -151,12 +149,10 @@ export default function UserListings({ userId }: Props) {
 
                 <div className="min-w-0">
                   <h3 className="font-bold truncate">{listing.title}</h3>
+                  <p className=" truncate">{listing.city}, {listing.state}</p>
                   <p className="text-green-600 text-sm">
                     ₦{Number(listing.price ?? 0).toLocaleString()}
                   </p>
-                  {listing.location && (
-                    <p className="text-sm text-gray-500">{listing.location}</p>
-                  )}
                 </div>
               </div>
 

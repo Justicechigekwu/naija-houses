@@ -7,69 +7,122 @@ import AdminUsersTable from "@/components/admin/AdminUsersTable";
 import AdminNavbar from "@/components/admin/AdminNavbar";
 import AdminOverviewCards from "@/components/admin/AdminOverviewCards";
 
+import {
+  LayoutDashboard,
+  CreditCard,
+  Flag,
+  ShieldAlert,
+  BarChart3,
+  LogOut,
+} from "lucide-react";
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { adminLogout } = useAdminAuth();
   const { isCheckingAuth, isAuthenticated } = useRequireAdminAuth();
 
   if (isCheckingAuth) {
-    return <div className="max-w-6xl mx-auto mt-8">Checking admin session...</div>;
+    return (
+      <div className="mx-auto mt-10 max-w-6xl px-4">
+        <div className="rounded-2xl border bg-white px-5 py-4 text-sm text-gray-600 shadow-sm">
+          Checking admin session...
+        </div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) return null;
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#f6f7f9]">
       <AdminNavbar />
 
-      <div className="max-w-6xl mx-auto mt-8 px-4">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+      <div className="mx-auto mt-8 max-w-7xl px-4 pb-10">
+        {/* Header */}
+        <div className="mb-6 rounded-3xl border bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <LayoutDashboard className="w-5 h-5 text-[#8A715D]" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#8A715D]">
+                  Admin Panel
+                </p>
+              </div>
 
-          <div className="flex gap-3 flex-wrap">
-            <button
-              className="border px-3 py-2 rounded"
-              onClick={() => router.push("/admin/payments")}
-            >
-              Pending Payments
-            </button>
+              <h1 className="text-3xl font-semibold text-gray-900">
+                Admin Dashboard
+              </h1>
 
-            <button
-              className="border px-3 py-2 rounded"
-              onClick={() => router.push("/admin/reports")}
-            >
-              Reports
-            </button>
+              <p className="text-sm text-gray-500 mt-1">
+                Manage platform activity, users, payments and reports.
+              </p>
+            </div>
 
-            <button
-              className="border px-3 py-2 rounded"
-              onClick={() => router.push("/admin/appeals")}
-            >
-              Appeals
-            </button>
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-3">
+              <button
+                className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition shadow-sm"
+                onClick={() => router.push("/admin/payments")}
+              >
+                <CreditCard className="w-4 h-4" />
+                Pending Payments
+              </button>
 
-            <button
-              className="border px-3 py-2 rounded"
-              onClick={() => router.push("/admin/performance")}
-            >
-              Performance
-            </button>
+              <button
+                className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition shadow-sm"
+                onClick={() => router.push("/admin/reports")}
+              >
+                <Flag className="w-4 h-4" />
+                Reports
+              </button>
 
-            <button
-              className="bg-black text-white px-3 py-2 rounded"
-              onClick={() => {
-                adminLogout();
-                router.push("/admin/login");
-              }}
-            >
-              Logout
-            </button>
+              <button
+                className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition shadow-sm"
+                onClick={() => router.push("/admin/appeals")}
+              >
+                <ShieldAlert className="w-4 h-4" />
+                Appeals
+              </button>
+
+              <button
+                className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition shadow-sm"
+                onClick={() => router.push("/admin/performance")}
+              >
+                <BarChart3 className="w-4 h-4" />
+                Performance
+              </button>
+
+              <button
+                className="flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition shadow-sm"
+                onClick={() => {
+                  adminLogout();
+                  router.push("/admin/login");
+                }}
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
-        <AdminOverviewCards />
+        {/* Overview */}
+        <div className="rounded-3xl border bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <LayoutDashboard className="w-5 h-5 text-gray-700" />
+            <h2 className="text-lg font-semibold">Platform Overview</h2>
+          </div>
 
-        <div className="mt-6">
+          <AdminOverviewCards />
+        </div>
+
+        {/* Users table */}
+        <div className="mt-6 rounded-3xl border bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <ShieldAlert className="w-5 h-5 text-gray-700" />
+            <h2 className="text-lg font-semibold">Users & Listings</h2>
+          </div>
+
           <AdminUsersTable />
         </div>
       </div>

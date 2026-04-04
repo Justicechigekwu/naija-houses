@@ -5,6 +5,7 @@ import { useSearchParams, useParams, useRouter } from "next/navigation";
 import api from "@/libs/api";
 import PlanOptions from "@/components/PlanOptions";
 import { useUI } from "@/hooks/useUi";
+import { AxiosError } from "axios";
 
 type PublishOptions = {
   listingId: string;
@@ -75,8 +76,14 @@ export default function PaymentDetailsPage() {
 
         setOpts(optsRes.data);
         setMethods(methodsRes.data);
-      } catch (e: any) {
-        setError(e?.response?.data?.message || "Failed to load payment details");
+      } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+          setError(e.response?.data?.message || "Failed to load payment details");
+        } else if (e instanceof Error) {
+          setError(e.message || "Failed to load payment details");
+        } else {
+          setError("Failed to load payment details");
+        }
       } finally {
         setLoading(false);
       }
@@ -147,8 +154,14 @@ export default function PaymentDetailsPage() {
 
       showToast("Submitted! Waiting for confirmation, This usually take 5 mins to 2 hours to be reviewed", "success");
       router.push("/pending");
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || "Failed to submit payment");
+    } catch (e: unknown) {
+      if (e instanceof AxiosError) {
+        setError(e.response?.data?.message || e.message || "Failed to submit payment");
+      } else if (e instanceof Error) {
+        setError(e.message || "Failed to submit payment");
+      } else {
+        setError("Failed to submit payment");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -325,3 +338,198 @@ export default function PaymentDetailsPage() {
     </PlanOptions>
   );
 }
+
+
+
+
+
+// "use client";
+
+// import { useEffect, useMemo, useState } from "react";
+// import { useSearchParams, useParams, useRouter } from "next/navigation";
+// import api from "@/libs/api";
+// import PlanOptions from "@/components/PlanOptions";
+// import { useUI } from "@/hooks/useUi";
+// import { AxiosError } from "axios";
+
+// type PublishOptions = {
+//   listingId: string;
+//   category: string;
+//   subcategory?: string;
+//   canUseTrial: boolean;
+//   trialDays: number;
+//   paidDays: number;
+//   price: number;
+//   publishStatus: string;
+//   publishPlan: "TRIAL_14_DAYS" | "PAID_30_DAYS" | null;
+//   bankDetails: {
+//     bankName: string;
+//     accountName: string;
+//     accountNumber: string;
+//   } | null;
+//   activePayment: {
+//     id: string;
+//     paymentCode: string;
+//     status: string;
+//     amount: number;
+//     accountAssignedAt: string;
+//     accountExpiresAt: string;
+//     isAccountActive: boolean;
+//   } | null;
+// };
+
+// type PaymentMethodsRes = {
+//   recommended: "BANK_TRANSFER" | "PAYSTACK" | "FLUTTERWAVE" | "CARD";
+//   methods: { key: string; label: string }[];
+// };
+
+// export default function PaymentDetailsPage() {
+//   const { id } = useParams<{ id: string }>();
+//   const router = useRouter();
+//   const { showToast } = useUI();
+//   const params = useSearchParams();
+//   const queryPaymentCode = params.get("code");
+
+//   const [opts, setOpts] = useState<PublishOptions | null>(null);
+//   const [methods, setMethods] = useState<PaymentMethodsRes | null>(null);
+
+//   const [loading, setLoading] = useState(true);
+//   const [submitting, setSubmitting] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+//   const [timeLeft, setTimeLeft] = useState("");
+
+//   const [reference, setReference] = useState("");
+//   const [note, setNote] = useState("");
+
+//   const bank = useMemo(() => {
+//     return opts?.bankDetails || null;
+//   }, [opts]);
+
+//   const paymentCode = queryPaymentCode || opts?.activePayment?.paymentCode || "";
+//   const price = opts?.price ?? 0;
+
+//   const getErrorMessage = (e: unknown): string => {
+//     if (e instanceof AxiosError) {
+//       return e.response?.data?.message || e.message;
+//     }
+//     if (e instanceof Error) {
+//       return e.message;
+//     }
+//     return "Something went wrong";
+//   };
+
+//   useEffect(() => {
+//     const load = async () => {
+//       try {
+//         setLoading(true);
+//         setError(null);
+
+//         const [optsRes, methodsRes] = await Promise.all([
+//           api.get(`/listings/${id}/publish-options`),
+//           api.get(`/payments/methods`),
+//         ]);
+
+//         setOpts(optsRes.data);
+//         setMethods(methodsRes.data);
+//       } catch (e: unknown) {
+//         setError(getErrorMessage(e));
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     if (id) load();
+//   }, [id]);
+
+//   useEffect(() => {
+//     if (!opts?.activePayment?.accountExpiresAt) return;
+
+//     const interval = setInterval(() => {
+//       const end = new Date(opts.activePayment!.accountExpiresAt).getTime();
+//       const now = Date.now();
+//       const diff = end - now;
+
+//       if (diff <= 0) {
+//         setTimeLeft("Expired");
+//         clearInterval(interval);
+//         return;
+//       }
+
+//       const mins = Math.floor(diff / 1000 / 60);
+//       const secs = Math.floor((diff / 1000) % 60);
+//       setTimeLeft(`${mins}:${secs.toString().padStart(2, "0")}`);
+//     }, 1000);
+
+//     return () => clearInterval(interval);
+//   }, [opts?.activePayment?.accountExpiresAt]);
+
+//   const copy = async (text: string) => {
+//     try {
+//       await navigator.clipboard.writeText(text);
+//       showToast("Copied!", "success");
+//     } catch {
+//       showToast("Copy failed. Please copy manually.", "error");
+//     }
+//   };
+
+//   const notify = async () => {
+//     try {
+//       setSubmitting(true);
+//       setError(null);
+
+//       if (!opts) throw new Error("Missing listing payment options");
+
+//       if (opts.publishPlan !== "PAID_30_DAYS") {
+//         setError("This listing is not set to paid publishing.");
+//         return;
+//       }
+
+//       if (!["DRAFT", "REJECTED", "EXPIRED"].includes(opts.publishStatus)) {
+//         setError(`You can't submit payment while listing is ${opts.publishStatus}`);
+//         return;
+//       }
+
+//       if (!price || price <= 0) {
+//         setError("Publish price is missing. Please contact support/admin.");
+//         return;
+//       }
+
+//       await api.post("/payments/notify", {
+//         listingId: id,
+//         method: "BANK_TRANSFER",
+//         reference,
+//         note,
+//       });
+
+//       showToast(
+//         "Submitted! Waiting for confirmation, This usually take 5 mins to 2 hours to be reviewed",
+//         "success"
+//       );
+//       router.push("/pending");
+//     } catch (e: unknown) {
+//       setError(getErrorMessage(e));
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   return (
+//     <PlanOptions
+//       title="Payment Details"
+//       subtitle="Bank transfer is recommended. After you pay, click “I have made payment”."
+//     >
+//       {loading && <div className="text-sm text-gray-600">Loading...</div>}
+//       {error && (
+//         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+//           {error}
+//         </div>
+//       )}
+
+//       {!loading && opts && (
+//         <div className="space-y-5">
+//           {/* UI unchanged */}
+//         </div>
+//       )}
+//     </PlanOptions>
+//   );
+// }

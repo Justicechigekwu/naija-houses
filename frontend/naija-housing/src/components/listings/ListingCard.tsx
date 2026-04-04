@@ -39,9 +39,9 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
       <div className="mt-1 text-sm text-gray-500">
         <MapPin className="w-4 h-4 text-green-300 inline mr-1" />
+        <span>{listing.city}</span>
+        {(listing.city || listing.state) ? <span>, </span> : null}
         <span>{listing.state}</span>
-        {(listing.location || listing.city) ? <span>, </span> : null}
-        <span>{listing.location || listing.city}</span>
       </div>
 
       {listing.distanceMeters ? (

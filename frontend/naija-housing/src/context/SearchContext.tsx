@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import api from "@/libs/api";
+import { useBrowsingLocation } from "@/context/BrowsingLocationContext";
 
 export interface Filters {
   category?: string;
@@ -13,6 +14,7 @@ export interface SearchSuggestion {
   _id: string;
   title: string;
   location?: string;
+  city?: string;
   state?: string;
   images?: { url: string }[];
 }
@@ -21,50 +23,41 @@ interface SearchContextType {
   filters: Filters;
   results: SearchSuggestion[];
   suggestions: SearchSuggestion[];
-  setFilters: (filters: Filters) => void;
+  // setFilters: (filters: Filters) => void;
+  setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   searchListings: () => Promise<void>;
   filterListings: () => Promise<void>;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
-const LOCATION_STORAGE_KEY = "userCurrentLocation_v1";
-
-function getStoredLocation(): {
-  latitude?: number;
-  longitude?: number;
-  city?: string;
-  state?: string;
-} | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const raw = localStorage.getItem(LOCATION_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
 export function SearchProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<Filters>({});
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [results, setResults] = useState<SearchSuggestion[]>([]);
+  const { browsingLocation } = useBrowsingLocation();
 
-  const buildLocationParams = (params: URLSearchParams) => {
-    const storedLocation = getStoredLocation();
+  const buildLocationParams = useCallback(
+    (params: URLSearchParams) => {
+      if (browsingLocation.latitude != null && browsingLocation.longitude != null) {
+        params.append("lat", String(browsingLocation.latitude));
+        params.append("lng", String(browsingLocation.longitude));
+      }
 
-    if (storedLocation?.latitude != null && storedLocation?.longitude != null) {
-      params.append("lat", String(storedLocation.latitude));
-      params.append("lng", String(storedLocation.longitude));
-    }
+      if (browsingLocation.city) params.append("city", browsingLocation.city);
+      if (browsingLocation.state) params.append("state", browsingLocation.state);
+      if (browsingLocation.isManual) params.append("manualLocationFilter", "true");
+    },
+    [
+      browsingLocation.latitude,
+      browsingLocation.longitude,
+      browsingLocation.city,
+      browsingLocation.state,
+      browsingLocation.isManual,
+    ]
+  );
 
-    if (storedLocation?.city) params.append("city", storedLocation.city);
-    if (storedLocation?.state) params.append("state", storedLocation.state);
-  };
-
-  const searchListings = async () => {
+  const searchListings = useCallback(async () => {
     if (!filters.search?.trim()) {
       setSuggestions([]);
       return;
@@ -101,17 +94,21 @@ export function SearchProvider({ children }: { children: ReactNode }) {
 
       if (filters.category) fallbackParams.append("category", filters.category);
       if (filters.subcategory) fallbackParams.append("subcategory", filters.subcategory);
+      if (browsingLocation.state) fallbackParams.append("state", browsingLocation.state);
+      if (browsingLocation.city) fallbackParams.append("city", browsingLocation.city);
 
       const fallbackRes = await api.get(`/listings?${fallbackParams.toString()}`);
-      const fallbackListings: SearchSuggestion[] = fallbackRes.data?.items || [];
+      const fallbackListings: SearchSuggestion[] =
+        fallbackRes.data?.items || fallbackRes.data || [];
+
       setSuggestions(fallbackListings);
     } catch (error) {
       console.error("Instant search failed:", error);
       setSuggestions([]);
     }
-  };
+  }, [filters, buildLocationParams, browsingLocation.state, browsingLocation.city]);
 
-  const filterListings = async () => {
+  const filterListings = useCallback(async () => {
     try {
       const params = new URLSearchParams();
 
@@ -141,17 +138,21 @@ export function SearchProvider({ children }: { children: ReactNode }) {
       if (filters.search?.trim()) fallbackParams.append("search", filters.search.trim());
       if (filters.category) fallbackParams.append("category", filters.category);
       if (filters.subcategory) fallbackParams.append("subcategory", filters.subcategory);
+      if (browsingLocation.state) fallbackParams.append("state", browsingLocation.state);
+      if (browsingLocation.city) fallbackParams.append("city", browsingLocation.city);
       fallbackParams.append("page", "1");
       fallbackParams.append("limit", "20");
 
       const fallbackRes = await api.get(`/listings?${fallbackParams.toString()}`);
-      const fallbackListings: SearchSuggestion[] = fallbackRes.data?.items || [];
+      const fallbackListings: SearchSuggestion[] =
+        fallbackRes.data?.items || fallbackRes.data || [];
+
       setResults(fallbackListings);
     } catch (error) {
       console.error("Filter search failed:", error);
       setResults([]);
     }
-  };
+  }, [filters, buildLocationParams, browsingLocation.state, browsingLocation.city]);
 
   return (
     <SearchContext.Provider
@@ -170,7 +171,11 @@ export function SearchProvider({ children }: { children: ReactNode }) {
 }
 
 export function useSearch() {
-  const ctx = useContext(SearchContext);
-  if (!ctx) throw new Error("useSearch must be used within SearchProvider");
-  return ctx;
+  const context = useContext(SearchContext);
+
+  if (!context) {
+    throw new Error("useSearch must be used within SearchProvider");
+  }
+
+  return context;
 }

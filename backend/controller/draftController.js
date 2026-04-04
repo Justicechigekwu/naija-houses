@@ -11,7 +11,7 @@ export const createDrafts = async (req, res) => {
     }).sort({ updatedAt: -1 });
 
     if (existing) {
-      existing.draftReminderAt = addMinutes(new Date(), 30);
+      existing.draftReminderAt = addMinutes(new Date(), 60);
       existing.draftReminderSentAt = null;
       await existing.save();
 

@@ -18,6 +18,8 @@ const notificationSchema = new mongoose.Schema(
         "LISTING_EXPIRING_SOON",
         "PAYMENT_CONFIRMED",
         "PAYMENT_REJECTED",
+        "REVIEW_RECEIVED",
+        "REVIEW_REPLY",
         "DRAFT_REMINDER",
 
         "LISTING_REMOVED_BY_ADMIN",

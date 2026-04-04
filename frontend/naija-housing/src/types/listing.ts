@@ -9,6 +9,14 @@ export type PublishStatus =
   | "APPEAL_PENDING";
 
 export type PublishPlan = "TRIAL_14_DAYS" | "PAID_30_DAYS" | null;
+export type AppealStatus = "PENDING" | "APPROVED" | "REJECTED" | null;
+
+export type ListingsMeta = {
+  mode?: "manual" | "geo";
+  exactLocationOnly?: boolean;
+  selectedCity?: string;
+  selectedState?: string;
+};
 
 export type Listing = {
   _id: string;
@@ -18,14 +26,14 @@ export type Listing = {
   subcategory?: string;
   price?: number;
   state?: string;
-  location?: string;
   city?: string;
+  attributes?: Record<string, string>;
   images?: { url: string; public_id?: string }[];
   publishStatus?: PublishStatus;
   publishPlan?: PublishPlan;
   publishedAt?: string | null;
   expiresAt?: string | null;
-  listingType?: "Sale" | "Rent";
+  listingType?: "Sale" | "Rent" | "Shortlet";
   expiredAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -47,4 +55,5 @@ export type PaginatedListingsResponse = {
   limit: number;
   hasMore: boolean;
   nextPage: number | null;
+  meta?: ListingsMeta;
 };

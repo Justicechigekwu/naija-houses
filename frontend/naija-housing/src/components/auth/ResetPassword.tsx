@@ -26,7 +26,11 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      const res = await api.put(`/reset/reset-password/${token}`, { password });
+      // const res = await api.put(`/reset/reset-password/${token}`, { password });
+      const res = await api.put(`/reset/reset-password/${token}`, {
+        password,
+        confirmPassword,
+      });
       setMessage(res.data.message || "Password reset successful!");
       setTimeout(() => router.push("/login"), 2000);
     } catch (err: unknown) {

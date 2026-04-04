@@ -50,30 +50,30 @@ app.use(
   })
 );
 
-app.use("/api/auth", authRoutes);
-app.use("/api/reset", resetPasswordRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/listings", listingStatusRoutes);
-app.use("/api/listings", listingRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/chats", chatRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/favorites", favoriteRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/listings", locationListingRoutes);
-app.use("/api/listings", listingAppealRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/reset", resetPasswordRoutes);
+app.use("/api/v1/profile", profileRoutes);
+app.use("/api/v1/listings", listingStatusRoutes);
+app.use("/api/v1/listings", listingRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/chats", chatRoutes);
+app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/favorites", favoriteRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/reports", reportRoutes);
+app.use("/api/v1/listings", locationListingRoutes);
+app.use("/api/v1/listings", listingAppealRoutes);
 
 // admin
-app.use("/api/admin", adminOverviewRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/admin/auth", adminAuthRoutes);
-app.use("/api/admin", adminDashboardRoutes);
-app.use("/api/admin", adminPaymentRoutes);
-app.use("/api/admin", adminModerationRoutes);
-app.use("/api/admin", adminAppealRoutes);
+app.use("/api/v1/admin", adminOverviewRoutes);
+app.use("/api/v1/analytics", analyticsRoutes);
+app.use("/api/v1/admin/auth", adminAuthRoutes);
+app.use("/api/v1/admin", adminDashboardRoutes);
+app.use("/api/v1/admin", adminPaymentRoutes);
+app.use("/api/v1/admin", adminModerationRoutes);
+app.use("/api/v1/admin", adminAppealRoutes);
 
-app.get("/api/ping", (req, res) => {
+app.get("/api/v1/ping", (req, res) => {
   res.json({ message: "Backend connected" });
 });
 

@@ -63,6 +63,10 @@ export default function AdminPaymentsPage() {
     load();
   }, [admin, isHydrated, router]);
 
+  const openDetails = (paymentId: string) => {
+    router.push(`/admin/payments/${paymentId}`);
+  };
+
   const confirmPayment = (paymentId: string) => {
     showConfirm(
       {
@@ -151,7 +155,11 @@ export default function AdminPaymentsPage() {
             </thead>
             <tbody>
               {rows.map((p) => (
-                <tr key={p._id} className="border-t">
+                <tr
+                  key={p._id}
+                  className="border-t hover:bg-gray-50 cursor-pointer"
+                  onClick={() => openDetails(p._id)}
+                >
                   <td className="p-3">
                     <div className="font-medium">
                       {p.user?.firstName} {p.user?.lastName}
@@ -181,8 +189,12 @@ export default function AdminPaymentsPage() {
                       <span className="font-semibold">{p.paymentCode || "-"}</span>
                       {p.paymentCode && (
                         <button
+                          type="button"
                           className="border px-2 py-1 rounded text-xs"
-                          onClick={() => copy(p.paymentCode!)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copy(p.paymentCode!);
+                          }}
                         >
                           Copy
                         </button>
@@ -191,16 +203,36 @@ export default function AdminPaymentsPage() {
                   </td>
 
                   <td className="p-3">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
+                        type="button"
+                        className="border px-3 py-2 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDetails(p._id);
+                        }}
+                      >
+                        View details
+                      </button>
+
+                      <button
+                        type="button"
                         className="bg-green-600 text-white px-3 py-2 rounded"
-                        onClick={() => confirmPayment(p._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmPayment(p._id);
+                        }}
                       >
                         Confirm
                       </button>
+
                       <button
+                        type="button"
                         className="bg-red-600 text-white px-3 py-2 rounded"
-                        onClick={() => reject(p._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          reject(p._id);
+                        }}
                       >
                         Reject
                       </button>

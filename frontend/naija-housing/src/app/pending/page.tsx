@@ -12,6 +12,7 @@ export default function PendingPage() {
         className="border px-3 py-2 rounded bg-[#8A715D]"
         onClick={() => router.push("/profile")}
       >Back to Home</button>
+      
             
       <PendingListings />
     </div>

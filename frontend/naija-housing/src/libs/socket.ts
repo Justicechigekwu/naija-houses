@@ -14,49 +14,36 @@ export const getSocket = () => {
     autoConnect: false,
     transports: ["websocket", "polling"],
     withCredentials: true,
-    auth: {
-      token:
-        typeof window !== "undefined"
-          ? localStorage.getItem("token")
-          : null,
-    },
   });
 
   return socket;
 };
 
 export const connectSocket = () => {
-  const socket = getSocket();
+  const instance = getSocket();
 
-  if (!socket.connected) {
-    socket.auth = {
-      token:
-        typeof window !== "undefined"
-          ? localStorage.getItem("token")
-          : null,
-    };
+  if (!instance.connected) {
+    instance.connect();
 
-    socket.connect();
+    instance.off("connect_error");
 
-    socket.off("connect_error");
-
-    socket.on("connect_error", (error) => {
+    instance.on("connect_error", (error) => {
       if (error?.message === "ACCOUNT_BANNED") {
         alert(
           "Your account has been banned for violating marketplace/community standards."
         );
 
-        localStorage.removeItem("token");
         localStorage.removeItem("user");
-
-        socket.disconnect();
-
+        instance.disconnect();
         window.location.href = "/login";
+        return;
       }
+
+      console.error("Socket connection error:", error?.message || error);
     });
   }
 
-  return socket;
+  return instance;
 };
 
 export const disconnectSocket = () => {

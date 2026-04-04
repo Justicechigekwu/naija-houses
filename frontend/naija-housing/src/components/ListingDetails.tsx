@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import api from "@/libs/api";
+import { ArrowLeft } from "lucide-react";
 import { CATEGORY_TREE } from "@/libs/listingFormConfig";
 import RelatedListing from "@/components/RelatedListing";
 import deleteListing from "@/controllers/Delete";
@@ -10,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import ReviewsList from "./reviews/ReviewList";
 import FavoriteButton from "@/components/FavoriteButton";
 import { useUI } from "@/hooks/useUi";
+import { useBrowsingLocation } from "@/context/BrowsingLocationContext";
 import PageReadyLoader from "@/components/pages/PageReadyLoader";
 
 type DynamicField = {
@@ -28,7 +30,6 @@ interface Listing {
   title: string;
   listingType: string;
   price: number;
-  location: string;
   city: string;
   state: string;
   description: string;
@@ -56,6 +57,7 @@ export default function ListingDetails() {
   const router = useRouter();
   const { user } = useAuth();
   const { showToast, showConfirm } = useUI();
+  const { setLastViewedListingType } = useBrowsingLocation();
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +67,9 @@ export default function ListingDetails() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [maxThumbs, setMaxThumbs] = useState(6);
+
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -86,6 +91,14 @@ export default function ListingDetails() {
       setLoading(false);
     }
   }, [id, showToast]);
+
+  useEffect(() => {
+    if (listing?.listingType) {
+      setLastViewedListingType(
+        listing.listingType as "Sale" | "Rent" | "Shortlet"
+      );
+    }
+  }, [listing?.listingType, setLastViewedListingType]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -169,7 +182,7 @@ export default function ListingDetails() {
     listing?.subcategory as keyof typeof categoryConfig.subcategories
   ] as SubcategoryConfig | undefined;
 
-const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
+  const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
 
   const formAttributeValue = (
     value: string | number | boolean | string[] | undefined | null
@@ -183,10 +196,63 @@ const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
   const currentUserId = user?.id || user?._id;
   const isOwner = currentUserId === listing?.owner?._id;
 
+  const goToPreviousImage = () => {
+    if (!listing) return;
+    setCurrentImageIndex(
+      (currentImageIndex - 1 + listing.images.length) % listing.images.length
+    );
+  };
+
+  const goToNextImage = () => {
+    if (!listing) return;
+    setCurrentImageIndex((currentImageIndex + 1) % listing.images.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (touchStartX.current === null || touchStartY.current === null || !listing)
+      return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const diffX = touchStartX.current - touchEndX;
+    const diffY = touchStartY.current - touchEndY;
+
+    const absX = Math.abs(diffX);
+    const absY = Math.abs(diffY);
+
+    if (absY > absX && diffY < -80) {
+      setIsModalOpen(false);
+    } else if (absX > absY && absX > 50) {
+      if (diffX > 0) {
+        goToNextImage();
+      } else {
+        goToPreviousImage();
+      }
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   return (
     <PageReadyLoader ready={!loading}>
       {listing ? (
         <div className="p-4 md:p-6 max-w-5xl mx-auto bg-[#F5F5F5]  space-y-6">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => router.push("/")}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          </div>
           {isModalOpen && (
             <div
               className="fixed inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-50"
@@ -194,7 +260,7 @@ const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
             >
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="absolute top-4 right-4 text-white text-3xl"
+                className="absolute top-4 right-4 z-20 text-white text-3xl"
               >
                 ✕
               </button>
@@ -202,12 +268,9 @@ const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setCurrentImageIndex(
-                    (currentImageIndex - 1 + listing.images.length) %
-                      listing.images.length
-                  );
+                  goToPreviousImage();
                 }}
-                className="absolute left-6 text-white text-4xl"
+                className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-20 text-white text-4xl"
               >
                 ‹
               </button>
@@ -217,16 +280,16 @@ const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
                 alt={`Image ${currentImageIndex + 1}`}
                 className="relative z-10 max-w-full max-h-screen"
                 onClick={(e) => e.stopPropagation()}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
               />
 
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setCurrentImageIndex(
-                    (currentImageIndex + 1) % listing.images.length
-                  );
+                  goToNextImage();
                 }}
-                className="absolute right-6 text-white text-4xl"
+                className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-20 text-white text-4xl"
               >
                 ›
               </button>
@@ -317,13 +380,6 @@ const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
                   </span>{" "}
                   {listing.city}
                 </p>
-
-                <p className="text-base">
-                  <span className="block text-[10px] text-gray-500 uppercase">
-                    location
-                  </span>{" "}
-                  {listing.location}
-                </p>
               </div>
 
               <div className="mt-6 border-6 pt-6">
@@ -342,7 +398,7 @@ const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
               </div>
 
               <div className="pt-6 border-t">
-                <p className="text-base">
+                <p className="text-base border-b">
                   <span className="block text-[10px] text-gray-500 uppercase">
                     Description
                   </span>
@@ -418,11 +474,15 @@ const dynamicFields: DynamicField[] = subcategoryConfig?.fields ?? [];
                   )}
                 </div>
 
-                <div className="pt-6 w-full lg:w-1/2">
-                  <div
-                    onClick={() => router.push(`/profile/${listing.owner._id}`)}
-                    className="flex items-center gap-2 cursor-pointer hover:opacity-80"
-                  >
+                <div
+                  className="pt-6 w-full lg:w-1/2"
+                  onClick={() =>
+                    router.push(
+                      `/profile/${listing.owner._id}?listingId=${listing._id}`
+                    )
+                  }
+                >
+                  <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
                     <img
                       src={listing.owner.avatar || "/default-avatar.png"}
                       alt={`${listing.owner?.firstName} ${listing.owner?.lastName}`}

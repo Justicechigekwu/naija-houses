@@ -88,24 +88,24 @@ export const submitAppeal = async (req, res) => {
       userId: listing.owner,
       type: "LISTING_APPEAL_SUBMITTED",
       title: "Appeal submitted",
-      message: `Your appeal for "${listing.title}" has been submitted and is awaiting review.`,
+      message: `Your appeal for "${listing.title}" has been submitted and is awaiting admin review.`,
       listingId: listing._id,
       metadata: {
         listingId: listing._id,
         publishStatus: listing.publishStatus,
         appealStatus: listing.appealStatus,
-        route: "/notification",
+        route: "/pending",
         actionLabel: "View status",
       },
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Appeal submitted successfully",
       listing,
     });
   } catch (error) {
     console.error("submitAppeal error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: error.message || "Failed to submit appeal",
     });
   }

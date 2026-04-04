@@ -47,6 +47,10 @@ export default function AdminUsersTable() {
     load();
   }, [admin, isHydrated]);
 
+  const goToUser = (userId: string, filter = "all") => {
+    router.push(`/admin/users/${userId}?filter=${filter}`);
+  };
+
   return (
     <div className="bg-white border rounded overflow-hidden">
       {error && <p className="text-red-500 p-3">{error}</p>}
@@ -64,28 +68,62 @@ export default function AdminUsersTable() {
             <tr
               key={u.id}
               className="border-t hover:bg-gray-50 cursor-pointer"
-              onClick={() => router.push(`/admin/users/${u.id}`)}
+              onClick={() => goToUser(u.id)}
             >
               <td className="p-3">
                 {u.firstName} {u.lastName}
               </td>
               <td className="p-3">{u.email}</td>
-              <td className="p-3 flex flex-wrap gap-2">
-                <span className="px-2 py-1 rounded bg-gray-200">
-                  Total: {u.badges.total}
-                </span>
-                <span className="px-2 py-1 rounded bg-green-200">
-                  Active: {u.badges.active}
-                </span>
-                <span className="px-2 py-1 rounded bg-yellow-200">
-                  Pending: {u.badges.pending}
-                </span>
-                <span className="px-2 py-1 rounded bg-blue-200">
-                  Awaiting: {u.badges.awaitingPayment}
-                </span>
-                <span className="px-2 py-1 rounded bg-red-200">
-                  Expired: {u.badges.expired}
-                </span>
+              <td className="p-3">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="px-2 py-1 rounded bg-gray-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToUser(u.id, "all");
+                    }}
+                  >
+                    Total: {u.badges.total}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="px-2 py-1 rounded bg-green-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToUser(u.id, "active");
+                    }}
+                  >
+                    Active: {u.badges.active}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="px-2 py-1 rounded bg-yellow-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToUser(u.id, "pending");
+                    }}
+                  >
+                    Pending: {u.badges.pending}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="px-2 py-1 rounded bg-blue-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToUser(u.id, "awaiting");
+                    }}
+                  >
+                    Awaiting: {u.badges.awaitingPayment}
+                  </button>
+
+                  <span className="px-2 py-1 rounded bg-red-200">
+                    Expired: {u.badges.expired}
+                  </span>
+                </div>
               </td>
             </tr>
           ))}

@@ -8,9 +8,11 @@ import {
   useRef,
   useState,
   ReactNode,
+  useEffect,
 } from "react";
 import Toast from "@/components/ui/Toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { registerToastHandler, unregisterToastHandler } from "@/libs/Bridge";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -52,21 +54,30 @@ export function UIProvider({ children }: { children: ReactNode }) {
     confirmVariant: "primary",
   });
 
-  const toastIdRef = useRef(0);
-
+  
   const showToast = useCallback(
     (message: string, type: ToastType = "info") => {
       const id = ++toastIdRef.current;
-
+      
       setToasts((prev) => [...prev, { id, message, type }]);
-
+      
       setTimeout(() => {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
       }, 2600);
     },
     []
   );
+  
+  const toastIdRef = useRef(0);
 
+    useEffect(() => {
+    registerToastHandler(showToast);
+  
+    return () => {
+      unregisterToastHandler();
+    };
+  }, [showToast]);
+  
   const removeToast = useCallback((id: number) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);

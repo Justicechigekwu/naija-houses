@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import ListingForm from "@/components/ListingForm";
 import api from "@/libs/api";
 import { useUI } from "@/hooks/useUi";
+import { AxiosError } from "axios";
 
 export default function CreateListingPage() {
   const router = useRouter();
@@ -22,9 +23,17 @@ export default function CreateListingPage() {
       }
 
       router.push(`/listings/${listingId}/payment`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      showToast(error.response?.data?.message || "Failed to create listing", "error");
+
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data?.message || error.message
+          : error instanceof Error
+          ? error.message
+          : "Failed to create listing";
+
+      showToast(message, "error");
     }
   };
 
@@ -32,10 +41,7 @@ export default function CreateListingPage() {
     <div>
       <h1 className="text-center py-5 font-medium text-xl">Create Listing</h1>
 
-      <ListingForm
-        onSubmit={handleCreateListing}
-        isEditMode={false}
-      />
+      <ListingForm onSubmit={handleCreateListing} isEditMode={false} />
     </div>
   );
 }

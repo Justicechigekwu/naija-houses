@@ -97,8 +97,12 @@ export default function ChatList({
       await deleteChat(chatId);
       setMenu(null);
       onDeleted?.(chatId);
-    } catch (error: any) {
-      showToast(error.message || "Failed to delete chat");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        showToast(error.message || "Failed to delete chat");
+      } else {
+        showToast("Failed to delete chat");
+      }
     }
   };
 

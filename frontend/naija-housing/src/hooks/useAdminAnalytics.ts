@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import adminApi from "@/libs/adminApi";
+import { AxiosError } from "axios";
 
 type DayPoint = {
   day: string;
@@ -30,9 +31,10 @@ export default function useAdminAnalytics() {
     try {
       setLoading(true);
       setError("");
-      const res = await adminApi.get("/analytics/admin/overview");
+      const res = await adminApi.get<AnalyticsResponse>("/analytics/admin/overview");
       setData(res.data);
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
       setError(error?.response?.data?.message || "Failed to load analytics");
     } finally {
       setLoading(false);

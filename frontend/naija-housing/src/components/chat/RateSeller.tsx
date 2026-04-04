@@ -1,20 +1,91 @@
 "use client";
-import { useRouter } from "next/navigation";
 
-export default function RateSellerPrompt({ listingId }: { listingId: string }) {
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import api from "@/libs/api";
+
+type EligibilityResponse = {
+  canReview: boolean;
+  alreadyReviewed: boolean;
+  buyerMessageCount: number;
+  sellerMessageCount: number;
+  minimumRequired: number;
+  existingReview?: {
+    _id: string;
+    rating: number;
+    comment: string;
+  } | null;
+};
+
+export default function RateSellerPrompt({
+  listingId,
+  chatId,
+  refreshKey = 0,
+}: {
+  listingId: string;
+  chatId: string;
+  refreshKey?: number;
+}) {
   const router = useRouter();
+  const [canShow, setCanShow] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadEligibility = async () => {
+      try {
+        const res = await api.get<EligibilityResponse>(
+          `/reviews/eligibility/${listingId}`
+        );
+
+        if (!active) return;
+
+        const data = res.data;
+
+        if (data.alreadyReviewed) {
+          setCanShow(false);
+          return;
+        }
+
+        setCanShow(!!data.canReview);
+      } catch (error) {
+        if (!active) return;
+        setCanShow(false);
+      }
+    };
+
+    if (listingId) {
+      loadEligibility();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [listingId, refreshKey]);
+
+  if (!canShow) return null;
 
   return (
-    <div className="p-3 bg-yellow-100 border border-yellow-300 rounded-lg my-3">
-      <p className="text-sm text-yellow-800 font-medium mb-2">
-        How was your conversation with this seller, Would you like to leave a review?
-      </p>
-      <button
-        onClick={() => router.push(`/listings/${listingId}/reviews`)}
-        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-      >
-        Rate Seller
-      </button>
+    <div className="my-3 overflow-hidden rounded-2xl border border-[#eadfd6] bg-gradient-to-r from-[#f8f4f1] to-[#fcfbfa] shadow-sm">
+      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-gray-900">
+            How was your conversation with this seller?
+          </p>
+          <p className="mt-1 text-sm text-gray-600">
+            Share your experience to help other buyers make better decisions.
+          </p>
+        </div>
+
+        <button
+          onClick={() =>
+            router.push(`/listings/${listingId}/reviews?from=chat&chatId=${chatId}`)
+          }
+          className="inline-flex items-center justify-center rounded-xl bg-[#8A715D] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#755e4d]"
+        >
+          Rate Seller
+        </button>
+      </div>
     </div>
   );
 }

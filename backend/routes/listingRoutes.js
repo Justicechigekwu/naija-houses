@@ -22,8 +22,8 @@ router.post("/:id/renew", verifyToken, renewExpiredListing);
 
 router.get('/:id', optionalAuth, getListingById)
 
-router.post('/', verifyToken, upload.array('images', 10), createListing)
-router.put('/:id', verifyToken, upload.array('images', 10), updateListing)
+router.post('/', verifyToken, upload.array('images', 20), createListing)
+router.put('/:id', verifyToken, upload.array('images', 20), updateListing)
 router.delete('/:id', verifyToken, deleteListing)
 
 export default router;

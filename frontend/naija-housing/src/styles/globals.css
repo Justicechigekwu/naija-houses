@@ -7,36 +7,6 @@ body {
   scroll-behavior: smooth;
 }
 
-/* @keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateX(30px) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) translateY(0);
-  }
-}
-
-@keyframes modal-in {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.animate-toast-in {
-  animation: toast-in 0.25s ease-out;
-}
-
-.animate-modal-in {
-  animation: modal-in 0.2s ease-out;
-} */
-
 @keyframes toast-float {
   from {
     opacity: 0;
@@ -103,4 +73,16 @@ body {
 
 .border-theme {
   border-color: var(--border);
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
 }

@@ -15,3 +15,4 @@ router.post("/logout", adminLogout)
 router.get("/me", verifyAdmin, getAdminMe);
 
 export default router;
+

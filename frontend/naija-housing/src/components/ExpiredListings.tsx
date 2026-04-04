@@ -114,7 +114,7 @@ export default function ExpiredListings({ items, onRefresh }: Props) {
             : "No price yet";
 
         const locationText =
-          [listing.location, listing.city, listing.state]
+          [ listing.city, listing.state]
             .filter(Boolean)
             .join(", ") || "No location yet";
 

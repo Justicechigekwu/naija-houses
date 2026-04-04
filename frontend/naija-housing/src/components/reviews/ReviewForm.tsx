@@ -1,40 +1,89 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/libs/api";
 import StarRating from "./StarRating";
 import { AxiosError } from "axios";
 
+type ExistingReview = {
+  _id: string;
+  rating: number;
+  comment: string;
+};
+
+type EligibilityResponse = {
+  canReview: boolean;
+  alreadyReviewed: boolean;
+  existingReview?: ExistingReview | null;
+};
+
 export default function ReviewForm({
   listingId,
-  existingReview,
+  onSubmitted,
 }: {
   listingId: string;
-  existingReview?: { rating: number; comment: string; _id: string };
+  onSubmitted?: () => void;
 }) {
-  const [rating, setRating] = useState(existingReview?.rating || 0);
-  const [comment, setComment] = useState(existingReview?.comment || "");
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [status, setStatus] = useState("");
+  const [existingReview, setExistingReview] = useState<ExistingReview | null>(null);
+  const [canReview, setCanReview] = useState(false);
+
+  useEffect(() => {
+    const loadEligibility = async () => {
+      try {
+        setPageLoading(true);
+        const res = await api.get<EligibilityResponse>(
+          `/reviews/eligibility/${listingId}`
+        );
+
+        setCanReview(res.data.canReview || res.data.alreadyReviewed);
+
+        if (res.data.existingReview) {
+          setExistingReview(res.data.existingReview);
+          setRating(res.data.existingReview.rating);
+          setComment(res.data.existingReview.comment);
+        }
+      } catch (err) {
+        console.error("Failed to load review eligibility", err);
+        setCanReview(false);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    if (listingId) loadEligibility();
+  }, [listingId]);
 
   const handleSubmit = async () => {
-    if (!rating) return setStatus("Please select rating");
+    if (!rating) {
+      setStatus("Please select rating");
+      return;
+    }
 
     try {
       setLoading(true);
 
       if (existingReview) {
-        await api.put(`/reviews/${existingReview._id}`, {
+        const res = await api.put(`/reviews/${existingReview._id}`, {
           rating,
           comment,
         });
+        setExistingReview(res.data);
         setStatus("Review updated");
+        onSubmitted?.();
       } else {
-        await api.post(`/reviews`, {
+        const res = await api.post(`/reviews`, {
           listingId,
           rating,
           comment,
         });
+        setExistingReview(res.data);
         setStatus("Review added");
+        setCanReview(true);
+        onSubmitted?.();
       }
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
@@ -52,31 +101,52 @@ export default function ReviewForm({
     }
   };
 
-  return (
-    <div className="p-4 border rounded-lg bg-white shadow">
-      <h3 className="text-lg font-semibold mb-2">
-        {existingReview ? "Edit Your Review" : "Rate this Seller"}
-      </h3>
+  if (pageLoading) {
+    return (
+      <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        Loading review...
+      </div>
+    );
+  }
 
-      <StarRating value={rating} onChange={setRating} />
+  if (!canReview && !existingReview) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mb-5">
+        <h3 className="text-xl font-semibold text-gray-900">
+          {existingReview ? "Edit Your Review" : "Rate this Seller"}
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">
+          Share an honest experience about your conversation or transaction.
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-[#fafafa] p-4">
+        <StarRating value={rating} onChange={setRating} />
+      </div>
 
       <textarea
-        className="w-full border rounded p-2 mt-3"
-        rows={3}
+        className="mt-4 w-full rounded-2xl border border-gray-300 p-4 outline-none transition focus:border-[#8A715D] focus:ring-2 focus:ring-[#8A715D]/10"
+        rows={4}
         placeholder="Leave a comment..."
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />
 
-      <button
-        onClick={handleSubmit}
-        disabled={loading}
-        className="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        {loading ? "Saving..." : existingReview ? "Update Review" : "Submit Review"}
-      </button>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="rounded-2xl bg-[#8A715D] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#755e4d] disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {loading ? "Saving..." : existingReview ? "Update Review" : "Submit Review"}
+        </button>
 
-      {status && <p className="text-sm text-gray-600 mt-2">{status}</p>}
+        {status && <p className="text-sm text-gray-600">{status}</p>}
+      </div>
     </div>
   );
 }

@@ -15,6 +15,14 @@ const REPORT_REASONS = [
   "OTHER",
 ];
 
+type ErrorWithResponseMessage = {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+};
+
 export default function ReportChatTargetModal({
   open,
   targetType,
@@ -58,8 +66,9 @@ export default function ReportChatTargetModal({
         setSuccess("");
         onClose();
       }, 800);
-    } catch (error: any) {
-      setError(error?.response?.data?.message || "Failed to submit report");
+    } catch (error: unknown) {
+      const err = error as ErrorWithResponseMessage;
+      setError(err?.response?.data?.message || "Failed to submit report");
     }
   };
 
@@ -71,7 +80,9 @@ export default function ReportChatTargetModal({
         </h2>
 
         <p className="text-sm text-gray-600 mb-4">
-          {targetLabel ? `You are reporting: ${targetLabel}` : "Submit your report below."}
+          {targetLabel
+            ? `You are reporting: ${targetLabel}`
+            : "Submit your report below."}
         </p>
 
         <div className="space-y-4">

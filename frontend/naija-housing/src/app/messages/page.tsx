@@ -7,6 +7,7 @@ import ChatPage from "@/components/chat/ChatPage";
 import { useAuth } from "@/context/AuthContext";
 import { connectSocket } from "@/libs/socket";
 import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";
 
 interface UserPreview {
   _id: string;
@@ -17,7 +18,7 @@ interface UserPreview {
 }
 
 interface ListingPreview {
-  _id: string | null;
+  _id?: string | null;
   title?: string;
   price?: string;
   images?: { url: string; public_id: string }[];
@@ -49,36 +50,50 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
-  const { token } = useAuth();
+  const { user, isHydrated } = useAuth();
 
   const activeChatIdRef = useRef<string | null>(null);
-
   const processedMessageIdsRef = useRef<Set<string>>(new Set());
-
   const pendingChatFetchesRef = useRef<Set<string>>(new Set());
+
+  const getErrorDetails = (error: unknown) => {
+    if (error instanceof AxiosError) {
+      return error.response?.data || error.message;
+    }
+
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return error;
+  };
 
   useEffect(() => {
     activeChatIdRef.current = activeChat?._id || null;
   }, [activeChat]);
 
   useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
     const fetchChats = async () => {
       try {
         const res = await api.get("/chats");
-        const chatList = Array.isArray(res.data) ? res.data : [];
+        const chatList = Array.isArray(res.data) ? (res.data as Chat[]) : [];
         setChats(chatList);
-      } catch (err: any) {
-        console.error(
-          "Failed to fetch chats:",
-          err?.response?.data || err.message || err
-        );
+      } catch (err: unknown) {
+        console.error("Failed to fetch chats:", getErrorDetails(err));
       } finally {
         setLoading(false);
       }
     };
 
     fetchChats();
-  }, []);
+  }, [isHydrated, user, router]);
 
   const fetchAndInsertChat = async (
     chatId: string,
@@ -121,11 +136,8 @@ export default function MessagesPage() {
         const others = prev.filter((chat) => chat._id !== chatId);
         return [mergedChat, ...others];
       });
-    } catch (error: any) {
-      console.error(
-        "Failed to fetch missing chat:",
-        error?.response?.data || error?.message || error
-      );
+    } catch (error: unknown) {
+      console.error("Failed to fetch missing chat:", getErrorDetails(error));
     } finally {
       pendingChatFetchesRef.current.delete(chatId);
     }
@@ -194,7 +206,7 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
-    if (!token) return;
+    if (!isHydrated || !user) return;
 
     const socket = connectSocket();
 
@@ -265,9 +277,7 @@ export default function MessagesPage() {
       setActiveChat((prev) => (prev?._id === chatId ? null : prev));
     };
 
-    const handleUnreadCount = (_payload: { unreadCount: number }) => {
-
-    };
+    const handleUnreadCount = (_payload: { unreadCount: number }) => {};
 
     socket.on("chat:new-message", handleNewMessage);
     socket.on("chat:messages-seen", handleMessagesSeen);
@@ -280,7 +290,7 @@ export default function MessagesPage() {
       socket.off("chat:deleted", handleChatDeleted);
       socket.off("chat:unread-count", handleUnreadCount);
     };
-  }, [token]);
+  }, [isHydrated, user]);
 
   const handleSelectChat = (chat: Chat) => {
     if (typeof window !== "undefined" && window.innerWidth < 768) {
@@ -326,6 +336,20 @@ export default function MessagesPage() {
       incrementUnread: false,
     });
   };
+
+  if (!isHydrated) {
+    return (
+      <div className="flex h-[80vh] border rounded bg-white mt-8 max-w-6xl mx-auto overflow-hidden">
+        <div className="w-full flex items-center justify-center text-gray-500">
+          Checking session...
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="flex h-[80vh] border rounded bg-white mt-8 max-w-6xl mx-auto overflow-hidden">

@@ -6,6 +6,7 @@ import { CATEGORY_TREE } from "@/libs/listingFormConfig";
 import { NIGERIA_STATES, getCitiesByState } from "@/libs/nigeriaLocations";
 import { validateListingForm } from "@/libs/validateListingForm";
 import { useUI } from "@/hooks/useUi";
+import { Listing } from "@/types/listing";
 
 type DynamicField = {
   key: string;
@@ -21,24 +22,11 @@ type SubcategoryConfig = {
 
 interface ListingImage {
   url: string;
-  public_id: string;
+  public_id?: string;
 }
 
 interface ListingFormProps {
-  initialData?: Partial<{
-    title: string;
-    listingType: string;
-    price: string;
-    location: string;
-    city: string;
-    state: string;
-    description: string;
-    postedBy: string;
-    category: string;
-    subcategory: string;
-    attributes: Record<string, string>;
-    images: ListingImage[];
-  }>;
+  initialData?: Listing | null;
   isEditMode?: boolean;
   onSubmit: (formData: FormData) => Promise<void>;
 }
@@ -47,7 +35,6 @@ type FormShape = {
   title: string;
   listingType: string;
   price: string;
-  location: string;
   city: string;
   state: string;
   description: string;
@@ -57,6 +44,7 @@ type FormShape = {
 };
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_TOTAL_IMAGES = 20;
 const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
   "image/jpg",
@@ -86,7 +74,6 @@ export default function ListingForm({
     title: "",
     listingType: "",
     price: "",
-    location: "",
     city: "",
     state: "",
     description: "",
@@ -107,8 +94,7 @@ export default function ListingForm({
     setFormData({
       title: initialData.title || "",
       listingType: initialData.listingType || "",
-      price: initialData.price || "",
-      location: initialData.location || "",
+      price: initialData.price != null ? String(initialData.price) : "",
       city: initialData.city || "",
       state: initialData.state || "",
       description: initialData.description || "",
@@ -125,14 +111,14 @@ export default function ListingForm({
     `w-full px-4 py-4 border rounded-md text-xl focus:ring-2 focus:outline-none ${
       errors[fieldName]
         ? "border-red-500 focus:ring-red-500"
-        : "border-gray-400 focus:ring-green-500"
+        : "border-gray-400 focus:ring-[#8A715D]"
     }`;
 
   const dynamicFieldClass = (fieldKey: string) =>
     `w-full px-4 py-4 border rounded-md text-lg focus:ring-2 focus:outline-none ${
       errors[`attributes.${fieldKey}`]
         ? "border-red-500 focus:ring-red-500"
-        : "border-gray-400 focus:ring-green-500"
+        : "border-gray-400 focus:ring-[#8A715D]"
     }`;
 
   const categoryConfig = useMemo(() => {
@@ -281,6 +267,15 @@ export default function ListingForm({
       validFiles.push(file);
     }
 
+    const totalImagesAfterAdd =
+      existingImages.length + images.length + validFiles.length;
+
+    if (totalImagesAfterAdd > MAX_TOTAL_IMAGES) {
+      showToast(`You can upload a maximum of ${MAX_TOTAL_IMAGES} images.`, "error");
+      e.target.value = "";
+      return;
+    }
+
     if (validFiles.length > 0) {
       setImages((prev) => [...prev, ...validFiles]);
     }
@@ -295,6 +290,7 @@ export default function ListingForm({
 
   const removeExistingImage = (publicId: string) => {
     if (isSubmitting) return;
+    if (!publicId) return;
     setExistingImages((prev) => prev.filter((img) => img.public_id !== publicId));
   };
 
@@ -480,12 +476,11 @@ export default function ListingForm({
               </select>
             </div>
 
-              {isEditMode && (
-                <p className="text-sm text-gray-500 mt-1">
-                  You cannot edit category or subcategory after creating a listing.
-                </p>
-              )}
-              
+            {isEditMode && (
+              <p className="text-sm text-gray-500 mt-1">
+                You cannot edit category or subcategory after creating a listing.
+              </p>
+            )}
 
             <div>
               <label className="block text-xl text-gray-700 mb-2">Subcategory</label>
@@ -503,7 +498,6 @@ export default function ListingForm({
                 ))}
               </select>
             </div>
-
 
             <div>
               <label className="block text-xl text-gray-700 mb-2">Listing Type</label>
@@ -550,7 +544,7 @@ export default function ListingForm({
                 !formData.category ||
                 !formData.subcategory
               }
-              className="w-full bg-green-600 text-white text-lg py-3 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#8A715D] text-white text-lg py-3 rounded-md hover:bg-[#7A6352] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -591,19 +585,6 @@ export default function ListingForm({
                 onChange={handleChange}
                 disabled={isSubmitting}
                 className={getFieldClass("price")}
-              />
-            </div>
-
-            <div>
-              <label className="block text-2xl text-gray-700 mb-2">Location</label>
-              <input
-                type="text"
-                name="location"
-                placeholder="Enter area, street, estate or neighborhood"
-                value={formData.location}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={getFieldClass("location")}
               />
             </div>
 
@@ -684,11 +665,15 @@ export default function ListingForm({
                 accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                 onChange={handleImageChange}
                 disabled={isSubmitting}
-                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl bg-white focus:ring-2 focus:ring-green-500 focus:outline-none disabled:opacity-60"
+                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl bg-white focus:ring-2 focus:ring-[#8A715D] focus:outline-none disabled:opacity-60"
               />
 
               <p className="mt-2 text-sm text-gray-600">
                 Max image size 5MB allowed. File types: JPG, PNG, JPEG and WEBP.
+              </p>
+
+              <p className="mt-1 text-sm text-red-500">
+                Maximum of 20 images allowed.
               </p>
 
               <p className="mt-1 text-sm text-gray-500">
@@ -725,7 +710,7 @@ export default function ListingForm({
 
                         <button
                           type="button"
-                          onClick={() => removeExistingImage(img.public_id)}
+                          onClick={() => img.public_id && removeExistingImage(img.public_id)}
                           disabled={isSubmitting}
                           className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-80 hover:opacity-100 disabled:opacity-50"
                         >
@@ -827,7 +812,7 @@ export default function ListingForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-3 bg-green-600 text-white text-lg rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-[#8A715D] text-white text-lg rounded-md hover:bg-[#7A6352] transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting
                   ? isEditMode

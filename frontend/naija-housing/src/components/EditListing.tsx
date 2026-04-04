@@ -2,23 +2,35 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { AxiosError } from "axios";
 import api from "@/libs/api";
 import ListingForm from "@/components/ListingForm";
 import { useUI } from "@/hooks/useUi";
 import PageReadyLoader from "@/components/pages/PageReadyLoader";
+import type { Listing } from "@/types/listing";
+
+type ListingResponse = {
+  listing?: Listing;
+};
 
 export default function EditListing() {
-  const { id } = useParams();
+  const params = useParams<{ id: string }>();
+  const id = params.id;
   const router = useRouter();
   const { showToast } = useUI();
-  const [listing, setListing] = useState<any>(null);
+  const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const res = await api.get(`/listings/${id}`);
-        setListing(res.data?.listing || res.data);
+        const res = await api.get<ListingResponse | Listing>(`/listings/${id}`);
+
+        if ("listing" in res.data) {
+          setListing(res.data.listing ?? null);
+        } else {
+          setListing(res.data as Listing);
+        }
       } catch (error) {
         console.error("Failed to fetch listing", error);
       } finally {
@@ -39,9 +51,13 @@ export default function EditListing() {
 
       showToast("Listing updated successfully", "success");
       router.push(`/listings/${id}`);
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string }>;
       console.error("Failed to update listing", error);
-      showToast(error?.response?.data?.message || "Failed to update listing", "error");
+      showToast(
+        error?.response?.data?.message || "Failed to update listing",
+        "error"
+      );
     }
   };
 
@@ -52,7 +68,7 @@ export default function EditListing() {
       ) : (
         <div className="p-4 md:p-6">
           <ListingForm
-            initialData={listing}
+            initialData={listing as Listing}
             onSubmit={handleUpdate}
             isEditMode={true}
           />

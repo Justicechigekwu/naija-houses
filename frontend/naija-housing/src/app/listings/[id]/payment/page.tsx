@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/libs/api";
 import PlanOptions from "@/components/PlanOptions";
+import { AxiosError } from "axios";
 
 type PublishOptions = {
   listingId: string;
@@ -48,8 +49,14 @@ export default function ListingPaymentPage() {
         setError(null);
         const res = await api.get(`/listings/${id}/publish-options`);
         setOpts(res.data);
-      } catch (e: any) {
-        setError(e?.response?.data?.message || "Failed to load payment options");
+      } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+          setError(e.response?.data?.message || "Failed to load payment options");
+        } else if (e instanceof Error) {
+          setError(e.message || "Failed to load payment options");
+        } else {
+          setError("Failed to load payment options");
+        }
       } finally {
         setLoading(false);
       }
@@ -79,8 +86,14 @@ export default function ListingPaymentPage() {
 
       const optsRes = await api.get(`/listings/${id}/publish-options`);
       setOpts(optsRes.data);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || "Something went wrong");
+    } catch (e: unknown) {
+      if (e instanceof AxiosError) {
+        setError(e.response?.data?.message || "Something went wrong");
+      } else if (e instanceof Error) {
+        setError(e.message || "Something went wrong");
+      } else {
+        setError("Something went wrong");
+      }
     } finally {
       setSubmitting(null);
     }
@@ -103,9 +116,6 @@ export default function ListingPaymentPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">14-days Free Plan</h2>
-                {/* <p className="mt-1 text-sm text-gray-600">
-                   Expires after {opts.trialDays} days.
-                </p> */}
               </div>
 
               <span className="rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white">

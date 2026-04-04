@@ -17,7 +17,6 @@ export const createListing = async (req, res) => {
     const price = Number(String(req.body.price).replace(/[^\d]/g, ""));
 
     const locationPayload = {
-      location: req.body.location || "",
       city: req.body.city || "",
       state: req.body.state || "",
     };
@@ -28,9 +27,10 @@ export const createListing = async (req, res) => {
       title: req.body.title,
       listingType: req.body.listingType,
       price,
-      location: locationPayload.location,
       state: locationPayload.state,
       city: locationPayload.city,
+      stateNormalized: String(locationPayload.state || "").trim().toLowerCase(),
+      cityNormalized: String(locationPayload.city || "").trim().toLowerCase(),
       geo: geo || undefined,
       description: req.body.description,
       postedBy: req.body.postedBy,
@@ -78,6 +78,7 @@ export const updateListing = async (req, res) => {
     delete req.body.publishedAt;
     delete req.body.expiresAt;
     delete req.body.owner;
+    delete req.body.location;
 
     if (
       listing.publishStatus === "PUBLISHED" &&
@@ -126,19 +127,16 @@ export const updateListing = async (req, res) => {
 
     const updatedImages = [...keepImages, ...newImages];
 
-    const nextLocation = req.body.location ?? listing.location;
     const nextCity = req.body.city ?? listing.city;
     const nextState = req.body.state ?? listing.state;
 
     let nextGeo = listing.geo;
     const locationChanged =
-      nextLocation !== listing.location ||
       nextCity !== listing.city ||
       nextState !== listing.state;
 
     if (locationChanged) {
       nextGeo = await geocodeAddress({
-        location: nextLocation,
         city: nextCity,
         state: nextState,
       });
@@ -150,9 +148,10 @@ export const updateListing = async (req, res) => {
       price: req.body.price
         ? Number(String(req.body.price).replace(/[^\d]/g, ""))
         : listing.price,
-      location: nextLocation,
       city: nextCity,
       state: nextState,
+      stateNormalized: String(nextState || "").trim().toLowerCase(),
+      cityNormalized: String(nextCity || "").trim().toLowerCase(),
       geo: nextGeo || listing.geo,
       description: req.body.description || listing.description,
       postedBy: req.body.postedBy || listing.postedBy,
@@ -162,7 +161,7 @@ export const updateListing = async (req, res) => {
         : listing.attributes,
     };
 
-if (listing.publishStatus === "DRAFT") {
+    if (listing.publishStatus === "DRAFT") {
       updates.category = req.body.category || listing.category;
       updates.subcategory = req.body.subcategory || listing.subcategory;
       updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000);
@@ -223,7 +222,7 @@ export const getLitsing = async (req, res) => {
     const {
       search,
       state,
-      location,
+      city,
       category,
       subcategory,
       listingType,
@@ -251,7 +250,6 @@ export const getLitsing = async (req, res) => {
         $or: [
           { title: { $regex: search, $options: "i" } },
           { state: { $regex: search, $options: "i" } },
-          { location: { $regex: search, $options: "i" } },
           { city: { $regex: search, $options: "i" } },
           { description: { $regex: search, $options: "i" } },
         ],
@@ -261,7 +259,7 @@ export const getLitsing = async (req, res) => {
     if (and.length) filter.$and = and;
 
     if (state) filter.state = { $regex: state, $options: "i" };
-    if (location) filter.location = { $regex: location, $options: "i" };
+    if (city) filter.city = { $regex: city, $options: "i" };
     if (category) filter.category = category;
     if (subcategory) filter.subcategory = subcategory;
     if (listingType) filter.listingType = listingType;

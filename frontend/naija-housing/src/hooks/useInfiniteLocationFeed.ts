@@ -1,11 +1,16 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import api from "@/libs/api";
 import useUserLocation from "./useUserLocation";
 import type { Listing, PaginatedListingsResponse } from "@/types/listing";
 
 const PAGE_SIZE = 20;
+
+type ErrorResponse = {
+  message?: string;
+};
 
 export default function useInfiniteLocationFeed() {
   const userLocation = useUserLocation();
@@ -54,12 +59,14 @@ export default function useInfiniteLocationFeed() {
   const listings: Listing[] =
     query.data?.pages.flatMap((page) => page.listings || page.items || []) || [];
 
+  const queryError = query.error as AxiosError<ErrorResponse> | Error | null;
+
   return {
     listings,
     loading: query.isLoading || userLocation.loading,
     error:
-      (query.error as any)?.response?.data?.message ||
-      (query.error as Error | null)?.message ||
+      (queryError as AxiosError<ErrorResponse> | null)?.response?.data?.message ||
+      queryError?.message ||
       "",
     hasNextPage: query.hasNextPage,
     fetchNextPage: query.fetchNextPage,

@@ -1,4 +1,3 @@
-// changes made here token to user
 "use client";
 
 import {
@@ -58,7 +57,6 @@ export const NotificationProvider = ({
   children: ReactNode;
 }) => {
   const { user } = useAuth();
-  // const { token } = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);

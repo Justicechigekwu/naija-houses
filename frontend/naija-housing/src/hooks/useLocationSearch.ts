@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
 import api from "@/libs/api";
 import useUserLocation from "./useUserLocation";
 
@@ -10,12 +11,15 @@ type ListingItem = {
   price?: number;
   city?: string;
   state?: string;
-  location?: string;
   images?: { url: string }[];
   distanceMeters?: number;
   category?: string;
   subcategory?: string;
   postedBy?: "Owner" | "Agent" | "Dealer" | "Seller";
+};
+
+type ErrorResponse = {
+  message?: string;
 };
 
 export default function useLocationSearch(
@@ -88,9 +92,12 @@ export default function useLocationSearch(
 
         setResults(fallbackRes.data || []);
         setSimilarListings([]);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Search failed:", error);
-        setError(error?.response?.data?.message || "Search failed");
+
+        const err = error as AxiosError<ErrorResponse>;
+        setError(err.response?.data?.message || "Search failed");
+
         setResults([]);
         setSimilarListings([]);
       } finally {

@@ -1,7 +1,7 @@
 import axios from "axios";
 
-export const geocodeAddress = async ({ location = "", city = "", state = "" }) => {
-  const query = [location, city, state, "Nigeria"].filter(Boolean).join(", ");
+export const geocodeAddress = async ({ city = "", state = "" }) => {
+  const query = [city, state, "Nigeria"].filter(Boolean).join(", ");
 
   if (!query.trim()) return null;
 
@@ -33,8 +33,3 @@ export const geocodeAddress = async ({ location = "", city = "", state = "" }) =
     coordinates: [lng, lat],
   };
 };
-
-
-// Production note:
-  // Replace this with Google Maps, Mapbox, or LocationIQ in production.
-  // Nominatim is okay for development/small usage but not best for high traffic.

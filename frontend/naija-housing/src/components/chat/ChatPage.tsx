@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +10,7 @@ import deleteChat from "@/controllers/deleteChat";
 import { useRouter } from "next/navigation";
 import { connectSocket } from "@/libs/socket";
 import ReportChatTargetModal from "./ReportChatTargetModal";
+import { AxiosError } from "axios";
 
 interface Message {
   _id: string;
@@ -87,7 +85,9 @@ export default function ChatPage({
   const menuRef = useRef<HTMLDivElement | null>(null);
   const markingSeenRef = useRef(false);
 
-  const otherUser = chatDetails?.participants.find((p) => p._id !== user?.id);
+  const currentUserId = user?.id ?? user?._id;
+
+  const otherUser = chatDetails?.participants.find((p) => p._id !== currentUserId);
 
   const otherUserName = otherUser?.isBanned
     ? "Velora User"
@@ -98,13 +98,13 @@ export default function ChatPage({
 
   const listingClosed = !!chatDetails?.listing?.isClosed;
 
-  const hasUserId = (arr: any[] = [], userId?: string) =>
+  const hasUserId = (arr: Array<string | undefined | null> = [], userId?: string) =>
     arr.some((id) => String(id) === String(userId));
 
   const isBuyerViewing =
-    Boolean(user?.id) &&
+    Boolean(currentUserId) &&
     Boolean(chatDetails?.listing?.owner) &&
-    String(user?.id) !== String(chatDetails?.listing?.owner) &&
+    String(currentUserId) !== String(chatDetails?.listing?.owner) &&
     !listingClosed;
 
   const addMessageIfMissing = (incoming: Message) => {
@@ -130,8 +130,8 @@ export default function ChatPage({
   };
 
   const acknowledgeDelivered = (message: Message) => {
-    if (!user?.id) return;
-    if (message.sender?._id === user.id) return;
+    if (!currentUserId) return;
+    if (message.sender?._id === currentUserId) return;
 
     const socket = connectSocket();
     socket.emit("chat:message-delivered", {
@@ -141,7 +141,7 @@ export default function ChatPage({
   };
 
   const markSeen = async () => {
-    if (!chatId || !user?.id || markingSeenRef.current) return;
+    if (!chatId || !currentUserId || markingSeenRef.current) return;
 
     try {
       markingSeenRef.current = true;
@@ -150,28 +150,34 @@ export default function ChatPage({
 
       setMessages((prev) =>
         prev.map((msg) => {
-          const isIncoming = msg.sender?._id !== user.id;
-          const alreadySeen = hasUserId(msg.seenBy || [], user.id);
+          const isIncoming = msg.sender?._id !== currentUserId;
+          const alreadySeen = hasUserId(msg.seenBy || [], currentUserId);
           if (!isIncoming || alreadySeen) return msg;
 
           return {
             ...msg,
-            seenBy: [...(msg.seenBy || []), user.id],
+            seenBy: [...(msg.seenBy || []), currentUserId],
           };
         })
       );
-    } catch (error) {
-      console.error(
-        "Failed to mark messages as seen",
-        (error as any)?.response?.data || (error as any)?.message || error
-      );
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        console.error(
+          "Failed to mark messages as seen",
+          error.response?.data || error.message
+        );
+      } else if (error instanceof Error) {
+        console.error("Failed to mark messages as seen", error.message);
+      } else {
+        console.error("Failed to mark messages as seen", error);
+      }
     } finally {
       markingSeenRef.current = false;
     }
   };
 
   useEffect(() => {
-    if (!chatId || !user?.id) return;
+    if (!chatId || !currentUserId) return;
 
     const fetchChatData = async () => {
       try {
@@ -183,35 +189,39 @@ export default function ChatPage({
         ]);
 
         const fetchedMessages = Array.isArray(messagesRes.data)
-          ? messagesRes.data
+          ? (messagesRes.data as Message[])
           : [];
 
-        setChatDetails(chatRes.data);
+        setChatDetails(chatRes.data as ChatDetails);
         setMessages(fetchedMessages);
 
         const hasUnreadIncoming = fetchedMessages.some(
           (msg: Message) =>
-            msg.sender?._id !== user.id && !hasUserId(msg.seenBy || [], user.id)
+            msg.sender?._id !== currentUserId &&
+            !hasUserId(msg.seenBy || [], currentUserId)
         );
 
         if (hasUnreadIncoming) {
           await markSeen();
         }
-      } catch (error) {
-        console.error(
-          "Failed to load chat",
-          (error as any)?.response?.data || (error as any)?.message || error
-        );
+      } catch (error: unknown) {
+        if (error instanceof AxiosError) {
+          console.error("Failed to load chat", error.response?.data || error.message);
+        } else if (error instanceof Error) {
+          console.error("Failed to load chat", error.message);
+        } else {
+          console.error("Failed to load chat", error);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchChatData();
-  }, [chatId, user?.id]);
+  }, [chatId, currentUserId]);
 
   useEffect(() => {
-    if (!chatId || !user?.id) return;
+    if (!chatId || !currentUserId) return;
 
     const socket = connectSocket();
     socket.emit("chat:join", { chatId });
@@ -227,7 +237,7 @@ export default function ChatPage({
 
       addMessageIfMissing(message);
 
-      const isIncoming = message.sender?._id !== user.id;
+      const isIncoming = message.sender?._id !== currentUserId;
       if (isIncoming) {
         acknowledgeDelivered(message);
         await markSeen();
@@ -246,7 +256,7 @@ export default function ChatPage({
 
       setMessages((prev) =>
         prev.map((msg) => {
-          const isMine = msg.sender?._id === user.id;
+          const isMine = msg.sender?._id === currentUserId;
           if (!isMine) return msg;
           if (hasUserId(msg.seenBy || [], seenBy)) return msg;
 
@@ -308,7 +318,7 @@ export default function ChatPage({
       socket.off("chat:message-delivered-update", handleMessageDeliveredUpdate);
       socket.off("chat:deleted", handleChatDeleted);
     };
-  }, [chatId, user?.id, router]);
+  }, [chatId, currentUserId, router]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -346,11 +356,14 @@ export default function ChatPage({
         chatId,
         message: sentMessage,
       });
-    } catch (error) {
-      console.error(
-        "Failed to send message",
-        (error as any)?.response?.data || (error as any)?.message || error
-      );
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        console.error("Failed to send message", error.response?.data || error.message);
+      } else if (error instanceof Error) {
+        console.error("Failed to send message", error.message);
+      } else {
+        console.error("Failed to send message", error);
+      }
     } finally {
       setIsSending(false);
     }
@@ -361,8 +374,12 @@ export default function ChatPage({
       await deleteChat(chatId);
       setMenuOpen(false);
       router.push("/messages");
-    } catch (error: any) {
-      alert(error.message || "Failed to delete chat");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message || "Failed to delete chat");
+      } else {
+        alert("Failed to delete chat");
+      }
     }
   };
 
@@ -486,7 +503,8 @@ export default function ChatPage({
                     {chatDetails.listing.title}
                   </p>
                   <p className="text-sm text-green-600 font-semibold">
-                    {chatDetails.listing.price}
+                    {/* {chatDetails.listing.price} */}
+                    ₦{Number(chatDetails.listing.price || 0).toLocaleString()}
                   </p>
                 </div>
               </Link>
@@ -495,7 +513,6 @@ export default function ChatPage({
         )}
       </div>
 
-
       <div className="flex-1 p-4 overflow-y-auto bg-[#EDEDED]">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-500">
@@ -503,7 +520,7 @@ export default function ChatPage({
           </div>
         ) : (
           messages.map((msg) => {
-            const isMine = msg.sender._id === user?.id;
+            const isMine = msg.sender._id === currentUserId;
             const receiptLabel = isMine ? getReceiptLabel(msg) : "";
 
             return (
@@ -542,11 +559,12 @@ export default function ChatPage({
       </div>
 
       <div className="border-t bg-white p-3">
-        {isBuyerViewing && chatDetails?.listing?.owner && (
+        {isBuyerViewing && chatDetails?.listing?._id && (
           <div className="mb-3">
             <RateSellerPrompt
-              sellerId={chatDetails.listing.owner}
+              listingId={chatDetails.listing._id}
               chatId={chatId}
+              refreshKey={messages.length}
             />
           </div>
         )}
