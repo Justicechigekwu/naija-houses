@@ -71,5 +71,6 @@ export default function useHomeLocationFeed() {
       queryError?.message ||
       "",
     userLocation,
+    refreshFeed: query.refetch,
   };
 }

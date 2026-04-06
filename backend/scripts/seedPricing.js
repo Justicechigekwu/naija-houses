@@ -6,11 +6,23 @@ dotenv.config();
 await dbConnect();
 
 const seed = [
+  // =========================
   // CATEGORY DEFAULTS
+  // =========================
   {
     category: "PROPERTY",
     subcategory: null,
     label: "Property Default",
+    publishPrice: 3499,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: true,
+    isActive: true,
+  },
+  {
+    category: "LAND",
+    subcategory: null,
+    label: "Land Default",
     publishPrice: 3499,
     trialDays: 14,
     paidDays: 30,
@@ -100,7 +112,7 @@ const seed = [
   {
     category: "PETS_ANIMALS",
     subcategory: null,
-    label: "Pets & Animals Default",
+    label: "Pets Default",
     publishPrice: 1999,
     trialDays: 14,
     paidDays: 30,
@@ -110,7 +122,7 @@ const seed = [
   {
     category: "TOYS_GAMES",
     subcategory: null,
-    label: "Toys & Games Default",
+    label: "Toys Default",
     publishPrice: 1999,
     trialDays: 14,
     paidDays: 30,
@@ -128,11 +140,13 @@ const seed = [
     isActive: true,
   },
 
-  // SUBCATEGORY OVERRIDES
+  // =========================
+  // PROPERTY OVERRIDES
+  // =========================
   {
     category: "PROPERTY",
-    subcategory: "HOUSES_APARTMENTS",
-    label: "Houses & Apartments",
+    subcategory: "HOUSE",
+    label: "House",
     publishPrice: 3499,
     trialDays: 14,
     paidDays: 30,
@@ -141,9 +155,147 @@ const seed = [
   },
   {
     category: "PROPERTY",
-    subcategory: "LANDS_PLOTS",
-    label: "Lands & Plots",
+    subcategory: "APARTMENT",
+    label: "Apartment",
     publishPrice: 3499,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: true,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "DUPLEX",
+    label: "Duplex",
+    publishPrice: 3999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: true,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "MANSION",
+    label: "Mansion",
+    publishPrice: 6999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: false,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "SHOP",
+    label: "Shop",
+    publishPrice: 4999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: true,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "OFFICE_SPACE",
+    label: "Office Space",
+    publishPrice: 4999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: true,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "WAREHOUSE",
+    label: "Warehouse",
+    publishPrice: 5999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: false,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "FACTORY",
+    label: "Factory",
+    publishPrice: 6999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: false,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "HOTEL",
+    label: "Hotel",
+    publishPrice: 6999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: false,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "EVENT_CENTER",
+    label: "Event Center",
+    publishPrice: 7999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: false,
+    isActive: true,
+  },
+  {
+    category: "PROPERTY",
+    subcategory: "COMMERCIAL_BUILDING",
+    label: "Commercial Building",
+    publishPrice: 7999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: false,
+    isActive: true,
+  },
+
+  // =========================
+  // LAND OVERRIDES
+  // =========================
+  {
+    category: "LAND",
+    subcategory: "RESIDENTIAL_PLOT",
+    label: "Residential Plot",
+    publishPrice: 3499,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: true,
+    isActive: true,
+  },
+  {
+    category: "LAND",
+    subcategory: "COMMERCIAL_PLOT",
+    label: "Commercial Plot",
+    publishPrice: 4999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: true,
+    isActive: true,
+  },
+  {
+    category: "LAND",
+    subcategory: "INDUSTRIAL_LAND",
+    label: "Industrial Land",
+    publishPrice: 6999,
+    trialDays: 14,
+    paidDays: 30,
+    trialEnabled: false,
+    isActive: true,
+  },
+
+  // =========================
+  // VEHICLE OVERRIDES
+  // =========================
+  {
+    category: "VEHICLES",
+    subcategory: "CARS",
+    label: "Cars",
+    publishPrice: 2499,
     trialDays: 14,
     paidDays: 30,
     trialEnabled: true,
@@ -159,16 +311,10 @@ const seed = [
     trialEnabled: true,
     isActive: true,
   },
-  {
-    category: "VEHICLES",
-    subcategory: "CARS",
-    label: "Cars",
-    publishPrice: 2499,
-    trialDays: 14,
-    paidDays: 30,
-    trialEnabled: true,
-    isActive: true,
-  },
+
+  // =========================
+  // PHONES OVERRIDES
+  // =========================
   {
     category: "PHONES",
     subcategory: "SMART_PHONES",
@@ -189,6 +335,10 @@ const seed = [
     trialEnabled: true,
     isActive: true,
   },
+
+  // =========================
+  // ELECTRONICS OVERRIDES
+  // =========================
   {
     category: "ELECTRONICS",
     subcategory: "GAMING_CONSOLES",

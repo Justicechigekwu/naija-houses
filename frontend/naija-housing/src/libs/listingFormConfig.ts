@@ -2,66 +2,482 @@ export const CATEGORY_TREE = {
   PROPERTY: {
     label: "Property",
     subcategories: {
-      HOUSES_APARTMENTS: {
-        label: "Houses & Apartments",
+      HOUSE: {
+        label: "House",
         fields: [
-            {
-              key: "propertyType",
-              label: "Property Type",
-              type: "select",
-              options: [
-                "House",
-                "Apartment",
-                "Flat",
-                "Mini Flat",
-                "Self Contain",
-                "Duplex",
-                "Bungalow",
-                "Terrace",
-                "Semi Detached",
-                "Detached House",
-                "Mansion",
-                "Penthouse",
-                "Studio Apartment",
-                "Townhouse",
-                "Farm House",
-                "Villa",
-                "Cottage",
-                "Hotel",
-                "Guest House",
-                "Office Space",
-                "Shop",
-                "Warehouse",
-                "Factory",
-                "Commercial Building",
-                "School Building",
-                "Hospital Building"
-              ]
-            },
           { key: "bedrooms", label: "Bedrooms", type: "number" },
           { key: "bathrooms", label: "Bathrooms", type: "number" },
           { key: "toilets", label: "Toilets", type: "number" },
           { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
-          { key: "furnished", label: "Furnished", type: "select", options: ["Yes","No"] },
-          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"]},
-          { key: "petAllowed", label: "Pet Allowed", type: "select", options: ["Yes","No"] },
-          { key: "legalFees", label: "Legal Fees", type: "number" },
-          { key: "size", label: "Size (sqm)", type: "number" },
-          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O","Deed","Gazette","Receipt","None"] },
+          { key: "floors", label: "Number of Floors", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O", "Gazette", "Deed", "Receipt", "Governor Consent"] },
         ],
       },
-
-      LANDS_PLOTS: {
-        label: "Lands & Plots",
+  
+      APARTMENT: {
+        label: "Apartment",
         fields: [
-          { key: "landType", label: "Land Type", type: "select", options: ["Residential","Commercial","Agricultural","Industrial"] },
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floorNumber", label: "Floor Number", type: "number" },
+          { key: "totalFloors", label: "Total Floors", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Apartment Size (sqm)", type: "number" },
+        ],
+      },
+  
+      FLAT: {
+        label: "Flat",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floorNumber", label: "Floor Number", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Flat Size (sqm)", type: "number" },
+        ],
+      },
+  
+      MINI_FLAT: {
+        label: "Mini Flat",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "floorNumber", label: "Floor Number", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Unit Size (sqm)", type: "number" },
+        ],
+      },
+  
+      SELF_CONTAIN: {
+        label: "Self Contain",
+        fields: [
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Unit Size (sqm)", type: "number" },
+        ],
+      },
+  
+      STUDIO_APARTMENT: {
+        label: "Studio Apartment",
+        fields: [
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "floorNumber", label: "Floor Number", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Studio Size (sqm)", type: "number" },
+        ],
+      },
+  
+      DUPLEX: {
+        label: "Duplex",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floors", label: "Number of Floors", type: "number" },
+          { key: "boysQuarter", label: "Boys Quarter", type: "select", options: ["Yes", "No"] },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      BUNGALOW: {
+        label: "Bungalow",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "boysQuarter", label: "Boys Quarter", type: "select", options: ["Yes", "No"] },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      TERRACE: {
+        label: "Terrace",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floors", label: "Number of Floors", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      SEMI_DETACHED: {
+        label: "Semi Detached",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floors", label: "Number of Floors", type: "number" },
+          { key: "boysQuarter", label: "Boys Quarter", type: "select", options: ["Yes", "No"] },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      DETACHED_HOUSE: {
+        label: "Detached House",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floors", label: "Number of Floors", type: "number" },
+          { key: "boysQuarter", label: "Boys Quarter", type: "select", options: ["Yes", "No"] },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      MANSION: {
+        label: "Mansion",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floors", label: "Number of Floors", type: "number" },
+          { key: "swimmingPool", label: "Swimming Pool", type: "select", options: ["Yes", "No"] },
+          { key: "gym", label: "Gym", type: "select", options: ["Yes", "No"] },
+          { key: "cinema", label: "Cinema", type: "select", options: ["Yes", "No"] },
+          { key: "boysQuarter", label: "Boys Quarter", type: "select", options: ["Yes", "No"] },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      PENTHOUSE: {
+        label: "Penthouse",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floorNumber", label: "Floor Number", type: "number" },
+          { key: "privateElevator", label: "Private Elevator", type: "select", options: ["Yes", "No"] },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Penthouse Size (sqm)", type: "number" },
+        ],
+      },
+  
+      TOWNHOUSE: {
+        label: "Townhouse",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floors", label: "Number of Floors", type: "number" },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      VILLA: {
+        label: "Villa",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floors", label: "Number of Floors", type: "number" },
+          { key: "swimmingPool", label: "Swimming Pool", type: "select", options: ["Yes", "No"] },
+          { key: "boysQuarter", label: "Boys Quarter", type: "select", options: ["Yes", "No"] },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      COTTAGE: {
+        label: "Cottage",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "furnishing", label: "Furnishing", type: "select", options: ["Fully Furnished", "Semi Furnished", "Unfurnished"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+  
+      FARM_HOUSE: {
+        label: "Farm House",
+        fields: [
+          { key: "bedrooms", label: "Bedrooms", type: "number" },
+          { key: "bathrooms", label: "Bathrooms", type: "number" },
+          { key: "toilets", label: "Toilets", type: "number" },
+          { key: "farmSize", label: "Farm Size", type: "number" },
+          { key: "unit", label: "Unit", type: "select", options: ["sqm", "plot", "hectare", "acre"] },
+          { key: "waterSupply", label: "Water Supply", type: "select", options: ["Yes", "No"] },
+          { key: "electricity", label: "Electricity", type: "select", options: ["Yes", "No"] },
+          { key: "condition", label: "Condition", type: "select", options: ["Serviced", "Newly Built", "Under Construction", "Renovated"] },
+        ],
+      },
+  
+      OFFICE_SPACE: {
+        label: "Office Space",
+        fields: [
+          { key: "officeType", label: "Office Type", type: "select", options: ["Open Plan", "Private Office", "Co-working", "Serviced Office"] },
+          { key: "numberOfRooms", label: "Number of Rooms", type: "number" },
+          { key: "meetingRooms", label: "Meeting Rooms", type: "number" },
+          { key: "restrooms", label: "Restrooms", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "floorNumber", label: "Floor Number", type: "number" },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "size", label: "Office Size (sqm)", type: "number" },
+          { key: "internetReady", label: "Internet Ready", type: "select", options: ["Yes", "No"] },
+          { key: "powerSupply", label: "Power Supply", type: "select", options: ["Stable", "Moderate", "Poor"] },
+        ],
+      },
+  
+      SHOP: {
+        label: "Shop",
+        fields: [
+          { key: "shopType", label: "Shop Type", type: "select", options: ["Mall Shop", "Standalone Shop", "Plaza Shop", "Kiosk"] },
+          { key: "numberOfRooms", label: "Number of Rooms", type: "number" },
+          { key: "restrooms", label: "Restrooms", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "size", label: "Shop Size (sqm)", type: "number" },
+          { key: "frontage", label: "Road Frontage", type: "select", options: ["Yes", "No"] },
+          { key: "serviceCharge", label: "Service Charge", type: "number" },
+          { key: "powerSupply", label: "Power Supply", type: "select", options: ["Stable", "Moderate", "Poor"] },
+        ],
+      },
+  
+      WAREHOUSE: {
+        label: "Warehouse",
+        fields: [
+          { key: "warehouseType", label: "Warehouse Type", type: "select", options: ["Storage", "Distribution", "Cold Room", "Factory Storage"] },
+          { key: "size", label: "Warehouse Size (sqm)", type: "number" },
+          { key: "loadingBay", label: "Loading Bay", type: "select", options: ["Yes", "No"] },
+          { key: "ceilingHeight", label: "Ceiling Height", type: "text" },
+          { key: "officeSpaceIncluded", label: "Office Space Included", type: "select", options: ["Yes", "No"] },
+          { key: "restrooms", label: "Restrooms", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "powerSupply", label: "Power Supply", type: "select", options: ["Stable", "Moderate", "Poor"] },
+        ],
+      },
+  
+      FACTORY: {
+        label: "Factory",
+        fields: [
+          { key: "factoryType", label: "Factory Type", type: "select", options: ["Manufacturing", "Processing", "Assembly", "Packaging"] },
+          { key: "size", label: "Factory Size (sqm)", type: "number" },
+          { key: "productionHalls", label: "Production Halls", type: "number" },
+          { key: "officeBlocks", label: "Office Blocks", type: "number" },
+          { key: "restrooms", label: "Restrooms", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "loadingBay", label: "Loading Bay", type: "select", options: ["Yes", "No"] },
+          { key: "powerSupply", label: "Power Supply", type: "select", options: ["Stable", "Moderate", "Poor"] },
+        ],
+      },
+  
+      SCHOOL_BUILDING: {
+        label: "School Building",
+        fields: [
+          { key: "schoolType", label: "School Type", type: "select", options: ["Nursery", "Primary", "Secondary", "Combined", "Tutorial Center"] },
+          { key: "classRooms", label: "Class Rooms", type: "number" },
+          { key: "officeRooms", label: "Office Rooms", type: "number" },
+          { key: "laboratories", label: "Laboratories", type: "number" },
+          { key: "hostelAvailable", label: "Hostel Available", type: "select", options: ["Yes", "No"] },
+          { key: "hallAvailable", label: "Assembly Hall", type: "select", options: ["Yes", "No"] },
+          { key: "playground", label: "Playground", type: "select", options: ["Yes", "No"] },
+          { key: "restrooms", label: "Restrooms", type: "number" },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O", "Gazette", "Deed", "Receipt", "Governor Consent"] },
+        ],
+      },
+  
+      HOSPITAL_BUILDING: {
+        label: "Hospital Building",
+        fields: [
+          { key: "hospitalType", label: "Hospital Type", type: "select", options: ["Clinic", "Hospital", "Maternity", "Diagnostic Center"] },
+          { key: "wards", label: "Wards", type: "number" },
+          { key: "consultingRooms", label: "Consulting Rooms", type: "number" },
+          { key: "operatingTheatres", label: "Operating Theatres", type: "number" },
+          { key: "laboratories", label: "Laboratories", type: "number" },
+          { key: "pharmacySpace", label: "Pharmacy Space", type: "select", options: ["Yes", "No"] },
+          { key: "restrooms", label: "Restrooms", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "compoundSize", label: "Compound Size", type: "number" },
+        ],
+      },
+  
+      HOTEL: {
+        label: "Hotel",
+        fields: [
+          { key: "numberOfRooms", label: "Number of Rooms", type: "number" },
+          { key: "conferenceRooms", label: "Conference Rooms", type: "number" },
+          { key: "restaurant", label: "Restaurant", type: "select", options: ["Yes", "No"] },
+          { key: "bar", label: "Bar", type: "select", options: ["Yes", "No"] },
+          { key: "swimmingPool", label: "Swimming Pool", type: "select", options: ["Yes", "No"] },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "laundryRoom", label: "Laundry Room", type: "select", options: ["Yes", "No"] },
+          { key: "size", label: "Hotel Size (sqm)", type: "number" },
+        ],
+      },
+  
+      GUEST_HOUSE: {
+        label: "Guest House",
+        fields: [
+          { key: "numberOfRooms", label: "Number of Rooms", type: "number" },
+          { key: "receptionArea", label: "Reception Area", type: "select", options: ["Yes", "No"] },
+          { key: "restaurant", label: "Restaurant", type: "select", options: ["Yes", "No"] },
+          { key: "bar", label: "Bar", type: "select", options: ["Yes", "No"] },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "laundryRoom", label: "Laundry Room", type: "select", options: ["Yes", "No"] },
+          { key: "size", label: "Guest House Size (sqm)", type: "number" },
+        ],
+      },
+  
+      EVENT_CENTER: {
+        label: "Event Center",
+        fields: [
+          { key: "hallCapacity", label: "Hall Capacity", type: "number" },
+          { key: "numberOfHalls", label: "Number of Halls", type: "number" },
+          { key: "changingRooms", label: "Changing Rooms", type: "number" },
+          { key: "restrooms", label: "Restrooms", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "outdoorSpace", label: "Outdoor Space", type: "select", options: ["Yes", "No"] },
+          { key: "generatorRoom", label: "Generator Room", type: "select", options: ["Yes", "No"] },
+          { key: "size", label: "Event Center Size (sqm)", type: "number" },
+        ],
+      },
+  
+      COMMERCIAL_BUILDING: {
+        label: "Commercial Building",
+        fields: [
+          { key: "commercialType", label: "Commercial Type", type: "select", options: ["Mixed Use", "Plaza", "Business Complex", "Mall"] },
+          { key: "numberOfUnits", label: "Number of Units", type: "number" },
+          { key: "officeSpaces", label: "Office Spaces", type: "number" },
+          { key: "shops", label: "Shops", type: "number" },
+          { key: "restrooms", label: "Restrooms", type: "number" },
+          { key: "parkingSpaces", label: "Parking Spaces", type: "number" },
+          { key: "elevator", label: "Elevator", type: "select", options: ["Yes", "No"] },
+          { key: "size", label: "Building Size (sqm)", type: "number" },
+        ],
+      },
+    },
+  },
+  
+  LAND: {
+    label: "Lands",
+    subcategories: {
+      RESIDENTIAL_PLOT: {
+        label: "Residential Plot",
+        fields: [
           { key: "landSize", label: "Land Size", type: "number" },
-          { key: "unit", label: "Unit", type: "select", options: ["sqm","plot","hectare","acre"] },
-          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O","Gazette","Deed","Receipt"] },
-          { key: "serviced", label: "Serviced", type: "select", options: ["Yes","No"] },
-          { key: "fenced", label: "Fenced", type: "select", options: ["Yes","No"] },
-          { key: "surveyAvailable", label: "Survey Available", type: "select", options: ["Yes","No"] },
-          { key: "purpose", label: "Purpose", type: "select", options: ["Residential","Commercial","Mixed Use"] },
+          { key: "unit", label: "Unit", type: "select", options: ["sqm", "plot", "hectare", "acre"] },
+          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O", "Gazette", "Deed", "Receipt", "Governor Consent"] },
+          { key: "serviced", label: "Serviced", type: "select", options: ["Yes", "No"] },
+          { key: "fenced", label: "Fenced", type: "select", options: ["Yes", "No"] },
+          { key: "gatedEstate", label: "Gated Estate", type: "select", options: ["Yes", "No"] },
+          { key: "surveyAvailable", label: "Survey Available", type: "select", options: ["Yes", "No"] },
+          { key: "topography", label: "Topography", type: "select", options: ["Dry", "Swampy", "Mixed"] },
+          { key: "roadAccess", label: "Road Access", type: "select", options: ["Tarred", "Untarred", "Partly Tarred"] },
+        ],
+      },
+  
+      COMMERCIAL_PLOT: {
+        label: "Commercial Plot",
+        fields: [
+          { key: "landSize", label: "Land Size", type: "number" },
+          { key: "unit", label: "Unit", type: "select", options: ["sqm", "plot", "hectare", "acre"] },
+          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O", "Gazette", "Deed", "Receipt", "Governor Consent"] },
+          { key: "serviced", label: "Serviced", type: "select", options: ["Yes", "No"] },
+          { key: "fenced", label: "Fenced", type: "select", options: ["Yes", "No"] },
+          { key: "surveyAvailable", label: "Survey Available", type: "select", options: ["Yes", "No"] },
+          { key: "cornerPiece", label: "Corner Piece", type: "select", options: ["Yes", "No"] },
+          { key: "roadAccess", label: "Road Access", type: "select", options: ["Tarred", "Untarred", "Partly Tarred"] },
+          { key: "purpose", label: "Purpose", type: "select", options: ["Office", "Shop", "Plaza", "Warehouse", "Mixed Use"] },
+        ],
+      },
+  
+      INDUSTRIAL_LAND: {
+        label: "Industrial Land",
+        fields: [
+          { key: "landSize", label: "Land Size", type: "number" },
+          { key: "unit", label: "Unit", type: "select", options: ["sqm", "plot", "hectare", "acre"] },
+          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O", "Gazette", "Deed", "Receipt", "Governor Consent"] },
+          { key: "fenced", label: "Fenced", type: "select", options: ["Yes", "No"] },
+          { key: "surveyAvailable", label: "Survey Available", type: "select", options: ["Yes", "No"] },
+          { key: "roadAccess", label: "Road Access", type: "select", options: ["Tarred", "Untarred", "Partly Tarred"] },
+          { key: "heavyDutyAccess", label: "Heavy Duty Vehicle Access", type: "select", options: ["Yes", "No"] },
+          { key: "purpose", label: "Purpose", type: "select", options: ["Factory", "Warehouse", "Depot", "Industrial Estate"] },
+        ],
+      },
+  
+      AGRICULTURAL_LAND: {
+        label: "Agricultural Land",
+        fields: [
+          { key: "landSize", label: "Land Size", type: "number" },
+          { key: "unit", label: "Unit", type: "select", options: ["sqm", "plot", "hectare", "acre"] },
+          { key: "soilType", label: "Soil Type", type: "select", options: ["Loamy", "Sandy", "Clay", "Mixed"] },
+          { key: "waterSupply", label: "Water Supply", type: "select", options: ["Yes", "No"] },
+          { key: "fenced", label: "Fenced", type: "select", options: ["Yes", "No"] },
+          { key: "surveyAvailable", label: "Survey Available", type: "select", options: ["Yes", "No"] },
+          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O", "Gazette", "Deed", "Receipt", "Governor Consent"] },
+          { key: "cropSuitableFor", label: "Suitable For", type: "text" },
+        ],
+      },
+  
+      MIXED_USE_LAND: {
+        label: "Mixed Use Land",
+        fields: [
+          { key: "landSize", label: "Land Size", type: "number" },
+          { key: "unit", label: "Unit", type: "select", options: ["sqm", "plot", "hectare", "acre"] },
+          { key: "titleDocument", label: "Title Document", type: "select", options: ["C of O", "Gazette", "Deed", "Receipt", "Governor Consent"] },
+          { key: "serviced", label: "Serviced", type: "select", options: ["Yes", "No"] },
+          { key: "fenced", label: "Fenced", type: "select", options: ["Yes", "No"] },
+          { key: "surveyAvailable", label: "Survey Available", type: "select", options: ["Yes", "No"] },
+          { key: "roadAccess", label: "Road Access", type: "select", options: ["Tarred", "Untarred", "Partly Tarred"] },
+          { key: "purpose", label: "Purpose", type: "select", options: ["Residential", "Commercial", "Industrial"] },
         ],
       },
     },
@@ -384,14 +800,14 @@ export const CATEGORY_TREE = {
       SMART_PHONES: {
         label: "Smart Phones",
         fields: [
-          { key: "deviceType", label: "Device Type", type: "select", options: ["Phone","Tablet"] },
+          // { key: "deviceType", label: "Device Type", type: "select", options: ["Phone","Tablet"] },
           { key: "brand", label: "Brand", type: "text" },
           { key: "model", label: "Model", type: "text" },
           { key: "condition", label: "Condition", type: "select", options: ["New","Forein used", "Local used", "Refurbished"] },
-          { key: "ram", label: "RAM", type: "text" },
-          { key: "storage", label: "Storage", type: "text" },
+          { key: "ram", label: "ram", type: "select", options: ["2GB", "3GB", "4GB", "6GB", "8GB", "12GB", "16GB"] },
+          { key: "storage", label: "storage", type: "select", options: ["16GB", "32GB", "64GB", "128GB", "256GB", "512GB", "1TB"] },
           { key: "color", label: "Color", type: "text" },
-          { key: "batteryHealth", label: "Battery Health", type: "text" },
+          { key: "battery", label: "Battery ", type: "text" },
           { key: "network", label: "Network", type: "select", options: ["2G + Wifi", "3G + Wifi", "4G + Wifi","5G + Wifi","WiFi Only"] },
           { key: "simSlots", label: "SIM Slots", type: "number" },
           { key: "chargerIncluded", label: "Charger Included", type: "select", options: ["Yes","No"] },
@@ -406,7 +822,7 @@ export const CATEGORY_TREE = {
             label: "Tablet Type",
             type: "select",
             options: [
-              "Standard Tablet",
+              "Smart Tablet",
               "Kids Tablet",
               "Drawing Tablet",
               "Gaming Tablet",
@@ -484,7 +900,7 @@ export const CATEGORY_TREE = {
       
           {
             key: "batteryCapacity",
-            label: "Battery Capacity",
+            label: "Battery Size",
             type: "text"
           },
       
@@ -496,7 +912,7 @@ export const CATEGORY_TREE = {
           },
       
           {
-            key: "keyboardSupport",
+            key: "physicalKeyboard",
             label: "Keyboard Support",
             type: "select",
             options: ["Yes", "No"]

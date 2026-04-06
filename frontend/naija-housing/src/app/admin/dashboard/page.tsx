@@ -13,6 +13,7 @@ import {
   Flag,
   ShieldAlert,
   BarChart3,
+  LifeBuoy,
   LogOut,
 } from "lucide-react";
 
@@ -82,6 +83,14 @@ export default function AdminDashboardPage() {
               >
                 <ShieldAlert className="w-4 h-4" />
                 Appeals
+              </button>
+
+              <button
+                className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition shadow-sm"
+                onClick={() => router.push("/admin/support")}
+              >
+                <LifeBuoy className="w-4 h-4" />
+                Support
               </button>
 
               <button

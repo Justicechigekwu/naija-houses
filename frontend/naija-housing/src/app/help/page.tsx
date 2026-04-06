@@ -27,7 +27,7 @@ import CookiePolicyContent from "@/components/help-content/CookiePolicyContent";
 import RefundPolicyContent from "@/components/help-content/RefundPolicyContent";
 import SafetyTipsContent from "@/components/help-content/SafetyTipsContent";
 import AboutContent from "@/components/help-content/AboutContent";
-// import ContactContent from "@/components/help-content/ContactContent";
+import ContactContent from "@/components/help-content/ContactContent";
 
 type HelpItem = {
   id: string;
@@ -143,9 +143,9 @@ const HELP_ITEMS: HelpItem[] = [
 function renderSelectedContent(selectedId: string) {
   switch (selectedId) {
     case "about":
-      return <AboutContent />;
+      return <AboutContent embedded/>;
     case "support":
-      // return <ContactContent />;
+      return <ContactContent embedded />;
     case "terms":
       return <TermsContent embedded />;
     case "privacy":

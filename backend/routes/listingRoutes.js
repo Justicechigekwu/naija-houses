@@ -1,6 +1,13 @@
 import express from 'express';
 import verifyToken from '../middleware/authMiddleware.js';
-import { createListing, deleteListing, getListingById, getLitsing, updateListing } from '../controller/listingController.js';
+import { 
+    createListing,
+    deleteListing, 
+    getListingById, 
+    getLitsing, 
+    updateListing, 
+    getListingBySlug,
+ } from '../controller/listingController.js';
 import upload from '../middleware/uploadMiddleware.js';
 import relatedListingController from '../controller/relatedListingController.js';
 import searchController from '../controller/searchController.js';
@@ -20,6 +27,7 @@ router.get("/:id/publish-options", verifyToken, publishOptions);
 router.post("/:id/choose-plan", verifyToken, choosePublishPlan);
 router.post("/:id/renew", verifyToken, renewExpiredListing);
 
+router.get('/slug/:slug', optionalAuth, getListingBySlug);
 router.get('/:id', optionalAuth, getListingById)
 
 router.post('/', verifyToken, upload.array('images', 20), createListing)

@@ -8,12 +8,42 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { NotificationProvider } from "@/context/NotificationContext";
 import AppQueryProvider from "@/components/providers/QueryProvider";
 import { BrowsingLocationProvider } from "@/context/BrowsingLocationContext";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Velora Marketplace",
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.velora.ng";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Velora Marketplace",
+    template: "%s",
+  },
   description:
-    "Buy sell or rent anything from properties to vehicles to electronics and more.",
-    icons: {
+    "Buy, sell and rent properties, vehicles, electronics, phones and more across Nigeria on Velora Marketplace.",
+  alternates: {
+    canonical: siteUrl,
+  },
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    siteName: "Velora Marketplace",
+    title: "Velora Marketplace",
+    description:
+      "Buy, sell and rent properties, vehicles, electronics, phones and more across Nigeria on Velora Marketplace.",
+    locale: "en_NG",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Velora Marketplace",
+    description:
+      "Buy, sell and rent properties, vehicles, electronics, phones and more across Nigeria on Velora Marketplace.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },

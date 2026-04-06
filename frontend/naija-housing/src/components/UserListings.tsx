@@ -14,6 +14,7 @@ type ListingImage = {
 
 type Listing = {
   _id: string;
+  slug?: string;
   title: string;
   price?: number;
   description?: string;
@@ -137,7 +138,13 @@ export default function UserListings({ userId }: Props) {
           {listings.map((listing) => (
             <li
               key={listing._id}
-              onClick={() => router.push(`/listings/${listing._id}`)}
+              onClick={() => {
+                if (!listing.slug) {
+                  showToast("listing slug is missing", "error");
+                  return;
+                }
+                router.push(`/listings/${listing.slug}`);
+              }}
               className="p-4 flex items-center justify-between gap-4 border rounded shadow-sm bg-gray-50 cursor-pointer hover:shadow-md transition"
             >
               <div className="flex items-center gap-4 min-w-0">

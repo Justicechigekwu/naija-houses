@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { getListingHref } from "@/libs/listingUrl";
 import { useEffect, useState } from "react";
 import api from "@/libs/api";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -56,7 +57,7 @@ export default function FavoritesGrid() {
               key={listing._id}
               className="bg-white rounded-xl shadow overflow-hidden border"
             >
-              <Link href={`/listings/${listing._id}`}>
+              <Link href={getListingHref(listing)}>
                 <img
                   src={listing.images?.[0]?.url || "/placeholder.jpg"}
                   alt={listing.title}
@@ -66,7 +67,7 @@ export default function FavoritesGrid() {
 
               <div className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <Link href={`/listings/${listing._id}`} className="flex-1">
+                  <Link href={getListingHref(listing)} className="flex-1">
                     <h3 className="font-semibold text-base line-clamp-2">
                       {listing.title}
                     </h3>

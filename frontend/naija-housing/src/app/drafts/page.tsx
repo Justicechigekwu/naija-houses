@@ -42,7 +42,6 @@ export default function DraftPage() {
     <PageReadyLoader ready={!loading}>
       <div className="min-h-screen bg-gradient-to-b from-[#f8f6f3] via-white to-white">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-          {/* Top bar */}
           <div className="mb-6 flex items-center justify-between">
             <button
               onClick={() => router.push("/profile")}
@@ -53,7 +52,6 @@ export default function DraftPage() {
             </button>
           </div>
 
-          {/* Hero / page intro */}
           <div className="mb-6 rounded-3xl border border-[#eee5dd] bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -79,7 +77,6 @@ export default function DraftPage() {
             </div>
           </div>
 
-          {/* Draft list container */}
           <div className="rounded-3xl border border-[#eee5dd] bg-white p-4 shadow-sm sm:p-6">
             <DraftList drafts={drafts} onDeleted={fetchDrafts} />
           </div>

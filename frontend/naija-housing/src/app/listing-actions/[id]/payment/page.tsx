@@ -75,7 +75,7 @@ export default function ListingPaymentPage() {
 
       if (plan === "PAID_30_DAYS") {
         const code = res.data?.payment?.paymentCode;
-        router.push(`/listings/${id}/payment-details?code=${encodeURIComponent(code || "")}`);
+        router.push(`/listing-actions/${id}/payment-details?code=${encodeURIComponent(code || "")}`);
         return;
       } 
 

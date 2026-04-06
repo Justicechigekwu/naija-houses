@@ -72,5 +72,6 @@ export default function useInfiniteLocationFeed() {
     fetchNextPage: query.fetchNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
     userLocation,
+    refreshFeed: query.refetch,
   };
 }

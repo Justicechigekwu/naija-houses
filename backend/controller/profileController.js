@@ -4,6 +4,7 @@ import cloudinary from "../config/cloudinaryConfig.js";
 import Listing from "../models/listingModels.js";
 import Review from "../models/reviewModel.js";
 import mongoose from "mongoose";
+import { generateUniqueUserSlug } from "../utils/userSlug.js";
 
 export const updateProfile = async (req, res) => {
   try {
@@ -24,8 +25,19 @@ export const updateProfile = async (req, res) => {
       user.email = req.body.email;
     }
 
-    user.firstName = req.body.firstName || user.firstName;
-    user.lastName = req.body.lastName || user.lastName;
+    const nextFirstName = req.body.firstName || user.firstName;
+    const nextLastName = req.body.lastName || user.lastName;
+
+    user.firstName = nextFirstName;
+    user.lastName = nextLastName;
+    user.slug = await generateUniqueUserSlug(
+      userModel,
+      {
+        firstName: nextFirstName,
+        lastName: nextLastName,
+      },
+      user._id
+    );
     user.phone = req.body.phone || user.phone;
     user.location = req.body.location || user.location;
     user.bio = req.body.bio || user.bio;
@@ -47,6 +59,7 @@ export const updateProfile = async (req, res) => {
       message: "Profile updated successfully",
       user: {
         id: updatedUser._id,
+        slug: updatedUser.slug,
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
         email: updatedUser.email,
@@ -73,6 +86,7 @@ export const getProfile = async (req, res) => {
         }
         res.json({
             id: user.id,
+            slug: user.slug,
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
@@ -205,12 +219,65 @@ export const getPublicUserActiveListings = async (req, res) => {
     })
       .sort({ createdAt: -1 })
       .select(
-        "_id title price location state city images category subcategory listingType createdAt"
+        "slug title price location state city images category subcategory listingType createdAt"
       );
 
     res.json(listings);
   } catch (error) {
     console.error("Failed to fetch public user listings:", error);
     res.status(500).json({ message: "Failed to fetch active listings" });
+  }
+};
+
+export const getPublicProfileBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const user = await userModel.findOne({ slug }).select(
+      "firstName lastName slug avatar bio phone"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const listings = await Listing.find({ owner: user._id }).select("_id");
+    const listingIds = listings.map((l) => l._id);
+
+    let averageRating = 0;
+    let totalReviews = 0;
+
+    if (listingIds.length > 0) {
+      const ratingResult = await Review.aggregate([
+        { $match: { listing: { $in: listingIds } } },
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: "$rating" },
+            totalReviews: { $sum: 1 },
+          },
+        },
+      ]);
+
+      if (ratingResult.length > 0) {
+        averageRating = ratingResult[0].averageRating || 0;
+        totalReviews = ratingResult[0].totalReviews || 0;
+      }
+    }
+
+    res.json({
+      id: user._id,
+      slug: user.slug,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatar: user.avatar || "",
+      bio: user.bio || "",
+      phone: user.phone || "",
+      averageRating,
+      totalReviews,
+    });
+  } catch (error) {
+    console.error("Failed to fetch public profile by slug:", error);
+    res.status(500).json({ message: "Failed to fetch public profile" });
   }
 };

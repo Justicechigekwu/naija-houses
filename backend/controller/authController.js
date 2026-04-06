@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import userModel from "../models/userModel.js";
 import generateToken from "../utils/generateTokenUtils.js";
 import setTokenCookie from "../utils/setTokenCookies.js";
+import { generateUniqueUserSlug } from "../utils/userSlug.js";
 
 export const signup = async (req, res) => {
   const { firstName, lastName, email, password, confirmPassword } = req.body;
@@ -28,9 +29,15 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    const slug = await generateUniqueUserSlug(userModel, {
+      firstName,
+      lastName,
+    });
+
     const newUser = new userModel({
       firstName,
       lastName,
+      slug,
       email: normalizedEmail,
       password,
       provider: "local",
@@ -45,6 +52,7 @@ export const signup = async (req, res) => {
       message: "Signup successful",
       user: {
         id: newUser._id,
+        slug: newUser.slug,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         email: newUser.email,
@@ -99,6 +107,7 @@ export const login = async (req, res) => {
       message: "Login successful",
       user: {
         id: user._id,
+        slug: user.slug,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
@@ -142,6 +151,7 @@ export const getMe = async (req, res) => {
     return res.status(200).json({
       user: {
         id: user._id,
+        slug: user.slug,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,

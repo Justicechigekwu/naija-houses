@@ -91,6 +91,7 @@ export const confirmPaymentAndPublish = async (req, res) => {
       message: `Your listing "${listing.title}" has been approved and published successfully.`,
       listingId: listing._id,
       metadata: {
+        route: `/listings/${listing.slug}`,
         publishStatus: listing.publishStatus,
         expiresAt: listing.expiresAt,
       },

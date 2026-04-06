@@ -7,4 +7,4 @@ export default function Page() {
       <AdminAuthForm isLogin />
     </Suspense>
   );
-}
+}  

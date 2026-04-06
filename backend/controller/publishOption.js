@@ -19,9 +19,6 @@ export const publishOptions = async (req, res) => {
 
   const pricing = await getCategoryPricing(category, subcategory);
 
-  console.log("listing.category:", category);
-  console.log("listing.subcategory:", subcategory);
-  console.log("pricing from DB:", pricing);
 
   if (!pricing) {
     return res.status(500).json({ message: "Pricing not configured. Contact admin." });

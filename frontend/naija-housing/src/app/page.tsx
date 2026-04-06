@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { connectSocket } from "@/libs/socket";
+import { useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SearchBar from "@/components/SearchBar";
 import PageReadyLoader from "@/components/pages/PageReadyLoader";
@@ -18,7 +19,7 @@ export default function Home() {
   const { browsingLocation, setManualLocation, resetToDeviceLocation } =
     useBrowsingLocation();
 
-  const { listings, similarListings, meta, loading, error } = useHomeLocationFeed();
+  const { listings, similarListings, meta, loading, error, refreshFeed } = useHomeLocationFeed();
 
   const handleAddListing = () => {
     if (!isHydrated) return;
@@ -65,6 +66,20 @@ export default function Home() {
   }, [meta]);
 
   const pageReady = isHydrated && !browsingLocation.loading && !loading;
+
+  useEffect(() => {
+    const socket = connectSocket();
+  
+    const handleListingUpdate = () => {
+      refreshFeed();
+    };
+  
+    socket.on("listing:updated", handleListingUpdate);
+  
+    return () => {
+      socket.off("listing:updated", handleListingUpdate);
+    };
+  }, [refreshFeed]);
 
   return (
     <PageReadyLoader ready={pageReady}>

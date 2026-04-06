@@ -22,7 +22,7 @@ export default function CreateListingPage() {
         throw new Error("Listing ID not returned");
       }
 
-      router.push(`/listings/${listingId}/payment`);
+      router.push(`/listing-actions/${listingId}/payment`);
     } catch (error: unknown) {
       console.error(error);
 

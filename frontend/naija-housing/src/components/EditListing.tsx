@@ -42,15 +42,15 @@ export default function EditListing() {
   }, [id]);
 
   const handleUpdate = async (formData: FormData) => {
-    try {
-      await api.put(`/listings/${id}`, formData, {
+     try {
+      const res = await api.put<Listing>(`/listings/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
+  
       showToast("Listing updated successfully", "success");
-      router.push(`/listings/${id}`);
+      router.push(`/listings/${res.data.slug}`);
     } catch (err: unknown) {
       const error = err as AxiosError<{ message?: string }>;
       console.error("Failed to update listing", error);

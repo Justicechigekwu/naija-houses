@@ -20,6 +20,7 @@ export type ListingsMeta = {
 
 export type Listing = {
   _id: string;
+  slug?: string;
   title?: string;
   description?: string;
   category?: string;

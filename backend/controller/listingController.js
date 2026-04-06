@@ -1,3 +1,4 @@
+import { generateUniqueListingSlug } from "../utils/listingSlug.js";
 import Listing from "../models/listingModels.js";
 import markExpiredListings from "../utils/markExpiredListings.js";
 import cloudinary from "../config/cloudinaryConfig.js";
@@ -23,8 +24,15 @@ export const createListing = async (req, res) => {
 
     const geo = await geocodeAddress(locationPayload);
 
+    const slug = await generateUniqueListingSlug(Listing, {
+      title: req.body.title,
+      city: locationPayload.city,
+      state: locationPayload.state,
+    });
+
     const newListing = new Listing({
       title: req.body.title,
+      slug,
       listingType: req.body.listingType,
       price,
       state: locationPayload.state,
@@ -46,6 +54,7 @@ export const createListing = async (req, res) => {
     });
 
     scheduleDraftReminder(newListing, 1);
+    
     await newListing.save();
 
     res.status(201).json({
@@ -127,8 +136,19 @@ export const updateListing = async (req, res) => {
 
     const updatedImages = [...keepImages, ...newImages];
 
+    const nextTitle = req.body.title || listing.title;
     const nextCity = req.body.city ?? listing.city;
     const nextState = req.body.state ?? listing.state;
+
+    const nextSlug = await generateUniqueListingSlug(
+      Listing,
+      {
+        title: nextTitle,
+        city: nextCity,
+        state: nextState,
+      },
+      listing._id
+    );
 
     let nextGeo = listing.geo;
     const locationChanged =
@@ -143,7 +163,8 @@ export const updateListing = async (req, res) => {
     }
 
     const updates = {
-      title: req.body.title || listing.title,
+      title: nextTitle,
+      slug: nextSlug,
       listingType: req.body.listingType || listing.listingType,
       price: req.body.price
         ? Number(String(req.body.price).replace(/[^\d]/g, ""))
@@ -289,7 +310,7 @@ export const getLitsing = async (req, res) => {
 export const getListingById = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id)
-      .populate("owner", "firstName lastName avatar");
+      .populate("owner", "firstName lastName avatar slug");
 
     if (!listing) return res.status(404).json({ message: "Listing not found" });
 
@@ -316,7 +337,7 @@ export const getListingById = async (req, res) => {
     let isFavorited = false;
 
     if (req.user) {
-      const user = await userModel.findById(req.user.id).select("favorites");
+      const user = await userModel.findById(req.user.id).select(" slug title price city state images category subcategory favorites");
       if (user) {
         isFavorited = user.favorites.some(
           (favId) => favId.toString() === listing._id.toString()
@@ -330,5 +351,36 @@ export const getListingById = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message || "Failed to fetch listing" });
+  }
+};
+
+export const getListingBySlug = async (req, res) => {
+  try {
+    const listing = await Listing.findOne({ slug: req.params.slug })
+      .populate("owner", "firstName lastName avatar slug");
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    const now = new Date();
+    const isExpired = listing.expiresAt && listing.expiresAt <= now;
+
+    if (isExpired && listing.publishStatus === "PUBLISHED") {
+      listing.publishStatus = "EXPIRED";
+      listing.expiredAt = now;
+      await listing.save();
+    }
+
+    if (listing.publishStatus !== "PUBLISHED") {
+      return res.status(403).json({ message: "Listing not published" });
+    }
+
+    return res.json({ listing });
+  } catch (error) {
+    console.error("getListingBySlug error:", error);
+    return res.status(500).json({
+      message: error.message || "Failed to fetch listing",
+    });
   }
 };

@@ -36,7 +36,7 @@ export default function DraftList({
 
       const code = res.data?.payment?.paymentCode || "";
       router.push(
-        `/listings/${draft._id}/payment-details?code=${encodeURIComponent(code)}`
+        `/listing-actions/${draft._id}/payment-details?code=${encodeURIComponent(code)}`
       );
     } catch (err: unknown) {
       const error = err as AxiosError<{ message?: string }>;

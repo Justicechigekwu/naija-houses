@@ -9,7 +9,6 @@ import ReviewThreadList, {
 } from "@/components/reviews/ReviewThreadList";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { useUI } from "@/hooks/useUi";
 import {
   ArrowLeft,
   MessageSquareText,
@@ -25,13 +24,20 @@ type ReviewSummary = {
   totalReviews: number;
 };
 
+type PublicProfile = {
+  id: string;
+  slug?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
 export default function PublicUserReviewsPage() {
-  const params = useParams();
-  const id = params?.id as string;
+  const params = useParams<{ slug: string }>();
+  const slug = params?.slug as string;
 
   const { user, isHydrated } = useAuth();
-  const { showToast } = useUI();
 
+  const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [summary, setSummary] = useState<ReviewSummary>({
     averageRating: 0,
@@ -42,15 +48,31 @@ export default function PublicUserReviewsPage() {
   const currentUserId = user?.id || user?._id;
 
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
 
     const fetchReviews = async () => {
       try {
         setLoading(true);
 
+        const profileRes = await api.get<PublicProfile>(
+          `/profile/public/slug/${slug}`
+        );
+
+        const nextProfile = profileRes.data;
+        setProfile(nextProfile);
+
+        if (!nextProfile?.id) {
+          setReviews([]);
+          setSummary({
+            averageRating: 0,
+            totalReviews: 0,
+          });
+          return;
+        }
+
         const [reviewsRes, avgRes] = await Promise.all([
-          api.get(`/reviews/owner/${id}`),
-          api.get(`/reviews/owner/${id}/average`),
+          api.get(`/reviews/owner/${nextProfile.id}`),
+          api.get(`/reviews/owner/${nextProfile.id}/average`),
         ]);
 
         setReviews(Array.isArray(reviewsRes.data) ? reviewsRes.data : []);
@@ -60,6 +82,7 @@ export default function PublicUserReviewsPage() {
         });
       } catch (error) {
         console.error("Failed to fetch owner reviews", error);
+        setProfile(null);
         setReviews([]);
         setSummary({
           averageRating: 0,
@@ -71,7 +94,7 @@ export default function PublicUserReviewsPage() {
     };
 
     fetchReviews();
-  }, [id]);
+  }, [slug]);
 
   const handleReviewUpdated = (updatedReview: ReviewItem) => {
     setReviews((prev) =>
@@ -124,7 +147,7 @@ export default function PublicUserReviewsPage() {
     <div className="min-h-screen bg-[#dfe6eb] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <Link
-          href={`/profile/${id}`}
+          href={`/profile/${slug}`}
           className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-700 transition hover:text-[#8A715D]"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -231,7 +254,7 @@ export default function PublicUserReviewsPage() {
                 >
                   <ReviewThreadList
                     reviews={reviews}
-                    sellerId={id}
+                    sellerId={profile?.id || ""}
                     onReviewUpdated={handleReviewUpdated}
                   />
                 </div>

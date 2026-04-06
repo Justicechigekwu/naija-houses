@@ -177,6 +177,7 @@ const listingSchema = new mongoose.Schema(
       enum: [
         "VEHICLES",
         "PROPERTY",
+        "LAND",
         "ELECTRONICS",
         "PHONES",
         "HOME",
@@ -193,63 +194,121 @@ const listingSchema = new mongoose.Schema(
     },
 
     subcategory: {
-      type: String,
-      enum: [
-        "CARS",
-        "TRUCKS_TRAILERS",
-        "MOTORCYCLES",
-        "BICYCLES",
-        "TRAILERS",
-        "CAR_PARTS_ACCESSORIES",
-        "HOUSES_APARTMENTS",
-        "LANDS_PLOTS",
-        "TABLETS",
-        "SMART_PHONES",
-        "MOBILE_ACCESSORIES",
-        "LAPTOPS_COMPUTERS",
-        "TELEVISIONS",
-        "HEADPHONES",
-        "SMART_WATCHES",
-        "GAMING_CONSOLES",
-        "ELECTRONICS_OTHER",
-        "AUDIO_MUSIC_EQUIPMENT",
-        "CAMERAS_PHOTOGRAPHY",
-        "TV_EQUIPMENT",
-        "NETWORKING_EQUIPMENT",
-        "COMPUTER_MONITORS",
-        "COMPUTER_ACCESSORIES",
-        "CCTV_SECURITY_CAMERAS",
-        "FURNITURE",
-        "HOME_APPLIANCES",
-        "WATCHES",
-        "CLOTHING",
-        "FOOTWEAR",
-        "BAGS",
-        "JEWELRY",
-        "HATS_CAPS",
-        "SUNGLASSES",
-        "BELTS",
-        "WALLETS",
-        "BABY_CLOTHING",
-        "BABY_GEAR",
-        "BABY_FEEDING",
-        "GYM_EQUIPMENT",
-        "SPORTS_EQUIPMENT",
-        "FITNESS_ACCESSORIES",
-        "FARM_MACHINERY",
-        "FARM_TOOLS",
-        "FARM_PRODUCE",
-        "CEREALS_GRAINS",
-        "PACKAGED_FOODS",
-        "DOGS",
-        "CATS",
-        "PET_ACCESSORIES",
-        "KIDS_TOYS",
-        "BOARD_GAMES",
-      ],
-      required: true,
-      default: "HOUSES_APARTMENTS",
-    },
+    type: String,
+    enum: [
+      // VEHICLES
+      "CARS",
+      "TRUCKS_TRAILERS",
+      "MOTORCYCLES",
+      "BICYCLES",
+      "TRAILERS",
+      "CAR_PARTS_ACCESSORIES",
+      "BOATS",
+  
+      // PROPERTY (Residential)
+      "HOUSE",
+      "APARTMENT",
+      "FLAT",
+      "MINI_FLAT",
+      "SELF_CONTAIN",
+      "STUDIO_APARTMENT",
+      "DUPLEX",
+      "BUNGALOW",
+      "TERRACE",
+      "SEMI_DETACHED",
+      "DETACHED_HOUSE",
+      "MANSION",
+      "PENTHOUSE",
+      "TOWNHOUSE",
+      "VILLA",
+      "COTTAGE",
+      "FARM_HOUSE",
+  
+      // PROPERTY (Commercial)
+      "OFFICE_SPACE",
+      "SHOP",
+      "WAREHOUSE",
+      "FACTORY",
+      "SCHOOL_BUILDING",
+      "HOSPITAL_BUILDING",
+      "HOTEL",
+      "GUEST_HOUSE",
+      "EVENT_CENTER",
+      "COMMERCIAL_BUILDING",
+  
+      // LAND
+      "RESIDENTIAL_PLOT",
+      "COMMERCIAL_PLOT",
+      "INDUSTRIAL_LAND",
+      "AGRICULTURAL_LAND",
+      "MIXED_USE_LAND",
+  
+      // PHONES
+      "SMART_PHONES",
+      "TABLETS",
+      "SMART_WATCHES",
+      "MOBILE_ACCESSORIES",
+  
+      // ELECTRONICS
+      "LAPTOPS_COMPUTERS",
+      "TELEVISIONS",
+      "HEADPHONES",
+      "GAMING_CONSOLES",
+      "AUDIO_MUSIC_EQUIPMENT",
+      "CAMERAS_PHOTOGRAPHY",
+      "TV_EQUIPMENT",
+      "NETWORKING_EQUIPMENT",
+      "COMPUTER_MONITORS",
+      "COMPUTER_ACCESSORIES",
+      "CCTV_SECURITY_CAMERAS",
+      "ELECTRONICS_OTHER",
+  
+      // HOME
+      "FURNITURE",
+      "HOME_APPLIANCES",
+  
+      // FASHION
+      "WATCHES",
+      "CLOTHING",
+      "FOOTWEAR",
+      "BAGS",
+      "JEWELRY",
+      "HATS_CAPS",
+      "SUNGLASSES",
+      "BELTS",
+      "WALLETS",
+  
+      // BABY
+      "BABY_CLOTHING",
+      "BABY_GEAR",
+      "BABY_FEEDING",
+  
+      // SPORTS & FITNESS
+      "GYM_EQUIPMENT",
+      "SPORTS_EQUIPMENT",
+      "FITNESS_ACCESSORIES",
+  
+      // AGRICULTURE
+      "FARM_MACHINERY",
+      "FARM_TOOLS",
+      "FARM_PRODUCE",
+  
+      // FOOD
+      "CEREALS_GRAINS",
+      "PACKAGED_FOODS",
+  
+      // PETS
+      "DOGS",
+      "CATS",
+      "PET_ACCESSORIES",
+  
+      // TOYS
+      "KIDS_TOYS",
+      "BOARD_GAMES",
+    ],
+    required: true,
+    default: "HOUSES",
+  },
 
     attributes: {
       type: mongoose.Schema.Types.Mixed,
@@ -313,6 +372,14 @@ const listingSchema = new mongoose.Schema(
     appealExpiresAt: {
       type: Date,
       default: null,
+    },
+
+    slug: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      unique: true,
+      sparse: true,
     },
 
     appealReviewedAt: {

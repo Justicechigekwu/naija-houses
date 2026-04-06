@@ -27,6 +27,7 @@ type SubcategoryConfig = {
 
 interface Listing {
   _id: string;
+  slug: string;
   title: string;
   listingType: string;
   price: number;
@@ -40,6 +41,7 @@ interface Listing {
   attributes: Record<string, string | number | boolean | string[]>;
   owner: {
     _id: string;
+    slug: string;
     firstName: string;
     lastName: string;
     avatar?: string;
@@ -53,7 +55,7 @@ const quickMessage = [
 ];
 
 export default function ListingDetails() {
-  const { id } = useParams();
+  const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
   const { user } = useAuth();
   const { showToast, showConfirm } = useUI();
@@ -75,7 +77,7 @@ export default function ListingDetails() {
     const fetchListing = async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/listings/${id}`);
+        const res = await api.get(`/listings/slug/${slug}`);
         setListing(res.data.listing);
       } catch (err) {
         console.error("Error fetching listing:", err);
@@ -85,12 +87,42 @@ export default function ListingDetails() {
       }
     };
 
-    if (id) {
+    if (slug) {
       fetchListing();
     } else {
       setLoading(false);
     }
-  }, [id, showToast]);
+  }, [slug, showToast]);
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.velora.ng";
+  
+  const jsonLd = listing
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: listing.title,
+        description: listing.description,
+        image: listing.images?.map((img) => img.url) || [],
+        url: `${siteUrl}/listings/${listing.slug}`,
+        category: [listing.category, listing.subcategory].filter(Boolean).join(" / "),
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "NGN",
+          price: listing.price || 0,
+          availability:
+            listing.publishStatus === "PUBLISHED"
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+        },
+        seller: listing.owner
+          ? {
+              "@type": "Person",
+              name: `${listing.owner.firstName || ""} ${listing.owner.lastName || ""}`.trim(),
+            }
+          : undefined,
+      }
+    : null;
 
   useEffect(() => {
     if (listing?.listingType) {
@@ -242,6 +274,15 @@ export default function ListingDetails() {
 
   return (
     <PageReadyLoader ready={!loading}>
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+      ) : null}
+
       {listing ? (
         <div className="p-4 md:p-6 max-w-5xl mx-auto bg-[#F5F5F5]  space-y-6">
           <div className="flex items-center justify-between">
@@ -478,7 +519,7 @@ export default function ListingDetails() {
                   className="pt-6 w-full lg:w-1/2"
                   onClick={() =>
                     router.push(
-                      `/profile/${listing.owner._id}?listingId=${listing._id}`
+                      `/profile/${listing.owner.slug}?listingId=${listing._id}&listingSlug=${listing.slug}`
                     )
                   }
                 >

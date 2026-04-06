@@ -75,6 +75,7 @@ const ownerLookupStages = [
 
 const baseProject = {
   title: 1,
+  slug: 1,
   description: 1,
   price: 1,
   category: 1,

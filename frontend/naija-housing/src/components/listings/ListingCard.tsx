@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { MapPin } from "lucide-react";
+import { getListingHref } from "@/libs/listingUrl";
 import type { Listing } from "@/types/listing";
 
 function formatDistance(distanceMeters?: number) {
@@ -19,7 +20,7 @@ function formatDistance(distanceMeters?: number) {
 export default function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link
-      href={`/listings/${listing._id}`}
+      href={getListingHref(listing)}
       className="w-full rounded shadow hover:shadow-lg transition bg-white cursor-pointer p-4 block"
     >
       <div className="w-full flex justify-center items-center mb-3 bg-gray-100 rounded">

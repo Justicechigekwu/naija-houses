@@ -69,5 +69,6 @@ export default function useInfiniteRelatedListings(listingId: string) {
     hasNextPage: query.hasNextPage,
     fetchNextPage: query.fetchNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
+    refreshFeed: query.refetch,
   };
 }

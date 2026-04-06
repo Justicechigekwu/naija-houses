@@ -49,6 +49,10 @@ export default function AdminNavbar() {
             Payments
           </Link>
 
+          <Link href="/admin/support" className="text-sm hover:underline">
+            Support
+          </Link>
+
           <div className="text-sm text-gray-600">
             {profile?.email || admin?.email || "Admin"}
           </div>

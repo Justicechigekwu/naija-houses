@@ -97,5 +97,6 @@ export default function useInfiniteLocationSearch(
     fetchNextPage: searchQuery.fetchNextPage,
     isFetchingNextPage: searchQuery.isFetchingNextPage,
     userLocation,
+    refreshFeed: searchQuery.refetch,
   };
 }

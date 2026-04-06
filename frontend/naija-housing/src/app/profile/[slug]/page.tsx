@@ -8,11 +8,11 @@ import PublicProfileDetails from "@/components/PublicProfileDetails";
 import PublicUserListings from "@/components/PublicUserListings";
 import StarRating from "@/components/reviews/StarRating";
 import { useAuth } from "@/context/AuthContext";
-import { ChevronRight, MapPin, ShieldCheck, Star } from "lucide-react";
-import { ArrowLeft,} from "lucide-react";
+import { ChevronRight, MapPin, ShieldCheck, Star, ArrowLeft } from "lucide-react";
 
 type PublicProfile = {
   id: string;
+  slug?: string;
   firstName?: string;
   lastName?: string;
   avatar?: string;
@@ -24,28 +24,28 @@ type PublicProfile = {
 };
 
 export default function PublicProfilePage() {
-  const params = useParams();
+  const params = useParams<{ slug: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const listingId = searchParams.get("listingId");
+  const listingSlug = searchParams.get("listingSlug");
   const { user } = useAuth();
 
-  const id = params?.id as string;
+  const slug = params?.slug as string;
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
 
-    if (user?.id && user.id === id) {
+    if (user?.slug && user.slug === slug) {
       router.replace("/profile");
       return;
     }
 
     const fetchProfile = async () => {
       try {
-        const res = await api.get(`/profile/public/${id}`);
+        const res = await api.get<PublicProfile>(`/profile/public/slug/${slug}`);
         setProfile(res.data);
       } catch (error) {
         console.error("Failed to fetch public profile", error);
@@ -56,7 +56,7 @@ export default function PublicProfilePage() {
     };
 
     fetchProfile();
-  }, [id, user?.id, router]);
+  }, [slug, user?.slug, router]);
 
   if (loading) {
     return (
@@ -128,16 +128,16 @@ export default function PublicProfilePage() {
   return (
     <div className="min-h-screen bg-[#f5f5f5] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-
-        {listingId && (
+        {listingSlug && (
           <Link
-            href={`/listings/${listingId}`}
+            href={`/listings/${listingSlug}`}
             className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-[#8A715D] hover:text-[#8A715D]"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to listing
           </Link>
         )}
+
         <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
           <aside className="self-start overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
             <div className="bg-gradient-to-br from-[#111827] via-[#1f2937] to-[#2f3b4d] px-6 pb-8 pt-8 text-white">
@@ -179,7 +179,7 @@ export default function PublicProfilePage() {
               <PublicProfileDetails user={profile} />
 
               <Link
-                href={`/profile/${profile.id}/reviews`}
+                href={`/profile/${profile.slug}/reviews`}
                 className="mt-6 block rounded-2xl border border-gray-200 bg-[#fafafa] p-4 transition hover:border-[#8A715D]/30 hover:bg-[#f7f4f1]"
               >
                 <div className="flex items-center justify-between">

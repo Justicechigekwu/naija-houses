@@ -23,6 +23,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import locationListingRoutes from "./routes/locationListingRoutes.js";
 import listingAppealRoutes from "./routes/listingAppealRoutes.js";
+import supportRoutes from "./routes/supportRoutes.js";
 
 // admin
 import adminOverviewRoutes from "./routes/adminOverviewRoutes.js";
@@ -32,6 +33,7 @@ import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
 import adminPaymentRoutes from "./routes/adminPaymentRoutes.js";
 import adminModerationRoutes from "./routes/adminModerationRoutes.js";
 import adminAppealRoutes from "./routes/adminAppealRoutes.js";
+import adminSupportRoutes from "./routes/adminSupportRoutes.js";
 
 dbConnect();
 startExpireListingsJob();
@@ -63,6 +65,7 @@ app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/listings", locationListingRoutes);
 app.use("/api/v1/listings", listingAppealRoutes);
+app.use("/api/v1/support", supportRoutes);
 
 // admin
 app.use("/api/v1/admin", adminOverviewRoutes);
@@ -72,6 +75,7 @@ app.use("/api/v1/admin", adminDashboardRoutes);
 app.use("/api/v1/admin", adminPaymentRoutes);
 app.use("/api/v1/admin", adminModerationRoutes);
 app.use("/api/v1/admin", adminAppealRoutes);
+app.use("/api/v1/admin/support", adminSupportRoutes);
 
 app.get("/api/v1/ping", (req, res) => {
   res.json({ message: "Backend connected" });

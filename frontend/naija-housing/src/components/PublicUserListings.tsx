@@ -1,5 +1,6 @@
 "use client";
 
+import { getListingHref } from "@/libs/listingUrl";
 import { useEffect, useState } from "react";
 import api from "@/libs/api";
 import Link from "next/link";
@@ -12,6 +13,7 @@ type ListingImage = {
 
 type PublicListing = {
   _id: string;
+  slug?: string;
   title: string;
   price?: number | string;
   state?: string;
@@ -94,7 +96,7 @@ export default function PublicUserListings({ userId }: Props) {
       {listings.map((listing) => (
         <Link
           key={listing._id}
-          href={`/listings/${listing._id}`}
+          href={getListingHref(listing)}
           className="group rounded-2xl border border-gray-200 bg-white transition hover:border-gray-300 hover:shadow-sm"
         >
           <div className="flex items-center gap-4 p-4">

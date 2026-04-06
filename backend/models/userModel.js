@@ -87,6 +87,14 @@ const userSchema = new mongoose.Schema({
     default: {}
   },
 
+  slug: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    sparse: true,
+  },
+
   favorites: [
     {
       type: mongoose.Schema.Types.ObjectId,
