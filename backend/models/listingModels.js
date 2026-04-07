@@ -412,6 +412,23 @@ const listingSchema = new mongoose.Schema(
       default: null,
     },
 
+    rejectionType: {
+      type: String,
+      enum: ["NONE", "PAYMENT", "LISTING", "PROHIBITED"],
+      default: "NONE",
+    },
+    
+    rejectionReason: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    
+    rejectedAt: {
+      type: Date,
+      default: null,
+    },
+
     autoDeleteAt: {
       type: Date,
       default: null,

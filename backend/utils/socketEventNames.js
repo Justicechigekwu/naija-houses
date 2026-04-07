@@ -16,4 +16,6 @@ export const SOCKET_EVENTS = {
 
   LISTING_UPDATED: "listing:updated",
   PAYMENT_UPDATED: "payment:updated",
+
+  ADMIN_PAYMENTS_UPDATED: "admin:payments-updated",
 };

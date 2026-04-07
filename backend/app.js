@@ -24,6 +24,9 @@ import reportRoutes from "./routes/reportRoutes.js";
 import locationListingRoutes from "./routes/locationListingRoutes.js";
 import listingAppealRoutes from "./routes/listingAppealRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
+import rejectedPaymentRoutes from "./routes/rejectedPaymentRoutes.js";
+// app.js
+
 
 // admin
 import adminOverviewRoutes from "./routes/adminOverviewRoutes.js";
@@ -66,13 +69,14 @@ app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/listings", locationListingRoutes);
 app.use("/api/v1/listings", listingAppealRoutes);
 app.use("/api/v1/support", supportRoutes);
+app.use("/api/v1/listings", rejectedPaymentRoutes);
 
 // admin
 app.use("/api/v1/admin", adminOverviewRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/admin/auth", adminAuthRoutes);
 app.use("/api/v1/admin", adminDashboardRoutes);
-app.use("/api/v1/admin", adminPaymentRoutes);
+app.use("/api/v1/admin/payments", adminPaymentRoutes);
 app.use("/api/v1/admin", adminModerationRoutes);
 app.use("/api/v1/admin", adminAppealRoutes);
 app.use("/api/v1/admin/support", adminSupportRoutes);

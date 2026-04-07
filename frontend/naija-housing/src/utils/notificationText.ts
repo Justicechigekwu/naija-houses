@@ -1,6 +1,5 @@
 export const getNotificationBadge = (type: string) => {
   switch (type) {
-
     case "LISTING_APPROVED":
       return "Approved";
     case "LISTING_REJECTED":
@@ -15,10 +14,10 @@ export const getNotificationBadge = (type: string) => {
     case "PAYMENT_REJECTED":
       return "Payment";
 
-      case "REVIEW_RECEIVED":
-        return "Review";
-      case "REVIEW_REPLY":
-        return "Review";
+    case "REVIEW_RECEIVED":
+      return "Review";
+    case "REVIEW_REPLY":
+      return "Review";
 
     case "DRAFT_REMINDER":
       return "Draft";
@@ -29,13 +28,13 @@ export const getNotificationBadge = (type: string) => {
     case "LISTING_APPEAL_SUBMITTED":
       return "Appeal";
     case "APPEAL_PENDING":
-      return "Appeal Pending Review";  
+      return "Appeal";
     case "LISTING_APPEAL_APPROVED":
       return "Appeal";
     case "LISTING_APPEAL_REJECTED":
       return "Appeal";
 
     default:
-      return "Notice"; 
+      return "Notice";
   }
 };

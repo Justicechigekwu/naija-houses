@@ -168,4 +168,4 @@ export const updateSupportMessageStatus = async (req, res) => {
       message: error.message || "Failed to update support message",
     });
   }
-};
+}; 

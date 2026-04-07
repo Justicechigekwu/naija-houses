@@ -53,7 +53,7 @@ export const createListing = async (req, res) => {
       attributes: req.body.attributes ? JSON.parse(req.body.attributes) : {},
     });
 
-    scheduleDraftReminder(newListing, 1);
+    scheduleDraftReminder(newListing, 30);
     
     await newListing.save();
 

@@ -21,6 +21,11 @@ export const emitToChat = (chatId, event, payload) => {
   io.to(`chat:${chatId}`).emit(event, payload);
 };
 
+export const emitToAdmins = (event, payload) => {
+  const io = getIO();
+  io.to("admin:payments").emit(event, payload);
+};
+
 export const emitNewChatMessage = (participantIds = [], payload) => {
   emitToUsers(participantIds, SOCKET_EVENTS.CHAT_NEW_MESSAGE, payload);
 };
@@ -53,6 +58,10 @@ export const emitListingUpdated = (userId, payload) => {
 
 export const emitPaymentUpdated = (userId, payload) => {
   emitToUser(userId, SOCKET_EVENTS.PAYMENT_UPDATED, payload);
+};
+
+export const emitAdminPaymentsUpdated = (payload = {}) => {
+  emitToAdmins(SOCKET_EVENTS.ADMIN_PAYMENTS_UPDATED, payload);
 };
 
 export const emitUnreadChatCount = async (userId) => {

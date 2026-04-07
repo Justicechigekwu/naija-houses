@@ -45,6 +45,10 @@ export const approveAppeal = async (req, res) => {
     listing.isArchivedByAdmin = false;
     listing.adminRemovedAt = null;
     listing.adminRemovalReason = "";
+    listing.violationPolicy = "OTHER";
+    listing.rejectionType = "NONE";
+    listing.rejectionReason = "";
+    listing.rejectedAt = null;
 
     await listing.save();
 
@@ -73,15 +77,16 @@ export const approveAppeal = async (req, res) => {
         listingId: listing._id,
         publishStatus: listing.publishStatus,
         appealStatus: listing.appealStatus,
-        route: `/listings/${listing._id}`,
+        route: listing.slug ? `/listings/${listing.slug}` : `/listings/${listing._id}`,
         actionLabel: "View listing",
       },
     });
 
-    emitListingUpdated(listing.owner.toString(), {
+    emitListingUpdated(String(listing.owner), {
       listingId: listing._id,
       publishStatus: listing.publishStatus,
       appealStatus: listing.appealStatus,
+      updatedAt: listing.updatedAt,
     });
 
     res.json({
@@ -132,15 +137,16 @@ export const rejectAppeal = async (req, res) => {
         listingId: listing._id,
         appealStatus: listing.appealStatus,
         appealReviewNote: listing.appealReviewNote,
-        route: "/notification",
+        route: `/appeals/${listing._id}`,
         actionLabel: "View details",
       },
     });
 
-    emitListingUpdated(listing.owner.toString(), {
+    emitListingUpdated(String(listing.owner), {
       listingId: listing._id,
       publishStatus: listing.publishStatus,
       appealStatus: listing.appealStatus,
+      updatedAt: listing.updatedAt,
     });
 
     res.json({

@@ -6,9 +6,6 @@ dotenv.config();
 await dbConnect();
 
 const seed = [
-  // =========================
-  // CATEGORY DEFAULTS
-  // =========================
   {
     category: "PROPERTY",
     subcategory: null,
@@ -140,9 +137,6 @@ const seed = [
     isActive: true,
   },
 
-  // =========================
-  // PROPERTY OVERRIDES
-  // =========================
   {
     category: "PROPERTY",
     subcategory: "HOUSE",
@@ -254,9 +248,6 @@ const seed = [
     isActive: true,
   },
 
-  // =========================
-  // LAND OVERRIDES
-  // =========================
   {
     category: "LAND",
     subcategory: "RESIDENTIAL_PLOT",
