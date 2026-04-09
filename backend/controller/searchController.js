@@ -16,7 +16,7 @@ const searchController = async (req, res) => {
       ],
     })
       .limit(10)
-      .select("title location state images price");
+      .select("_id slug title city state images price attributes");
 
     res.json(listings);
   } catch (error) {

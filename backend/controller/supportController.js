@@ -1,5 +1,7 @@
 import Support from "../models/supportMessageModel.js";
 import sendEmail from "../utils/sendEmailsUtils.js";
+import { emitAdminSupportUpdated } from "../service/realtimeService.js";
+import { emitAdminSnapshot } from "../service/adminRealtimeService.js";
 
 const normalizeEmail = (value = "") => String(value).trim().toLowerCase();
 
@@ -73,6 +75,15 @@ ${supportMessage.message}
       }
     }
 
+    emitAdminSupportUpdated({
+      supportId: supportMessage._id,
+      type: "SUPPORT_CREATED",
+      status: supportMessage.status,
+      updatedAt: new Date().toISOString(),
+    });
+
+    await emitAdminSnapshot();
+
     return res.status(201).json({
       message:
         "Your support message has been sent successfully. Velora support will get back to you through your email.",
@@ -119,9 +130,26 @@ export const getAdminSupportMessageDetails = async (req, res) => {
       return res.status(404).json({ message: "Support message not found" });
     }
 
+    let changed = false;
+
     if (!message.readAt) {
       message.readAt = new Date();
+      if (message.status === "NEW") {
+        message.status = "IN_PROGRESS";
+      }
       await message.save();
+      changed = true;
+    }
+
+    if (changed) {
+      emitAdminSupportUpdated({
+        supportId: message._id,
+        type: "SUPPORT_READ",
+        status: message.status,
+        updatedAt: new Date().toISOString(),
+      });
+
+      await emitAdminSnapshot();
     }
 
     return res.json(message);
@@ -158,6 +186,15 @@ export const updateSupportMessageStatus = async (req, res) => {
 
     await supportMessage.save();
 
+    emitAdminSupportUpdated({
+      supportId: supportMessage._id,
+      type: "SUPPORT_UPDATED",
+      status: supportMessage.status,
+      updatedAt: new Date().toISOString(),
+    });
+
+    await emitAdminSnapshot();
+
     return res.json({
       message: "Support message updated successfully",
       supportMessage,
@@ -168,4 +205,4 @@ export const updateSupportMessageStatus = async (req, res) => {
       message: error.message || "Failed to update support message",
     });
   }
-}; 
+};

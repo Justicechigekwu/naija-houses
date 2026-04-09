@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import adminApi from "@/libs/adminApi";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useUI } from "@/hooks/useUi";
 import { AxiosError } from "axios";
 import Link from "next/link";
 
@@ -21,6 +22,7 @@ export default function AdminAuthForm({
   isLogin?: boolean;
 }) {
   const { adminLogin } = useAdminAuth();
+  const { showToast } = useUI();
   const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState("");
@@ -32,21 +34,35 @@ export default function AdminAuthForm({
     formState: { errors, isSubmitting },
   } = useForm<AdminFormData>();
 
+  useEffect(() => {
+    if (!isLogin) return;
+    if (typeof window === "undefined") return;
+
+    const expired =
+      params.get("expired") === "1" ||
+      sessionStorage.getItem("admin_session_expired") === "1";
+
+    if (expired) {
+      showToast("Session expired. Please log in again.", "error");
+      sessionStorage.removeItem("admin_session_expired");
+    }
+  }, [isLogin, params, showToast]);
+
   const onSubmit = async (data: AdminFormData) => {
     try {
       setError("");
-  
+
       const endpoint = isLogin ? "/admin/auth/login" : "/admin/auth/register";
-  
+
       if (!isLogin && !data.setupKey) {
         setError("Setup key is required to create admin.");
         return;
       }
-  
+
       const res = await adminApi.post(endpoint, data);
-  
+
       adminLogin(res.data.admin);
-  
+
       const redirectUrl = params.get("redirect");
       router.push(redirectUrl || "/admin/dashboard");
     } catch (err: unknown) {

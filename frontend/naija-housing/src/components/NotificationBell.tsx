@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useNotifications } from "@/context/NotificationContext";
+import { useNotifications, type AppNotification } from "@/context/NotificationContext";
 import { getNotificationBadge } from "@/utils/notificationText";
 
 export default function NotificationBell() {
@@ -20,7 +20,7 @@ export default function NotificationBell() {
     removeNotification,
   } = useNotifications();
 
-  const handleOpenNotification = async (item: any) => {
+  const handleOpenNotification = async (item: AppNotification) => {
     try {
       if (!item.isRead) {
         await markOneAsRead(item._id);

@@ -80,6 +80,7 @@ const baseProject = {
   price: 1,
   category: 1,
   subcategory: 1,
+  attributes: 1,
   listingType: 1,
   city: 1,
   state: 1,

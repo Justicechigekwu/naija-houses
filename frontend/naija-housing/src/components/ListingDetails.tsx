@@ -13,6 +13,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import { useUI } from "@/hooks/useUi";
 import { useBrowsingLocation } from "@/context/BrowsingLocationContext";
 import PageReadyLoader from "@/components/pages/PageReadyLoader";
+import { trackAnalyticsEvent } from "@/libs/analytics";
 
 type DynamicField = {
   key: string;
@@ -131,6 +132,17 @@ export default function ListingDetails() {
       );
     }
   }, [listing?.listingType, setLastViewedListingType]);
+
+  useEffect(() => {
+    if (!listing?._id) return;
+  
+    trackAnalyticsEvent({
+      eventType: "LISTING_VIEW",
+      listingId: listing._id,
+      category: listing.category,
+      subcategory: listing.subcategory,
+    });
+  }, [listing?._id, listing?.category, listing?.subcategory]);
 
   useEffect(() => {
     const handleResize = () => {

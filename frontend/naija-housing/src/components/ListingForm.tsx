@@ -1,47 +1,29 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { X } from "lucide-react";
+import { GripVertical, ImagePlus, Move, X } from "lucide-react";
 import { CATEGORY_TREE } from "@/libs/listingFormConfig";
 import { NIGERIA_STATES, getCitiesByState } from "@/libs/nigeriaLocations";
 import { validateListingForm } from "@/libs/validateListingForm";
 import { useUI } from "@/hooks/useUi";
-import { Listing } from "@/types/listing";
-
-type DynamicField = {
-  key: string;
-  label: string;
-  type: string;
-  options?: string[];
-};
-
-type SubcategoryConfig = {
-  label: string;
-  fields: DynamicField[];
-};
-
-interface ListingImage {
-  url: string;
-  public_id?: string;
-}
+import type {
+  Listing,
+  ListingImage,
+  DynamicField,
+  SubcategoryConfig,
+  ListingFormShape,
+} from "@/types/listing";
+import {
+  categoryUsesListingType,
+  categoryUsesPostedBy,
+  getListingTypeOptions,
+} from "@/libs/listingFieldRules";
 
 interface ListingFormProps {
   initialData?: Listing | null;
   isEditMode?: boolean;
   onSubmit: (formData: FormData) => Promise<void>;
 }
-
-type FormShape = {
-  title: string;
-  listingType: string;
-  price: string;
-  city: string;
-  state: string;
-  description: string;
-  postedBy: string;
-  category: string;
-  subcategory: string;
-};
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_TOTAL_IMAGES = 20;
@@ -52,13 +34,39 @@ const ALLOWED_IMAGE_TYPES = [
   "image/webp",
 ];
 
+const POSTED_BY_OPTIONS = ["Owner", "Agent", "Dealer", "Seller"] as const;
+
+function getFirstSubcategory(category?: string) {
+  const categoryNode =
+    CATEGORY_TREE[String(category || "").toUpperCase() as keyof typeof CATEGORY_TREE];
+
+  if (!categoryNode?.subcategories) return "";
+
+  return Object.keys(categoryNode.subcategories)[0] || "";
+}
+
+function reorderArray<T>(items: T[], fromIndex: number, toIndex: number) {
+  const updated = [...items];
+  const [movedItem] = updated.splice(fromIndex, 1);
+
+  if (movedItem === undefined) return items;
+
+  updated.splice(toIndex, 0, movedItem);
+  return updated;
+}
+
 export default function ListingForm({
   initialData,
   isEditMode = false,
   onSubmit,
 }: ListingFormProps) {
-  const [step, setStep] = useState(1);
+  const { showToast } = useUI();
 
+  const initialCategory = initialData?.category || "PROPERTY";
+  const initialSubcategory =
+    initialData?.subcategory || getFirstSubcategory(initialCategory);
+
+  const [step, setStep] = useState(1);
   const [existingImages, setExistingImages] = useState<ListingImage[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -68,9 +76,10 @@ export default function ListingForm({
   const [draggedExistingImageIndex, setDraggedExistingImageIndex] = useState<number | null>(null);
   const [draggedNewImageIndex, setDraggedNewImageIndex] = useState<number | null>(null);
 
-  const { showToast } = useUI();
+  const [selectedExistingImageIndex, setSelectedExistingImageIndex] = useState<number | null>(null);
+  const [selectedNewImageIndex, setSelectedNewImageIndex] = useState<number | null>(null);
 
-  const [formData, setFormData] = useState<FormShape>({
+  const [formData, setFormData] = useState<ListingFormShape>({
     title: "",
     listingType: "",
     price: "",
@@ -78,18 +87,18 @@ export default function ListingForm({
     state: "",
     description: "",
     postedBy: "",
-    category: "PROPERTY",
-    subcategory: "HOUSES_APARTMENTS",
+    category: initialCategory,
+    subcategory: initialSubcategory,
   });
 
   const [attributes, setAttributes] = useState<Record<string, string>>({});
 
-  const cityOptions = useMemo(() => {
-    return getCitiesByState(formData.state);
-  }, [formData.state]);
-
   useEffect(() => {
     if (!initialData) return;
+
+    const nextCategory = initialData.category || "PROPERTY";
+    const nextSubcategory =
+      initialData.subcategory || getFirstSubcategory(nextCategory);
 
     setFormData({
       title: initialData.title || "",
@@ -99,13 +108,64 @@ export default function ListingForm({
       state: initialData.state || "",
       description: initialData.description || "",
       postedBy: initialData.postedBy || "",
-      category: initialData.category || "PROPERTY",
-      subcategory: initialData.subcategory || "HOUSES_APARTMENTS",
+      category: nextCategory,
+      subcategory: nextSubcategory,
     });
 
-    setAttributes(initialData.attributes || {});
+    setAttributes(
+      initialData.attributes
+        ? Object.fromEntries(
+            Object.entries(initialData.attributes).map(([key, value]) => [
+              key,
+              Array.isArray(value) ? value.join(", ") : String(value ?? ""),
+            ])
+          )
+        : {}
+    );
+
     setExistingImages(initialData.images || []);
   }, [initialData]);
+
+  const categoryConfig = useMemo(() => {
+    return CATEGORY_TREE[formData.category as keyof typeof CATEGORY_TREE];
+  }, [formData.category]);
+
+  const subcategoryOptions = useMemo(() => {
+    if (!categoryConfig?.subcategories) return [];
+
+    return Object.entries(categoryConfig.subcategories).map(([key, value]) => ({
+      key,
+      label: value.label,
+    }));
+  }, [categoryConfig]);
+
+  const fieldConfig = useMemo<DynamicField[]>(() => {
+    if (!categoryConfig?.subcategories) return [];
+
+    const sub = categoryConfig.subcategories[
+      formData.subcategory as keyof typeof categoryConfig.subcategories
+    ] as SubcategoryConfig | undefined;
+
+    return sub?.fields ?? [];
+  }, [categoryConfig, formData.subcategory]);
+
+  const cityOptions = useMemo(() => {
+    return getCitiesByState(formData.state);
+  }, [formData.state]);
+
+  const showListingType = useMemo(
+    () => categoryUsesListingType(formData.category),
+    [formData.category]
+  );
+
+  const showPostedBy = useMemo(
+    () => categoryUsesPostedBy(formData.category),
+    [formData.category]
+  );
+
+  const listingTypeOptions = useMemo(() => {
+    return getListingTypeOptions(formData.category);
+  }, [formData.category]);
 
   const getFieldClass = (fieldName: string) =>
     `w-full px-4 py-4 border rounded-md text-xl focus:ring-2 focus:outline-none ${
@@ -121,77 +181,66 @@ export default function ListingForm({
         : "border-gray-400 focus:ring-[#8A715D]"
     }`;
 
-  const categoryConfig = useMemo(() => {
-    return CATEGORY_TREE[formData.category as keyof typeof CATEGORY_TREE];
-  }, [formData.category]);
-
-  const subcategoryOptions = useMemo(() => {
-    if (!categoryConfig) return [];
-    return Object.entries(categoryConfig.subcategories).map(([key, value]) => ({
-      key,
-      label: value.label,
-    }));
-  }, [categoryConfig]);
-
-  const fieldConfig = useMemo<DynamicField[]>(() => {
-    if (!categoryConfig) return [];
-
-    const sub = categoryConfig.subcategories[
-      formData.subcategory as keyof typeof categoryConfig.subcategories
-    ] as SubcategoryConfig | undefined;
-
-    return sub?.fields ?? [];
-  }, [categoryConfig, formData.subcategory]);
-
-  const listingTypeOptions = useMemo(() => {
-    if (formData.subcategory === "HOUSES_APARTMENTS") {
-      return ["Sale", "Rent", "Shortlet"];
-    }
-    return ["Sale"];
-  }, [formData.subcategory]);
-
   function formatPriceInput(value: string) {
     const match = value.match(/^([\d\s,\.]*)(.*)$/);
     if (!match) return value;
+
     const rawNum = match[1].replace(/[^\d]/g, "");
     const tail = match[2] ?? "";
     const formattedNum = rawNum ? Number(rawNum).toLocaleString() : "";
     const trimmedTail = tail.replace(/^\s+/, "");
+
     return trimmedTail ? `${formattedNum} ${trimmedTail}`.trim() : formattedNum;
   }
+
+  const clearFieldError = (key: string) => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const clearImageError = () => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.images;
+      return next;
+    });
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
 
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[name];
-      return next;
-    });
+    clearFieldError(name);
 
     if (name === "price") {
       setFormData((prev) => ({ ...prev, price: formatPriceInput(value) }));
       return;
     }
 
-    if (isEditMode && (name === "catagory" || name === "subcategory")) {
+    if (isEditMode && (name === "category" || name === "subcategory")) {
       return;
     }
 
     if (name === "category") {
       const nextCategory = value;
-      const nextCategoryConfig =
-        CATEGORY_TREE[nextCategory as keyof typeof CATEGORY_TREE];
-      const firstSubcategory = Object.keys(nextCategoryConfig.subcategories)[0] || "";
+      const firstSubcategory = getFirstSubcategory(nextCategory);
 
       setFormData((prev) => ({
         ...prev,
         category: nextCategory,
         subcategory: firstSubcategory,
-        listingType: firstSubcategory === "HOUSES_APARTMENTS" ? prev.listingType : "Sale",
+        listingType: categoryUsesListingType(nextCategory)
+          ? nextCategory === "LAND"
+            ? "Sale"
+            : ""
+          : "",
+        postedBy: categoryUsesPostedBy(nextCategory) ? prev.postedBy : "",
       }));
+
       setAttributes({});
       return;
     }
@@ -200,14 +249,14 @@ export default function ListingForm({
       setFormData((prev) => ({
         ...prev,
         subcategory: value,
-        listingType: value === "HOUSES_APARTMENTS" ? prev.listingType : "Sale",
+        listingType: categoryUsesListingType(prev.category)
+          ? prev.category === "LAND"
+            ? "Sale"
+            : prev.listingType
+          : "",
       }));
-      setAttributes({});
-      return;
-    }
 
-    if (name === "listingType") {
-      setFormData((prev) => ({ ...prev, listingType: value }));
+      setAttributes({});
       return;
     }
 
@@ -228,11 +277,7 @@ export default function ListingForm({
   ) => {
     const { name, value } = e.target;
 
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[`attributes.${name}`];
-      return next;
-    });
+    clearFieldError(`attributes.${name}`);
 
     setAttributes((prev) => ({
       ...prev,
@@ -241,6 +286,8 @@ export default function ListingForm({
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    clearImageError();
+
     const { files } = e.target;
     if (!files || files.length === 0) return;
 
@@ -285,13 +332,46 @@ export default function ListingForm({
 
   const removeNewImage = (index: number) => {
     if (isSubmitting) return;
-    setImages((prev) => prev.filter((_, i) => i !== index));
+
+    setImages((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+
+      if (existingImages.length + next.length > 0) {
+        clearImageError();
+      }
+
+      return next;
+    });
+
+    setSelectedNewImageIndex((prev) => {
+      if (prev === null) return null;
+      if (prev === index) return null;
+      if (prev > index) return prev - 1;
+      return prev;
+    });
   };
 
-  const removeExistingImage = (publicId: string) => {
-    if (isSubmitting) return;
-    if (!publicId) return;
-    setExistingImages((prev) => prev.filter((img) => img.public_id !== publicId));
+  const removeExistingImage = (publicId?: string) => {
+    if (isSubmitting || !publicId) return;
+
+    const removedIndex = existingImages.findIndex((img) => img.public_id === publicId);
+
+    setExistingImages((prev) => {
+      const next = prev.filter((img) => img.public_id !== publicId);
+
+      if (next.length + images.length > 0) {
+        clearImageError();
+      }
+
+      return next;
+    });
+
+    setSelectedExistingImageIndex((prev) => {
+      if (prev === null || removedIndex === -1) return prev;
+      if (prev === removedIndex) return null;
+      if (prev > removedIndex) return prev - 1;
+      return prev;
+    });
   };
 
   const handleExistingDragStart = (index: number) => {
@@ -303,18 +383,7 @@ export default function ListingForm({
     if (isSubmitting) return;
     if (draggedExistingImageIndex === null || draggedExistingImageIndex === index) return;
 
-    setExistingImages((prev) => {
-      const updated = [...prev];
-      const draggedItem = updated[draggedExistingImageIndex];
-
-      if (!draggedItem) return prev;
-
-      updated.splice(draggedExistingImageIndex, 1);
-      updated.splice(index, 0, draggedItem);
-
-      return updated;
-    });
-
+    setExistingImages((prev) => reorderArray(prev, draggedExistingImageIndex, index));
     setDraggedExistingImageIndex(null);
   };
 
@@ -327,18 +396,7 @@ export default function ListingForm({
     if (isSubmitting) return;
     if (draggedNewImageIndex === null || draggedNewImageIndex === index) return;
 
-    setImages((prev) => {
-      const updated = [...prev];
-      const draggedItem = updated[draggedNewImageIndex];
-
-      if (!draggedItem) return prev;
-
-      updated.splice(draggedNewImageIndex, 1);
-      updated.splice(index, 0, draggedItem);
-
-      return updated;
-    });
-
+    setImages((prev) => reorderArray(prev, draggedNewImageIndex, index));
     setDraggedNewImageIndex(null);
   };
 
@@ -350,6 +408,52 @@ export default function ListingForm({
     setDraggedExistingImageIndex(null);
     setDraggedNewImageIndex(null);
   };
+
+  const handleExistingMobileReorder = (index: number) => {
+    if (isSubmitting) return;
+
+    if (selectedExistingImageIndex === null) {
+      setSelectedExistingImageIndex(index);
+      setSelectedNewImageIndex(null);
+      showToast("Image selected. Tap another image to move it there.", "success");
+      return;
+    }
+
+    if (selectedExistingImageIndex === index) {
+      setSelectedExistingImageIndex(null);
+      return;
+    }
+
+    setExistingImages((prev) => reorderArray(prev, selectedExistingImageIndex, index));
+    setSelectedExistingImageIndex(null);
+    showToast("Image order updated.", "success");
+  };
+
+  const handleNewMobileReorder = (index: number) => {
+    if (isSubmitting) return;
+
+    if (selectedNewImageIndex === null) {
+      setSelectedNewImageIndex(index);
+      setSelectedExistingImageIndex(null);
+      showToast("Image selected. Tap another image to move it there.", "success");
+      return;
+    }
+
+    if (selectedNewImageIndex === index) {
+      setSelectedNewImageIndex(null);
+      return;
+    }
+
+    setImages((prev) => reorderArray(prev, selectedNewImageIndex, index));
+    setSelectedNewImageIndex(null);
+    showToast("Image order updated.", "success");
+  };
+
+  const canGoNext =
+    !!formData.category &&
+    !!formData.subcategory &&
+    (!showListingType || !!formData.listingType) &&
+    (!showPostedBy || !!formData.postedBy);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -366,16 +470,29 @@ export default function ListingForm({
 
     if (Object.keys(nextErrors).length > 0) {
       const firstErrorKey = Object.keys(nextErrors)[0];
-      const el = document.querySelector(
-        `[name="${firstErrorKey.replace("attributes.", "")}"]`
-      );
+      const focusName = firstErrorKey.replace("attributes.", "");
+      const el = document.querySelector(`[name="${focusName}"]`);
       if (el instanceof HTMLElement) el.focus();
+      return;
+    }
+
+    const totalImages = existingImages.length + images.length;
+
+    if (totalImages === 0) {
+      setErrors((prev) => ({
+        ...prev,
+        images: "At least one image is required",
+      }));
+      showToast("Please upload at least one image.", "error");
       return;
     }
 
     const data = new FormData();
 
     Object.entries(formData).forEach(([key, val]) => {
+      if (key === "listingType" && !showListingType) return;
+      if (key === "postedBy" && !showPostedBy) return;
+
       if (key === "price") {
         const numericPrice = String(val).replace(/[^\d]/g, "");
         data.append("price", numericPrice);
@@ -402,12 +519,7 @@ export default function ListingForm({
     }
   };
 
-  const renderDynamicField = (field: {
-    key: string;
-    label: string;
-    type: string;
-    options?: string[];
-  }) => {
+  const renderDynamicField = (field: DynamicField) => {
     if (field.type === "select") {
       return (
         <select
@@ -466,7 +578,9 @@ export default function ListingForm({
                 value={formData.category}
                 onChange={handleChange}
                 disabled={isSubmitting || isEditMode}
-                className={`${getFieldClass("category")} ${isEditMode ? "cursor-not-allowed bg-gray-100" : ""}`}
+                className={`${getFieldClass("category")} ${
+                  isEditMode ? "cursor-not-allowed bg-gray-100" : ""
+                }`}
               >
                 {Object.entries(CATEGORY_TREE).map(([key, value]) => (
                   <option key={key} value={key}>
@@ -489,7 +603,9 @@ export default function ListingForm({
                 value={formData.subcategory}
                 onChange={handleChange}
                 disabled={isSubmitting || isEditMode}
-                className={`${getFieldClass("subcategory")} ${isEditMode ? "cursor-not-allowed bg-gray-100" : ""}`}
+                className={`${getFieldClass("subcategory")} ${
+                  isEditMode ? "cursor-not-allowed bg-gray-100" : ""
+                }`}
               >
                 {subcategoryOptions.map((sub) => (
                   <option key={sub.key} value={sub.key}>
@@ -499,51 +615,50 @@ export default function ListingForm({
               </select>
             </div>
 
-            <div>
-              <label className="block text-xl text-gray-700 mb-2">Listing Type</label>
-              <select
-                name="listingType"
-                value={formData.listingType}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={getFieldClass("listingType")}
-              >
-                <option value="">Select Listing Type</option>
-                {listingTypeOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {showListingType && (
+              <div>
+                <label className="block text-xl text-gray-700 mb-2">Listing Type</label>
+                <select
+                  name="listingType"
+                  value={formData.listingType}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className={getFieldClass("listingType")}
+                >
+                  <option value="">Select Listing Type</option>
+                  {listingTypeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            <div>
-              <label className="block text-xl text-gray-700 mb-2">Posted By</label>
-              <select
-                name="postedBy"
-                value={formData.postedBy}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={getFieldClass("postedBy")}
-              >
-                <option value="">Select</option>
-                <option value="Owner">Owner</option>
-                <option value="Agent">Agent</option>
-                <option value="Dealer">Dealer</option>
-                <option value="Seller">Seller</option>
-              </select>
-            </div>
+            {showPostedBy && (
+              <div>
+                <label className="block text-xl text-gray-700 mb-2">Posted By</label>
+                <select
+                  name="postedBy"
+                  value={formData.postedBy}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className={getFieldClass("postedBy")}
+                >
+                  <option value="">Select</option>
+                  {POSTED_BY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <button
               type="button"
               onClick={() => setStep(2)}
-              disabled={
-                isSubmitting ||
-                !formData.listingType ||
-                !formData.postedBy ||
-                !formData.category ||
-                !formData.subcategory
-              }
+              disabled={isSubmitting || !canGoNext}
               className="w-full bg-[#8A715D] text-white text-lg py-3 rounded-md hover:bg-[#7A6352] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
@@ -641,80 +756,117 @@ export default function ListingForm({
               />
             </div>
 
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-gray-800">
-                {subcategoryOptions.find((s) => s.key === formData.subcategory)?.label} Details
-              </h2>
+            {fieldConfig.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  Additional Details
+                </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {fieldConfig.map((field) => (
-                  <div key={field.key}>
-                    <label className="block text-lg text-gray-700 mb-2">{field.label}</label>
-                    {renderDynamicField(field)}
-                  </div>
-                ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {fieldConfig.map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <label className="block text-lg text-gray-700">
+                        {field.label}
+                      </label>
+                      {renderDynamicField(field)}
+                      {errors[`attributes.${field.key}`] && (
+                        <p className="text-sm text-red-500">
+                          {errors[`attributes.${field.key}`]}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div>
-              <label className="block text-2xl text-gray-700 mb-2">Upload Images</label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <ImagePlus className="h-5 w-5 text-gray-700" />
+                <h2 className="text-2xl font-semibold text-gray-800">Images</h2>
+              </div>
+
               <input
                 type="file"
-                name="images"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
                 multiple
-                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                 onChange={handleImageChange}
                 disabled={isSubmitting}
-                className="w-full px-4 py-4 border border-gray-400 rounded-md text-xl bg-white focus:ring-2 focus:ring-[#8A715D] focus:outline-none disabled:opacity-60"
+                className="block w-full text-sm text-gray-700"
               />
 
-              <p className="mt-2 text-sm text-gray-600">
-                Max image size 5MB allowed. File types: JPG, PNG, JPEG and WEBP.
+              <p className="text-sm text-gray-500">
+                Upload at least 1 image and up to {MAX_TOTAL_IMAGES} images. JPG, JPEG,
+                PNG, WEBP only.
               </p>
 
-              <p className="mt-1 text-sm text-red-500">
-                Maximum of 20 images allowed.
-              </p>
+              <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-600">
+                <div className="flex items-start gap-2">
+                  <Move className="mt-0.5 h-4 w-4 text-[#8A715D]" />
+                  <div>
+                    <p className="font-medium text-gray-800">Rearrange images</p>
+                    <p className="mt-1">
+                      On desktop, drag and drop images.
+                    </p>
+                    <p>
+                      On mobile, tap one image to select it, then tap another image
+                      to move it there.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Drag any image to the front. The first image becomes the title image.
-              </p>
+              {errors.images && (
+                <p className="text-sm text-red-500">{errors.images}</p>
+              )}
 
               {existingImages.length > 0 && (
                 <div>
-                  <p className="text-xl text-gray-700 mb-2 mt-4">Existing Images</p>
-                  <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {existingImages.map((img, i) => (
+                  <h3 className="text-lg font-medium text-gray-700 mb-3">
+                    Existing Images
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {existingImages.map((img, index) => (
                       <div
-                        key={img.public_id || i}
+                        key={img.public_id || img.url}
                         draggable={!isSubmitting}
-                        onDragStart={() => handleExistingDragStart(i)}
+                        onDragStart={() => handleExistingDragStart(index)}
+                        onDrop={() => handleExistingDrop(index)}
                         onDragOver={handleDragOver}
-                        onDrop={() => handleExistingDrop(i)}
                         onDragEnd={handleDragEnd}
-                        className={`relative group cursor-move rounded-md border bg-white transition ${
-                          draggedExistingImageIndex === i ? "opacity-50 scale-[0.98]" : ""
+                        onClick={() => handleExistingMobileReorder(index)}
+                        className={`relative rounded-lg overflow-hidden border bg-white cursor-pointer select-none ${
+                          selectedExistingImageIndex === index
+                            ? "ring-2 ring-[#8A715D] border-[#8A715D]"
+                            : "border-gray-200"
                         }`}
                       >
-                        {i === 0 && (
-                          <span className="absolute top-2 left-2 z-10 bg-green-600 text-white text-xs px-2 py-1 rounded">
-                            Title Image
-                          </span>
-                        )}
-
                         <img
                           src={img.url}
-                          alt={`existing-${i}`}
-                          className="w-full h-32 object-cover rounded-md"
+                          alt={`Existing ${index + 1}`}
+                          className="w-full h-32 object-cover"
                         />
+
+                        <div className="absolute left-2 top-2 rounded-full bg-white/90 p-1 shadow">
+                          <GripVertical className="h-4 w-4 text-gray-700" />
+                        </div>
+
+                        {selectedExistingImageIndex === index && (
+                          <div className="absolute inset-x-0 bottom-0 bg-[#8A715D] px-2 py-1 text-center text-xs font-medium text-white">
+                            Selected
+                          </div>
+                        )}
 
                         <button
                           type="button"
-                          onClick={() => img.public_id && removeExistingImage(img.public_id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeExistingImage(img.public_id);
+                          }}
                           disabled={isSubmitting}
-                          className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-80 hover:opacity-100 disabled:opacity-50"
+                          className="absolute top-2 right-2 rounded-full bg-white/90 p-1 shadow"
                         >
-                          <X size={16} />
+                          <X className="h-4 w-4 text-red-500" />
                         </button>
                       </div>
                     ))}
@@ -723,41 +875,52 @@ export default function ListingForm({
               )}
 
               {images.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-xl text-gray-700 mb-2">Selected Images</p>
-
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-3">
+                    New Images
+                  </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {images.map((img, index) => (
                       <div
                         key={`${img.name}-${index}`}
                         draggable={!isSubmitting}
                         onDragStart={() => handleNewDragStart(index)}
-                        onDragOver={handleDragOver}
                         onDrop={() => handleNewDrop(index)}
+                        onDragOver={handleDragOver}
                         onDragEnd={handleDragEnd}
-                        className={`relative group cursor-move rounded-md border bg-white transition ${
-                          draggedNewImageIndex === index ? "opacity-50 scale-[0.98]" : ""
+                        onClick={() => handleNewMobileReorder(index)}
+                        className={`relative rounded-lg overflow-hidden border bg-white cursor-pointer select-none ${
+                          selectedNewImageIndex === index
+                            ? "ring-2 ring-[#8A715D] border-[#8A715D]"
+                            : "border-gray-200"
                         }`}
                       >
-                        {existingImages.length === 0 && index === 0 && (
-                          <span className="absolute top-2 left-2 z-10 bg-green-600 text-white text-xs px-2 py-1 rounded">
-                            Title Image
-                          </span>
-                        )}
-
                         <img
                           src={URL.createObjectURL(img)}
-                          alt={`preview-${index}`}
-                          className="w-full h-32 object-cover rounded-md"
+                          alt={`New ${index + 1}`}
+                          className="w-full h-32 object-cover"
                         />
+
+                        <div className="absolute left-2 top-2 rounded-full bg-white/90 p-1 shadow">
+                          <GripVertical className="h-4 w-4 text-gray-700" />
+                        </div>
+
+                        {selectedNewImageIndex === index && (
+                          <div className="absolute inset-x-0 bottom-0 bg-[#8A715D] px-2 py-1 text-center text-xs font-medium text-white">
+                            Selected
+                          </div>
+                        )}
 
                         <button
                           type="button"
-                          onClick={() => removeNewImage(index)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeNewImage(index);
+                          }}
                           disabled={isSubmitting}
-                          className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-80 hover:opacity-100 disabled:opacity-50"
+                          className="absolute top-2 right-2 rounded-full bg-white/90 p-1 shadow"
                         >
-                          <X size={16} />
+                          <X className="h-4 w-4 text-red-500" />
                         </button>
                       </div>
                     ))}
@@ -766,19 +929,8 @@ export default function ListingForm({
               )}
             </div>
 
-            {Object.keys(errors).length > 0 && (
-              <div className="rounded-md border border-red-300 bg-red-50 p-4 text-red-700">
-                <p className="font-semibold mb-2">Please fix the errors</p>
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  {Object.entries(errors).map(([key, value]) => (
-                    <li key={key}>{value}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="rounded-md border border-gray-300 bg-white p-4 text-sm">
-              <label className="flex items-start gap-2">
+            <div className="rounded-lg border border-gray-300 bg-white p-4">
+              <label className="flex items-start gap-3">
                 <input
                   type="checkbox"
                   checked={agreedToListingPolicy}
@@ -786,43 +938,26 @@ export default function ListingForm({
                   disabled={isSubmitting}
                   className="mt-1"
                 />
-                <span>
-                  I confirm this listing is legal, accurate, and follows Velora’s{" "}
-                  <a href="/community-guidelines" className="text-blue-600 underline">
-                    Community Guidelines
-                  </a>{" "}
-                  and{" "}
-                  <a href="/prohibited-items" className="text-blue-600 underline">
-                    Prohibited Items Policy
-                  </a>.
+                <span className="text-sm text-gray-700">
+                  I agree that this listing follows Velora marketplace rules and does
+                  not contain prohibited, misleading, or fraudulent content.
                 </span>
               </label>
             </div>
 
-            <div className="flex justify-between">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                disabled={isSubmitting}
-                className="px-6 py-3 bg-gray-300 text-lg rounded-md hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Back
-              </button>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-3 bg-[#8A715D] text-white text-lg rounded-md hover:bg-[#7A6352] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting
-                  ? isEditMode
-                    ? "Updating..."
-                    : "Creating..."
-                  : isEditMode
-                  ? "Update Listing"
-                  : "Create Listing"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#8A715D] text-white text-lg py-3 rounded-md hover:bg-[#7A6352] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting
+                ? isEditMode
+                  ? "Updating..."
+                  : "Creating..."
+                : isEditMode
+                ? "Update Listing"
+                : "Create Listing"}
+            </button>
           </div>
         )}
       </form>

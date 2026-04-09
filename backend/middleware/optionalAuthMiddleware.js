@@ -18,6 +18,6 @@ export default function optionalAuth(req, res, next) {
     req.user = decoded;
   } catch {
   }
-
+// for analystics authenticating 
   next();
 }

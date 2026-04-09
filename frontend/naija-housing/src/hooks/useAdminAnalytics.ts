@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import adminApi from "@/libs/adminApi";
 import { AxiosError } from "axios";
+import useAdminSocket from "@/hooks/useAdminSocket";
 
 type DayPoint = {
   day: string;
@@ -27,7 +28,7 @@ export default function useAdminAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -39,11 +40,32 @@ export default function useAdminAnalytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadAnalytics();
-  }, []);
+  }, [loadAnalytics]);
+
+  useAdminSocket({
+    onOverviewUpdated: useCallback(() => {
+      loadAnalytics();
+    }, [loadAnalytics]),
+    onPaymentsUpdated: useCallback(() => {
+      loadAnalytics();
+    }, [loadAnalytics]),
+    onReportsUpdated: useCallback(() => {
+      loadAnalytics();
+    }, [loadAnalytics]),
+    onAppealsUpdated: useCallback(() => {
+      loadAnalytics();
+    }, [loadAnalytics]),
+    onUsersUpdated: useCallback(() => {
+      loadAnalytics();
+    }, [loadAnalytics]),
+    onSupportUpdated: useCallback(() => {
+      loadAnalytics();
+    }, [loadAnalytics]),
+  });
 
   return { data, loading, error, reload: loadAnalytics };
 }

@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import adminApi from "@/libs/adminApi";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useAdminRealtime } from "@/context/AdminRealtimeContext";
+import IconWithBadge from "@/components/ui/IconWithBadge";
+import {
+  LayoutDashboard,
+  CreditCard,
+  Flag,
+  ShieldAlert,
+  LifeBuoy,
+} from "lucide-react";
 
 type AdminProfile = {
   id: string;
@@ -13,11 +22,11 @@ type AdminProfile = {
 
 export default function AdminNavbar() {
   const { admin, isHydrated, adminLogout } = useAdminAuth();
+  const { badges } = useAdminRealtime();
   const [profile, setProfile] = useState<AdminProfile | null>(null);
 
   useEffect(() => {
-    if (!isHydrated) return;
-    if (!admin) return;
+    if (!isHydrated || !admin) return;
 
     const loadProfile = async () => {
       try {
@@ -32,25 +41,56 @@ export default function AdminNavbar() {
   }, [admin, isHydrated]);
 
   return (
-    <nav className="border-b bg-white">
+    <nav className="border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div>
-          <Link href="/admin/dashboard" className="font-bold text-lg">
-            Admin Panel
-          </Link>
-        </div>
+        <Link href="/admin/dashboard" className="font-bold text-lg">
+          Admin Panel
+        </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <Link href="/admin/dashboard" className="text-sm hover:underline">
-            Dashboard
+            <IconWithBadge count={badges.dashboard}>
+              <span className="inline-flex items-center gap-1">
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </span>
+            </IconWithBadge>
           </Link>
 
           <Link href="/admin/payments" className="text-sm hover:underline">
-            Payments
+            <IconWithBadge count={badges.payments}>
+              <span className="inline-flex items-center gap-1">
+                <CreditCard className="w-4 h-4" />
+                Payments
+              </span>
+            </IconWithBadge>
+          </Link>
+
+          <Link href="/admin/reports" className="text-sm hover:underline">
+            <IconWithBadge count={badges.reports}>
+              <span className="inline-flex items-center gap-1">
+                <Flag className="w-4 h-4" />
+                Reports
+              </span>
+            </IconWithBadge>
+          </Link>
+
+          <Link href="/admin/appeals" className="text-sm hover:underline">
+            <IconWithBadge count={badges.appeals}>
+              <span className="inline-flex items-center gap-1">
+                <ShieldAlert className="w-4 h-4" />
+                Appeals
+              </span>
+            </IconWithBadge>
           </Link>
 
           <Link href="/admin/support" className="text-sm hover:underline">
-            Support
+            <IconWithBadge count={badges.support}>
+              <span className="inline-flex items-center gap-1">
+                <LifeBuoy className="w-4 h-4" />
+                Support
+              </span>
+            </IconWithBadge>
           </Link>
 
           <div className="text-sm text-gray-600">
@@ -59,7 +99,7 @@ export default function AdminNavbar() {
 
           <button
             onClick={adminLogout}
-            className="px-3 py-2 rounded bg-black text-white"
+            className="px-3 py-2 rounded-xl bg-black text-white shadow-sm hover:opacity-90"
           >
             Logout
           </button>

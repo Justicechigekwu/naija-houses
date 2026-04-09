@@ -23,7 +23,7 @@ export const emitToChat = (chatId, event, payload) => {
 
 export const emitToAdmins = (event, payload) => {
   const io = getIO();
-  io.to("admin:payments").emit(event, payload);
+  io.to("admin").emit(event, payload);
 };
 
 export const emitNewChatMessage = (participantIds = [], payload) => {
@@ -62,6 +62,30 @@ export const emitPaymentUpdated = (userId, payload) => {
 
 export const emitAdminPaymentsUpdated = (payload = {}) => {
   emitToAdmins(SOCKET_EVENTS.ADMIN_PAYMENTS_UPDATED, payload);
+};
+
+export const emitAdminReportsUpdated = (payload = {}) => {
+  emitToAdmins(SOCKET_EVENTS.ADMIN_REPORTS_UPDATED, payload);
+};
+
+export const emitAdminAppealsUpdated = (payload = {}) => {
+  emitToAdmins(SOCKET_EVENTS.ADMIN_APPEALS_UPDATED, payload);
+};
+
+export const emitAdminSupportUpdated = (payload = {}) => {
+  emitToAdmins(SOCKET_EVENTS.ADMIN_SUPPORT_UPDATED, payload);
+};
+
+export const emitAdminUsersUpdated = (payload = {}) => {
+  emitToAdmins(SOCKET_EVENTS.ADMIN_USERS_UPDATED, payload);
+};
+
+export const emitAdminOverviewUpdated = (payload = {}) => {
+  emitToAdmins(SOCKET_EVENTS.ADMIN_OVERVIEW_UPDATED, payload);
+};
+
+export const emitAdminBadgesUpdated = (payload = {}) => {
+  emitToAdmins(SOCKET_EVENTS.ADMIN_BADGES_UPDATED, payload);
 };
 
 export const emitUnreadChatCount = async (userId) => {

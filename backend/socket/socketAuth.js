@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
+import Admin from "../models/adminModel.js";
 
 const getCookieValue = (cookieHeader = "", name) => {
   const cookies = cookieHeader.split(";");
@@ -20,15 +21,34 @@ export const socketAuthMiddleware = async (socket, next) => {
       socket.handshake.auth?.token ||
       socket.handshake.headers?.authorization?.split(" ")[1];
 
-    const cookieToken = getCookieValue(socket.handshake.headers?.cookie, "token");
+    const userCookieToken = getCookieValue(socket.handshake.headers?.cookie, "token");
+    const adminCookieToken = getCookieValue(
+      socket.handshake.headers?.cookie,
+      "adminToken"
+    );
 
-    const token = authToken || cookieToken;
+    const token = authToken || adminCookieToken || userCookieToken;
 
     if (!token) {
       return next(new Error("Unauthorized: token missing"));
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.isAdmin) {
+      const admin = await Admin.findById(decoded.id).select("_id email");
+      if (!admin) {
+        return next(new Error("Unauthorized: admin not found"));
+      }
+
+      socket.user = {
+        id: admin._id.toString(),
+        email: admin.email,
+        isAdmin: true,
+      };
+
+      return next();
+    }
 
     const user = await userModel.findById(decoded.id).select(
       "_id firstName lastName email avatar isBanned banReason"
@@ -48,7 +68,7 @@ export const socketAuthMiddleware = async (socket, next) => {
       lastName: user.lastName,
       email: user.email,
       avatar: user.avatar,
-      isAdmin: !!decoded.isAdmin,
+      isAdmin: false,
     };
 
     next();

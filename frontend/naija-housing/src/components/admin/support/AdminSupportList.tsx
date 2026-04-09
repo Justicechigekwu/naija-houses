@@ -20,7 +20,7 @@ export default function AdminSupportList() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-[#F5F5F5]">
       {messages.map((item) => {
         const replyHref = `mailto:${item.email}?subject=${encodeURIComponent(
           `Re: ${item.reason}`

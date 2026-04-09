@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import adminApi from "@/libs/adminApi";
 import { AxiosError } from "axios";
+import useAdminSocket from "@/hooks/useAdminSocket";
 
 export type AdminAppealRow = {
   _id: string;
@@ -34,7 +35,7 @@ export default function useAdminAppeals() {
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const loadAppeals = async () => {
+  const loadAppeals = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -52,7 +53,7 @@ export default function useAdminAppeals() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const approveAppeal = async (listingId: string) => {
     try {
@@ -97,7 +98,13 @@ export default function useAdminAppeals() {
 
   useEffect(() => {
     loadAppeals();
-  }, []);
+  }, [loadAppeals]);
+
+  useAdminSocket({
+    onAppealsUpdated: useCallback(() => {
+      loadAppeals();
+    }, [loadAppeals]),
+  });
 
   return {
     appeals,

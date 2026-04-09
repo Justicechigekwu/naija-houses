@@ -15,6 +15,7 @@ export type ListingCardItem = {
   distanceMeters?: number;
   category?: string;
   subcategory?: string;
+  attributes?: Record<string, string | number | boolean | string[]>;
   postedBy?: "Owner" | "Agent" | "Dealer" | "Seller";
 };
 

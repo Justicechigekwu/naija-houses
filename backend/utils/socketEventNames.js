@@ -18,4 +18,10 @@ export const SOCKET_EVENTS = {
   PAYMENT_UPDATED: "payment:updated",
 
   ADMIN_PAYMENTS_UPDATED: "admin:payments-updated",
+  ADMIN_REPORTS_UPDATED: "admin:reports-updated",
+  ADMIN_APPEALS_UPDATED: "admin:appeals-updated",
+  ADMIN_SUPPORT_UPDATED: "admin:support-updated",
+  ADMIN_USERS_UPDATED: "admin:users-updated",
+  ADMIN_OVERVIEW_UPDATED: "admin:overview-updated",
+  ADMIN_BADGES_UPDATED: "admin:badges-updated",
 };

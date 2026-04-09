@@ -7,6 +7,7 @@ import {
   emitPaymentUpdated,
   emitAdminPaymentsUpdated,
 } from "../service/realtimeService.js";
+import { emitAdminSnapshot } from "../service/adminRealtimeService.js";
 import { removeListingByAdmin } from "../service/listingModerationService.js";
 
 const addDays = (date, days) => {
@@ -127,6 +128,8 @@ export const confirmPaymentAndPublish = async (req, res) => {
       updatedAt: new Date().toISOString(),
     });
 
+    await emitAdminSnapshot();
+
     await createNotification({
       userId: listing.owner,
       type: "LISTING_APPROVED",
@@ -213,6 +216,8 @@ export const rejectPayment = async (req, res) => {
       updatedAt: new Date().toISOString(),
     });
 
+    await emitAdminSnapshot();
+
     await createNotification({
       userId: listing.owner,
       type: "PAYMENT_REJECTED",
@@ -295,6 +300,8 @@ export const rejectPaymentForPolicyViolation = async (req, res) => {
       type: "PAYMENT_REJECTED_POLICY",
       updatedAt: new Date().toISOString(),
     });
+
+    await emitAdminSnapshot();
 
     return res.json({
       message: "Payment rejected and listing removed for policy violation.",

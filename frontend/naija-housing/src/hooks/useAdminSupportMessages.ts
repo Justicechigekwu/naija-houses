@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AxiosError } from "axios";
 import adminApi from "@/libs/adminApi";
+import useAdminSocket from "@/hooks/useAdminSocket";
 
 export type AdminSupportRow = {
   _id: string;
@@ -24,7 +25,7 @@ export default function useAdminSupportMessages() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -39,7 +40,7 @@ export default function useAdminSupportMessages() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const updateStatus = async (
     supportId: string,
@@ -60,7 +61,13 @@ export default function useAdminSupportMessages() {
 
   useEffect(() => {
     loadMessages();
-  }, []);
+  }, [loadMessages]);
+
+  useAdminSocket({
+    onSupportUpdated: useCallback(() => {
+      loadMessages();
+    }, [loadMessages]),
+  });
 
   return {
     messages,

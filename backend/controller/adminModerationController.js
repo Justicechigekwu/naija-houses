@@ -3,6 +3,11 @@ import userModel from "../models/userModel.js";
 import Report from "../models/reportModel.js";
 import { createNotification } from "../service/notificationService.js";
 import { removeListingByAdmin } from "../service/listingModerationService.js";
+import {
+  emitAdminReportsUpdated,
+  emitAdminUsersUpdated,
+} from "../service/realtimeService.js";
+import { emitAdminSnapshot } from "../service/adminRealtimeService.js";
 
 export const adminDeleteListing = async (req, res) => {
   try {
@@ -25,11 +30,20 @@ export const adminDeleteListing = async (req, res) => {
       source: "REPORT_MODERATION",
       rejectionType: "PROHIBITED",
     });
+    
+    emitAdminReportsUpdated({
+      listingId,
+      type: "LISTING_REMOVED",
+      updatedAt: new Date().toISOString(),
+    });
+    
+    await emitAdminSnapshot();
 
     res.json({
       message: "Listing removed successfully",
       listing: updatedListing,
     });
+
   } catch (error) {
     console.error("adminDeleteListing error:", error);
     res.status(500).json({
@@ -114,9 +128,18 @@ export const adminDeleteUser = async (req, res) => {
       },
     });
 
+    emitAdminUsersUpdated({
+      userId,
+      type: "USER_BANNED",
+      updatedAt: new Date().toISOString(),
+    });
+    
+    await emitAdminSnapshot();
+
     res.json({
       message: "User banned successfully",
     });
+
   } catch (error) {
     console.error("adminDeleteUser error:", error);
     res.status(500).json({

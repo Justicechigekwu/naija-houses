@@ -6,6 +6,68 @@ import userModel from "../models/userModel.js";
 import { scheduleDraftReminder } from "../utils/scheduleDraftReminder.js";
 import { geocodeAddress } from "../utils/geocodeAddress.js";
 
+// export const createListing = async (req, res) => {
+//   try {
+//     const imagePaths = req.files
+//       ? req.files.map((file) => ({
+//           url: file.path,
+//           public_id: file.filename,
+//         }))
+//       : [];
+
+//     const price = Number(String(req.body.price).replace(/[^\d]/g, ""));
+
+//     const locationPayload = {
+//       city: req.body.city || "",
+//       state: req.body.state || "",
+//     };
+
+//     const geo = await geocodeAddress(locationPayload);
+
+//     const slug = await generateUniqueListingSlug(Listing, {
+//       title: req.body.title,
+//       city: locationPayload.city,
+//       state: locationPayload.state,
+//     });
+
+//     const newListing = new Listing({
+//       title: req.body.title,
+//       slug,
+//       listingType: req.body.listingType,
+//       price,
+//       state: locationPayload.state,
+//       city: locationPayload.city,
+//       stateNormalized: String(locationPayload.state || "").trim().toLowerCase(),
+//       cityNormalized: String(locationPayload.city || "").trim().toLowerCase(),
+//       geo: geo || undefined,
+//       description: req.body.description,
+//       postedBy: req.body.postedBy,
+//       owner: req.user.id,
+//       images: imagePaths,
+//       publishStatus: "DRAFT",
+//       publishPlan: null,
+//       publishedAt: null,
+//       expiresAt: null,
+//       category: req.body.category,
+//       subcategory: req.body.subcategory,
+//       attributes: req.body.attributes ? JSON.parse(req.body.attributes) : {},
+//     });
+
+//     scheduleDraftReminder(newListing, 30);
+    
+//     await newListing.save();
+
+//     res.status(201).json({
+//       message: "Listing created. Pay to publish.",
+//       listingId: newListing._id,
+//       listing: newListing,
+//     });
+//   } catch (error) {
+//     console.error("Error in createListing:", error);
+//     res.status(500).json({ message: error.message || "Failed to create listing" });
+//   }
+// };
+
 export const createListing = async (req, res) => {
   try {
     const imagePaths = req.files
@@ -24,6 +86,19 @@ export const createListing = async (req, res) => {
 
     const geo = await geocodeAddress(locationPayload);
 
+    const category = String(req.body.category || "PROPERTY").toUpperCase();
+    const subcategory = String(req.body.subcategory || "").toUpperCase();
+
+    const normalizedListingType =
+      ["PROPERTY", "LAND"].includes(category)
+        ? req.body.listingType || null
+        : null;
+
+    const normalizedPostedBy =
+      ["PROPERTY", "LAND", "VEHICLES"].includes(category)
+        ? req.body.postedBy || null
+        : null;
+
     const slug = await generateUniqueListingSlug(Listing, {
       title: req.body.title,
       city: locationPayload.city,
@@ -33,7 +108,7 @@ export const createListing = async (req, res) => {
     const newListing = new Listing({
       title: req.body.title,
       slug,
-      listingType: req.body.listingType,
+      listingType: normalizedListingType,
       price,
       state: locationPayload.state,
       city: locationPayload.city,
@@ -41,20 +116,20 @@ export const createListing = async (req, res) => {
       cityNormalized: String(locationPayload.city || "").trim().toLowerCase(),
       geo: geo || undefined,
       description: req.body.description,
-      postedBy: req.body.postedBy,
+      postedBy: normalizedPostedBy,
       owner: req.user.id,
       images: imagePaths,
       publishStatus: "DRAFT",
       publishPlan: null,
       publishedAt: null,
       expiresAt: null,
-      category: req.body.category,
-      subcategory: req.body.subcategory,
+      category,
+      subcategory,
       attributes: req.body.attributes ? JSON.parse(req.body.attributes) : {},
     });
 
     scheduleDraftReminder(newListing, 30);
-    
+
     await newListing.save();
 
     res.status(201).json({
@@ -67,6 +142,142 @@ export const createListing = async (req, res) => {
     res.status(500).json({ message: error.message || "Failed to create listing" });
   }
 };
+
+// export const updateListing = async (req, res) => {
+//   try {
+//     const listing = await Listing.findById(req.params.id);
+
+//     if (!listing) {
+//       return res.status(404).json({ message: "Listing not found" });
+//     }
+
+//     if (listing.owner.toString() !== req.user.id) {
+//       return res
+//         .status(403)
+//         .json({ message: "Not authorized to update this listing" });
+//     }
+
+//     delete req.body.publishStatus;
+//     delete req.body.publishPlan;
+//     delete req.body.publishedAt;
+//     delete req.body.expiresAt;
+//     delete req.body.owner;
+//     delete req.body.location;
+
+//     if (
+//       listing.publishStatus === "PUBLISHED" &&
+//       (
+//         (req.body.category && req.body.category !== listing.category) ||
+//         (req.body.subcategory && req.body.subcategory !== listing.subcategory)
+//       )
+//     ) {
+//       return res.status(400).json({
+//         message: "Category and subcategory cannot be changed after publication",
+//       });
+//     }
+
+//     let keepImages = [];
+//     if (req.body.keepImages) {
+//       if (Array.isArray(req.body.keepImages)) {
+//         keepImages = req.body.keepImages.map((img) =>
+//           typeof img === "string" ? JSON.parse(img) : img
+//         );
+//       } else {
+//         keepImages = [
+//           typeof req.body.keepImages === "string"
+//             ? JSON.parse(req.body.keepImages)
+//             : req.body.keepImages,
+//         ];
+//       }
+//     }
+
+//     let newImages = [];
+//     if (req.files && req.files.length > 0) {
+//       newImages = req.files.map((file) => ({
+//         url: file.path,
+//         public_id: file.filename,
+//       }));
+//     }
+
+//     const removedImages = listing.images.filter(
+//       (oldImg) => !keepImages.some((kept) => kept.public_id === oldImg.public_id)
+//     );
+
+//     if (removedImages.length) {
+//       await Promise.all(
+//         removedImages.map((img) => cloudinary.uploader.destroy(img.public_id))
+//       );
+//     }
+
+//     const updatedImages = [...keepImages, ...newImages];
+
+//     const nextTitle = req.body.title || listing.title;
+//     const nextCity = req.body.city ?? listing.city;
+//     const nextState = req.body.state ?? listing.state;
+
+//     const nextSlug = await generateUniqueListingSlug(
+//       Listing,
+//       {
+//         title: nextTitle,
+//         city: nextCity,
+//         state: nextState,
+//       },
+//       listing._id
+//     );
+
+//     let nextGeo = listing.geo;
+//     const locationChanged =
+//       nextCity !== listing.city ||
+//       nextState !== listing.state;
+
+//     if (locationChanged) {
+//       nextGeo = await geocodeAddress({
+//         city: nextCity,
+//         state: nextState,
+//       });
+//     }
+
+//     const updates = {
+//       title: nextTitle,
+//       slug: nextSlug,
+//       listingType: req.body.listingType || listing.listingType,
+//       price: req.body.price
+//         ? Number(String(req.body.price).replace(/[^\d]/g, ""))
+//         : listing.price,
+//       city: nextCity,
+//       state: nextState,
+//       stateNormalized: String(nextState || "").trim().toLowerCase(),
+//       cityNormalized: String(nextCity || "").trim().toLowerCase(),
+//       geo: nextGeo || listing.geo,
+//       description: req.body.description || listing.description,
+//       postedBy: req.body.postedBy || listing.postedBy,
+//       images: updatedImages,
+//       attributes: req.body.attributes
+//         ? JSON.parse(req.body.attributes)
+//         : listing.attributes,
+//     };
+
+//     if (listing.publishStatus === "DRAFT") {
+//       updates.category = req.body.category || listing.category;
+//       updates.subcategory = req.body.subcategory || listing.subcategory;
+//       updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000);
+//       updates.draftReminderSentAt = null;
+//     }
+
+//     const updatedListing = await Listing.findByIdAndUpdate(
+//       req.params.id,
+//       { $set: updates },
+//       { new: true, runValidators: true }
+//     );
+
+//     return res.status(200).json(updatedListing);
+//   } catch (error) {
+//     console.error("updateListing error:", error);
+//     return res
+//       .status(500)
+//       .json({ message: error.message || "Failed to update listing" });
+//   }
+// };
 
 export const updateListing = async (req, res) => {
   try {
@@ -152,8 +363,7 @@ export const updateListing = async (req, res) => {
 
     let nextGeo = listing.geo;
     const locationChanged =
-      nextCity !== listing.city ||
-      nextState !== listing.state;
+      nextCity !== listing.city || nextState !== listing.state;
 
     if (locationChanged) {
       nextGeo = await geocodeAddress({
@@ -162,10 +372,25 @@ export const updateListing = async (req, res) => {
       });
     }
 
+    const nextCategory = String(req.body.category || listing.category || "").toUpperCase();
+    const nextSubcategory = String(
+      req.body.subcategory || listing.subcategory || ""
+    ).toUpperCase();
+
+    const normalizedListingType =
+      ["PROPERTY", "LAND"].includes(nextCategory)
+        ? req.body.listingType || listing.listingType || null
+        : null;
+
+    const normalizedPostedBy =
+      ["PROPERTY", "LAND", "VEHICLES"].includes(nextCategory)
+        ? req.body.postedBy || listing.postedBy || null
+        : null;
+
     const updates = {
       title: nextTitle,
       slug: nextSlug,
-      listingType: req.body.listingType || listing.listingType,
+      listingType: normalizedListingType,
       price: req.body.price
         ? Number(String(req.body.price).replace(/[^\d]/g, ""))
         : listing.price,
@@ -175,7 +400,7 @@ export const updateListing = async (req, res) => {
       cityNormalized: String(nextCity || "").trim().toLowerCase(),
       geo: nextGeo || listing.geo,
       description: req.body.description || listing.description,
-      postedBy: req.body.postedBy || listing.postedBy,
+      postedBy: normalizedPostedBy,
       images: updatedImages,
       attributes: req.body.attributes
         ? JSON.parse(req.body.attributes)
@@ -183,8 +408,8 @@ export const updateListing = async (req, res) => {
     };
 
     if (listing.publishStatus === "DRAFT") {
-      updates.category = req.body.category || listing.category;
-      updates.subcategory = req.body.subcategory || listing.subcategory;
+      updates.category = nextCategory;
+      updates.subcategory = nextSubcategory;
       updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000);
       updates.draftReminderSentAt = null;
     }

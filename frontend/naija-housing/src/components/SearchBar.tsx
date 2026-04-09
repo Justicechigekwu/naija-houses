@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useSearch } from "@/context/SearchContext";
 import { useRouter } from "next/navigation";
 import { CATEGORY_TREE } from "@/libs/listingFormConfig";
+import { trackAnalyticsEvent } from "@/libs/analytics";
 
 export default function SearchBar() {
   const { filters, setFilters } = useSearch();
@@ -34,6 +35,39 @@ export default function SearchBar() {
       return;
     }
 
+    if (filters.category) {
+      trackAnalyticsEvent({
+        eventType: "CATEGORY_VIEW",
+        category: filters.category,
+        meta: {
+          source: "searchbar-submit",
+        },
+      });
+    }
+
+    if (filters.category && filters.subcategory) {
+      trackAnalyticsEvent({
+        eventType: "SUBCATEGORY_VIEW",
+        category: filters.category,
+        subcategory: filters.subcategory,
+        meta: {
+          source: "searchbar-submit",
+        },
+      });
+    }
+
+    if (trimmedSearch) {
+      trackAnalyticsEvent({
+        eventType: "SEARCH_VIEW",
+        category: filters.category || null,
+        subcategory: filters.subcategory || null,
+        meta: {
+          source: "searchbar-submit",
+          query: trimmedSearch,
+        },
+      });
+    }
+
     const params = new URLSearchParams();
 
     if (filters.category) params.append("category", filters.category);
@@ -56,13 +90,25 @@ export default function SearchBar() {
         <div className="w-full sm:flex-1 flex h-14 items-center px-4 bg-white sm:bg-transparent rounded-xl sm:rounded-none">
           <select
             value={filters.category || ""}
-            onChange={(e) =>
+            onChange={(e) => {
+              const nextCategory = e.target.value;
+
               setFilters({
                 ...filters,
-                category: e.target.value,
+                category: nextCategory,
                 subcategory: "",
-              })
-            }
+              });
+
+              if (nextCategory) {
+                trackAnalyticsEvent({
+                  eventType: "CATEGORY_VIEW",
+                  category: nextCategory,
+                  meta: {
+                    source: "searchbar-select",
+                  },
+                });
+              }
+            }}
             className="w-full text-center text-medium bg-transparent outline-none"
           >
             <option value="">Category</option>
@@ -77,9 +123,22 @@ export default function SearchBar() {
         <div className="w-full sm:flex-1 flex h-14 items-center px-4 bg-white sm:bg-transparent rounded-xl sm:rounded-none">
           <select
             value={filters.subcategory || ""}
-            onChange={(e) =>
-              setFilters({ ...filters, subcategory: e.target.value })
-            }
+            onChange={(e) => {
+              const nextSubcategory = e.target.value;
+
+              setFilters({ ...filters, subcategory: nextSubcategory });
+
+              if (filters.category && nextSubcategory) {
+                trackAnalyticsEvent({
+                  eventType: "SUBCATEGORY_VIEW",
+                  category: filters.category,
+                  subcategory: nextSubcategory,
+                  meta: {
+                    source: "searchbar-select",
+                  },
+                });
+              }
+            }}
             className="w-full text-center text-medium bg-transparent outline-none"
           >
             <option value="">Subcategory</option>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import adminApi from "@/libs/adminApi";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { AxiosError } from "axios";
+import useAdminSocket from "@/hooks/useAdminSocket";
 
 type UserRow = {
   id: string;
@@ -26,26 +27,32 @@ export default function AdminUsersTable() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [error, setError] = useState("");
 
+  const loadUsers = useCallback(async () => {
+    try {
+      setError("");
+      const res = await adminApi.get("/admin/users");
+      setUsers(res.data);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || "Failed to load users");
+      } else {
+        setError("Failed to load users");
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (!isHydrated) return;
     if (!admin) return;
 
-    const load = async () => {
-      try {
-        setError("");
-        const res = await adminApi.get("/admin/users");
-        setUsers(res.data);
-      } catch (err: unknown) {
-        if (err instanceof AxiosError) {
-          setError(err.response?.data?.message || "Failed to load users");
-        } else {
-          setError("Failed to load users");
-        }
-      }
-    };
+    loadUsers();
+  }, [admin, isHydrated, loadUsers]);
 
-    load();
-  }, [admin, isHydrated]);
+  useAdminSocket({
+    onUsersUpdated: useCallback(() => {
+      loadUsers();
+    }, [loadUsers]),
+  });
 
   const goToUser = (userId: string, filter = "all") => {
     router.push(`/admin/users/${userId}?filter=${filter}`);

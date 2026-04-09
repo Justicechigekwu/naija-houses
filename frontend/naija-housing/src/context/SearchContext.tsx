@@ -12,6 +12,7 @@ export interface Filters {
 
 export interface SearchSuggestion {
   _id: string;
+  slug?: string;
   title: string;
   location?: string;
   city?: string;

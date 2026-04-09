@@ -43,34 +43,36 @@ const listingSchema = new mongoose.Schema(
 
     listingType: {
       type: String,
-      enum: ["Sale", "Rent", "Shortlet"],
+      enum: ["Sale", "Rent", "Shortlet", null, ""],
       validate: {
         validator: function (value) {
-          if (this.subcategory === "HOUSES_APARTMENTS") {
-            return ["Sale", "Rent", "Shortlet"].includes(value);
+          if (["PROPERTY", "LAND"].includes(this.category)) {
+            if (!value) return false;
+    
+            if (this.category === "PROPERTY") {
+              return ["Sale", "Rent", "Shortlet"].includes(value);
+            }
+    
+            if (this.category === "LAND") {
+              return value === "Sale";
+            }
           }
-
-          if (this.subcategory === "LANDS_PLOTS") {
-            return value === "Sale";
-          }
-
-          if (
-            ["VEHICLES", "ELECTRONICS", "HOME", "FASHION"].includes(this.category)
-          ) {
-            return value === "Sale";
-          }
-
-          return true;
+    
+          return value == null || value === "";
         },
         message: "Invalid listing type for this category",
       },
       required: [
         function () {
-          return this.publishStatus !== "DRAFT";
+          return (
+            this.publishStatus !== "DRAFT" &&
+            ["PROPERTY", "LAND"].includes(this.category)
+          );
         },
         "Please select listing type",
       ],
     },
+
 
     price: {
       type: Number,
@@ -142,13 +144,26 @@ const listingSchema = new mongoose.Schema(
 
     postedBy: {
       type: String,
-      enum: ["Owner", "Agent", "Dealer", "Seller"],
+      enum: ["Owner", "Agent", "Dealer", "Seller", null, ""],
       required: [
         function () {
-          return this.publishStatus !== "DRAFT";
+          return (
+            this.publishStatus !== "DRAFT" &&
+            ["PROPERTY", "LAND", "VEHICLES"].includes(this.category)
+          );
         },
         "Please select who is posting this listing",
       ],
+      validate: {
+        validator: function (value) {
+          if (["PROPERTY", "LAND", "VEHICLES"].includes(this.category)) {
+            return ["Owner", "Agent", "Dealer", "Seller"].includes(value);
+          }
+    
+          return value == null || value === "";
+        },
+        message: "Invalid postedBy value for this category",
+      },
     },
 
     owner: {
@@ -181,6 +196,8 @@ const listingSchema = new mongoose.Schema(
         "ELECTRONICS",
         "PHONES",
         "HOME",
+        "MEN_FASHION",
+        "WOMEN_FASHION",
         "FASHION",
         "BABY",
         "SPORTS_FITNESS",
@@ -188,127 +205,162 @@ const listingSchema = new mongoose.Schema(
         "FOOD",
         "PETS_ANIMALS",
         "TOYS_GAMES",
+        "EDUCATION",
+        "SERVICES",
+        "JOBS",
+        "INDUSTRIAL_TOOLS",
       ],
       required: true,
       default: "PROPERTY",
     },
 
+
     subcategory: {
-    type: String,
-    enum: [
-      // VEHICLES
-      "CARS",
-      "TRUCKS_TRAILERS",
-      "MOTORCYCLES",
-      "BICYCLES",
-      "TRAILERS",
-      "CAR_PARTS_ACCESSORIES",
-      "BOATS",
-  
-      // PROPERTY (Residential)
-      "HOUSE",
-      "APARTMENT",
-      "FLAT",
-      "MINI_FLAT",
-      "SELF_CONTAIN",
-      "STUDIO_APARTMENT",
-      "DUPLEX",
-      "BUNGALOW",
-      "TERRACE",
-      "SEMI_DETACHED",
-      "DETACHED_HOUSE",
-      "MANSION",
-      "PENTHOUSE",
-      "TOWNHOUSE",
-      "VILLA",
-      "COTTAGE",
-      "FARM_HOUSE",
-  
-      // PROPERTY (Commercial)
-      "OFFICE_SPACE",
-      "SHOP",
-      "WAREHOUSE",
-      "FACTORY",
-      "SCHOOL_BUILDING",
-      "HOSPITAL_BUILDING",
-      "HOTEL",
-      "GUEST_HOUSE",
-      "EVENT_CENTER",
-      "COMMERCIAL_BUILDING",
-  
-      // LAND
-      "RESIDENTIAL_PLOT",
-      "COMMERCIAL_PLOT",
-      "INDUSTRIAL_LAND",
-      "AGRICULTURAL_LAND",
-      "MIXED_USE_LAND",
-  
-      // PHONES
-      "SMART_PHONES",
-      "TABLETS",
-      "SMART_WATCHES",
-      "MOBILE_ACCESSORIES",
-  
-      // ELECTRONICS
-      "LAPTOPS_COMPUTERS",
-      "TELEVISIONS",
-      "HEADPHONES",
-      "GAMING_CONSOLES",
-      "AUDIO_MUSIC_EQUIPMENT",
-      "CAMERAS_PHOTOGRAPHY",
-      "TV_EQUIPMENT",
-      "NETWORKING_EQUIPMENT",
-      "COMPUTER_MONITORS",
-      "COMPUTER_ACCESSORIES",
-      "CCTV_SECURITY_CAMERAS",
-      "ELECTRONICS_OTHER",
-  
-      // HOME
-      "FURNITURE",
-      "HOME_APPLIANCES",
-  
-      // FASHION
-      "WATCHES",
-      "CLOTHING",
-      "FOOTWEAR",
-      "BAGS",
-      "JEWELRY",
-      "HATS_CAPS",
-      "SUNGLASSES",
-      "BELTS",
-      "WALLETS",
-  
-      // BABY
-      "BABY_CLOTHING",
-      "BABY_GEAR",
-      "BABY_FEEDING",
-  
-      // SPORTS & FITNESS
-      "GYM_EQUIPMENT",
-      "SPORTS_EQUIPMENT",
-      "FITNESS_ACCESSORIES",
-  
-      // AGRICULTURE
-      "FARM_MACHINERY",
-      "FARM_TOOLS",
-      "FARM_PRODUCE",
-  
-      // FOOD
-      "CEREALS_GRAINS",
-      "PACKAGED_FOODS",
-  
-      // PETS
-      "DOGS",
-      "CATS",
-      "PET_ACCESSORIES",
-  
-      // TOYS
-      "KIDS_TOYS",
-      "BOARD_GAMES",
-    ],
-    required: true,
-    default: "HOUSES",
-  },
+      type: String,
+      enum: [
+        // VEHICLES
+        "CARS",
+        "TRUCKS",
+        "BOATS",
+        "BUSES",
+        "MOTORCYCLES",
+        "BICYCLES",
+        "TRAILERS",
+        "CAR_PARTS_ACCESSORIES",
+    
+        // PROPERTY (Residential)
+        "HOUSE",
+        "APARTMENT",
+        "FLAT",
+        "MINI_FLAT",
+        "SELF_CONTAIN",
+        "STUDIO_APARTMENT",
+        "DUPLEX",
+        "BUNGALOW",
+        "TERRACE",
+        "SEMI_DETACHED",
+        "DETACHED_HOUSE",
+        "MANSION",
+        "PENTHOUSE",
+        "TOWNHOUSE",
+        "VILLA",
+        "COTTAGE",
+        "FARM_HOUSE",
+    
+        // PROPERTY (Commercial)
+        "OFFICE_SPACE",
+        "SHOP",
+        "WAREHOUSE",
+        "FACTORY",
+        "SCHOOL_BUILDING",
+        "HOSPITAL_BUILDING",
+        "HOTEL",
+        "GUEST_HOUSE",
+        "EVENT_CENTER",
+        "COMMERCIAL_BUILDING",
+    
+        // LAND
+        "RESIDENTIAL_PLOT",
+        "COMMERCIAL_PLOT",
+        "INDUSTRIAL_LAND",
+        "AGRICULTURAL_LAND",
+        "MIXED_USE_LAND",
+    
+        // PHONES
+        "SMART_PHONES",
+        "TABLETS",
+        "BUTTON_PHONES",
+        "SMART_WATCHES",
+        "MOBILE_ACCESSORIES",
+    
+        // ELECTRONICS
+        "LAPTOPS_COMPUTERS",
+        "TELEVISIONS",
+        "HEADPHONES",
+        "GAMING_CONSOLES",
+        "AUDIO_MUSIC_EQUIPMENT",
+        "CAMERAS_PHOTOGRAPHY",
+        "TV_EQUIPMENT",
+        "NETWORKING_EQUIPMENT",
+        "COMPUTER_MONITORS",
+        "COMPUTER_ACCESSORIES",
+        "CCTV_SECURITY_CAMERAS",
+        "ELECTRONICS_OTHER",
+    
+        // HOME
+        "FURNITURE",
+        "HOME_APPLIANCES",
+    
+        // FASHION
+        "WATCHES",
+        "CLOTHING",
+        "FOOTWEAR",
+        "BAGS",
+        "JEWELRY",
+        "HATS_CAPS",
+        "SUNGLASSES",
+        "BELTS",
+        "WALLETS",
+    
+        // BABY
+        "BABY_CLOTHING",
+        "BABY_GEAR",
+        "BABY_FEEDING",
+    
+        // SPORTS & FITNESS
+        "GYM_EQUIPMENT",
+        "SPORTS_EQUIPMENT",
+        "FITNESS_ACCESSORIES",
+    
+        // AGRICULTURE
+        "FARM_MACHINERY",
+        "FARM_TOOLS",
+        "FARM_PRODUCE",
+    
+        // FOOD
+        "CEREALS_GRAINS",
+        "PACKAGED_FOODS",
+        "BEVERAGES",
+        "FRESH_FOOD",
+        "MEAT_SEAFOOD",
+    
+        // PETS
+        "DOGS",
+        "CATS",
+        "PET_ACCESSORIES",
+    
+        // TOYS & GAMES
+        "KIDS_TOYS",
+        "BOARD_GAMES",
+    
+        // EDUCATION
+        "COURSES",
+        "STUDY_MATERIALS",
+    
+        // SERVICES
+        "HOME_SERVICES",
+        "BEAUTY_SERVICES",
+        "TECH_SERVICES",
+        "AUTO_SERVICES",
+        "BUSINESS_SERVICES",
+        "CONSTRUCTION_SERVICES",
+        "DELIVERY_LOGISTICS",
+    
+        // JOBS
+        "DOMESTIC_HELP",
+        "BEAUTY_FASHION_WORKERS",
+        "CAREGIVERS_NANNIES",
+        "DRIVERS_LOGISTICS",
+        "ARTISANS_TECHNICIANS",
+    
+        // INDUSTRIAL TOOLS
+        "POWER_TOOLS",
+        "HAND_TOOLS",
+        "WELDING_EQUIPMENT",
+      ],
+      required: true,
+      default: "HOUSE",
+    },
 
     attributes: {
       type: mongoose.Schema.Types.Mixed,

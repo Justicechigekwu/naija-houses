@@ -30,3 +30,4 @@ export default function RelatedListing({ listingId }: { listingId: string }) {
     </div>
   );
 }
+

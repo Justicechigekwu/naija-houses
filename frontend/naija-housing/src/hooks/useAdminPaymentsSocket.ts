@@ -1,4 +1,3 @@
-// hooks/useAdminPaymentsSocket.ts
 "use client";
 
 import { useEffect } from "react";
@@ -39,6 +38,7 @@ export default function useAdminPaymentsSocket(
     const socket = connectSocket();
 
     const handlePaymentsUpdated = (payload: AdminPaymentsUpdatedPayload) => {
+      console.log("admin:payments-updated received", payload);
       onPaymentsUpdated?.(payload);
     };
 

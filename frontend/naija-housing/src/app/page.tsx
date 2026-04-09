@@ -12,6 +12,7 @@ import Footer from "@/components/footer/Footer";
 import LocationFilter from "@/components/LocationFilter";
 import { useBrowsingLocation } from "@/context/BrowsingLocationContext";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
+import { trackAnalyticsEvent } from "@/libs/analytics";
 
 export default function Home() {
   const router = useRouter();
@@ -20,6 +21,15 @@ export default function Home() {
     useBrowsingLocation();
 
   const { listings, similarListings, meta, loading, error, refreshFeed } = useHomeLocationFeed();
+
+  useEffect(() => {
+    trackAnalyticsEvent({
+      eventType: "APP_VISIT",
+      meta: {
+        page: "home",
+      },
+    });
+  }, []);
 
   const handleAddListing = () => {
     if (!isHydrated) return;
@@ -108,7 +118,7 @@ export default function Home() {
         </div>
 
         <div className="p-6 bg-[#F5F5F5]">
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-bold">{sectionTitle}</h2>
 
             <LocationFilter
@@ -142,7 +152,7 @@ export default function Home() {
             <p className="text-red-500">{error}</p>
           ) : listings.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 w-full sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 w-full sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {listings.map((listing) => (
                   <ListingCard key={listing._id} listing={listing} />
                 ))}

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { FileText, X } from "lucide-react";
 import adminApi from "@/libs/adminApi";
 import { useUI } from "@/hooks/useUi";
-import useAdminPaymentsSocket from "@/hooks/useAdminPaymentsSocket";
+import useAdminPaymentsSocket, {
+  type AdminPaymentsUpdatedPayload,
+} from "@/hooks/useAdminPaymentsSocket";
 
 type ProofAttachment = {
   url: string;
@@ -72,7 +74,7 @@ export default function AdminPaymentDetailsPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<ProofAttachment | null>(null);
 
-  const loadPayment = async () => {
+  const loadPayment = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -87,17 +89,22 @@ export default function AdminPaymentDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [paymentId]);
 
   useEffect(() => {
     if (paymentId) loadPayment();
-  }, [paymentId]);
+  }, [paymentId, loadPayment]);
 
-  useAdminPaymentsSocket((payload) => {
-    if (payload.paymentId === paymentId) {
-      loadPayment();
-    }
-  });
+  useAdminPaymentsSocket(
+  useCallback(
+    (payload: AdminPaymentsUpdatedPayload) => {
+      if (payload.paymentId === paymentId) {
+        loadPayment();
+      }
+    },
+    [paymentId, loadPayment]
+  )
+);
 
   const openPreview = (item: ProofAttachment) => {
     setPreviewItem(item);
@@ -123,7 +130,8 @@ export default function AdminPaymentDetailsPage() {
           setActionLoading("confirm");
           await adminApi.post(`/admin/payments/${paymentId}/confirm`);
           showToast("Payment confirmed and listing published", "success");
-          await loadPayment();
+          // router.replace("/admin/payments");
+          router.replace("/admin/payments");
         } catch (err: unknown) {
           if (err instanceof AxiosError) {
             showToast(

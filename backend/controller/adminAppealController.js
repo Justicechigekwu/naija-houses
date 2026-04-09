@@ -2,6 +2,10 @@ import Listing from "../models/listingModels.js";
 import Report from "../models/reportModel.js";
 import { createNotification } from "../service/notificationService.js";
 import { emitListingUpdated } from "../service/realtimeService.js";
+import {
+  emitAdminAppealsUpdated,
+} from "../service/realtimeService.js";
+import { emitAdminSnapshot } from "../service/adminRealtimeService.js";
 
 export const getPendingAppeals = async (req, res) => {
   try {
@@ -89,6 +93,15 @@ export const approveAppeal = async (req, res) => {
       updatedAt: listing.updatedAt,
     });
 
+    emitAdminAppealsUpdated({
+      listingId: listing._id,
+      publishStatus: listing.publishStatus,
+      appealStatus: listing.appealStatus,
+      updatedAt: new Date().toISOString(),
+    });
+    
+    await emitAdminSnapshot();
+
     res.json({
       message: "Appeal approved successfully",
       listing,
@@ -149,10 +162,20 @@ export const rejectAppeal = async (req, res) => {
       updatedAt: listing.updatedAt,
     });
 
+    emitAdminAppealsUpdated({
+      listingId: listing._id,
+      publishStatus: listing.publishStatus,
+      appealStatus: listing.appealStatus,
+      updatedAt: new Date().toISOString(),
+    });
+    
+    await emitAdminSnapshot();
+
     res.json({
       message: "Appeal rejected successfully",
       listing,
     });
+    
   } catch (error) {
     console.error("rejectAppeal error:", error);
     res.status(500).json({

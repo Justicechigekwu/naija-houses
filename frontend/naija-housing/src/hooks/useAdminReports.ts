@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import adminApi from "@/libs/adminApi";
 import { AxiosError } from "axios";
+import useAdminSocket from "@/hooks/useAdminSocket";
 
 export type AdminReportRow = {
   _id: string;
@@ -41,7 +42,7 @@ export default function useAdminReports() {
   const [clearingReportId, setClearingReportId] = useState<string | null>(null);
   const [clearingAll, setClearingAll] = useState(false);
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -56,7 +57,7 @@ export default function useAdminReports() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const updateStatus = async (
     reportId: string,
@@ -206,7 +207,13 @@ export default function useAdminReports() {
 
   useEffect(() => {
     loadReports();
-  }, []);
+  }, [loadReports]);
+
+  useAdminSocket({
+    onReportsUpdated: useCallback(() => {
+      loadReports();
+    }, [loadReports]),
+  });
 
   return {
     reports,

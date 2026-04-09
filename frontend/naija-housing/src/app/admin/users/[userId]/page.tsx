@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AxiosError } from "axios";
 import adminApi from "@/libs/adminApi";
+import useAdminSocket from "@/hooks/useAdminSocket";
 
 type AdminUser = {
   id: string;
@@ -47,56 +48,63 @@ export default function AdminUserDetailsPage() {
   const [loadingListings, setLoadingListings] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const loadUser = useCallback(async () => {
     if (!userId) return;
 
-    const loadUser = async () => {
-      try {
-        setLoadingUser(true);
-        const res = await adminApi.get(`/admin/users/${userId}`);
-        setUser(res.data);
-      } catch (err: unknown) {
-        if (err instanceof AxiosError) {
-          setError(err.response?.data?.message || "Failed to load user");
-        } else {
-          setError("Failed to load user");
-        }
-      } finally {
-        setLoadingUser(false);
+    try {
+      setLoadingUser(true);
+      const res = await adminApi.get(`/admin/users/${userId}`);
+      setUser(res.data);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || "Failed to load user");
+      } else {
+        setError("Failed to load user");
       }
-    };
-
-    loadUser();
+    } finally {
+      setLoadingUser(false);
+    }
   }, [userId]);
 
-  useEffect(() => {
+  const loadListings = useCallback(async () => {
     if (!userId) return;
 
-    const loadListings = async () => {
-      try {
-        setLoadingListings(true);
-        const res = await adminApi.get(`/admin/users/${userId}/listings?filter=${filter}`);
-        setListings(res.data);
-      } catch (err: unknown) {
-        if (err instanceof AxiosError) {
-          setError(err.response?.data?.message || "Failed to load listings");
-        } else {
-          setError("Failed to load listings");
-        }
-      } finally {
-        setLoadingListings(false);
+    try {
+      setLoadingListings(true);
+      const res = await adminApi.get(`/admin/users/${userId}/listings?filter=${filter}`);
+      setListings(res.data);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || "Failed to load listings");
+      } else {
+        setError("Failed to load listings");
       }
-    };
-
-    loadListings();
+    } finally {
+      setLoadingListings(false);
+    }
   }, [userId, filter]);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  useEffect(() => {
+    loadListings();
+  }, [loadListings]);
+
+  useAdminSocket({
+    onUsersUpdated: useCallback(() => {
+      loadUser();
+      loadListings();
+    }, [loadUser, loadListings]),
+  });
 
   const setFilter = (nextFilter: string) => {
     router.push(`/admin/users/${userId}?filter=${nextFilter}`);
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="max-w-6xl bg-[#F5F5F5] mx-auto px-4 py-6">
       <button
         className="border px-3 py-2 rounded mb-4"
         onClick={() => router.push("/admin/dashboard")}
