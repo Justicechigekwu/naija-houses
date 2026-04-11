@@ -69,12 +69,12 @@ export default function ExpiredListings({ items, onRefresh }: Props) {
 
       if (paymentCode) {
         router.push(
-          `/listings/${listingId}/payment-details?code=${encodeURIComponent(
+          `/listing-actions/${listingId}/payment-details?code=${encodeURIComponent(
             paymentCode
           )}`
         );
       } else {
-        router.push(`/listings/${listingId}/payment-details`);
+        router.push(`/listing-actions/${listingId}/payment-details`);
       }
     } catch (err: unknown) {
       const error = err as AxiosError<ApiErrorResponse>;
@@ -103,7 +103,7 @@ export default function ExpiredListings({ items, onRefresh }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-[#F5F5F5]">
       {items.map((listing) => {
         const firstImage = listing.images?.[0];
         const imageUrl = firstImage?.url || "";
@@ -125,7 +125,7 @@ export default function ExpiredListings({ items, onRefresh }: Props) {
         return (
           <div
             key={listing._id}
-            className="flex flex-col gap-4 rounded-xl border bg-white p-4 shadow-sm md:flex-row"
+            className="flex flex-col gap-4 rounded-2xl border bg-white p-4 shadow-sm transition hover:shadow-md md:flex-row"
           >
             <div className="h-40 w-full shrink-0 overflow-hidden rounded-lg bg-gray-100 md:w-44">
               {imageUrl ? (
@@ -168,7 +168,7 @@ export default function ExpiredListings({ items, onRefresh }: Props) {
                 <button
                   onClick={() => handleRenew(listing._id)}
                   disabled={isLoading}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
                 >
                   {isLoading ? "Processing..." : "Renew"}
                 </button>

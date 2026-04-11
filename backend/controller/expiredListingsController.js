@@ -10,15 +10,15 @@ export const expiredListings = async (req, res) => {
       publishStatus: "EXPIRED",
     })
       .select(
-        "title images category subcategory price location city state publishStatus updatedAt createdAt expiresAt expiredAt publishPlan"
+        "title slug images category subcategory price city state publishStatus updatedAt createdAt expiresAt expiredAt autoDeleteAt publishPlan"
       )
       .sort({ expiredAt: -1, updatedAt: -1 });
 
-    res.status(200).json(listings);
+    return res.status(200).json(listings);
   } catch (error) {
     console.error("expiredListings error:", error);
-    res
-      .status(500)
-      .json({ message: error.message || "Failed to fetch expired listings" });
+    return res.status(500).json({
+      message: error.message || "Failed to fetch expired listings",
+    });
   }
 };

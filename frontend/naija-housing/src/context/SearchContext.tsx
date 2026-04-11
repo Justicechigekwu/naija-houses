@@ -24,7 +24,6 @@ interface SearchContextType {
   filters: Filters;
   results: SearchSuggestion[];
   suggestions: SearchSuggestion[];
-  // setFilters: (filters: Filters) => void;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   searchListings: () => Promise<void>;
   filterListings: () => Promise<void>;

@@ -4,13 +4,17 @@ import getCategoryPricing from "../utils/getCategoryPricing.js";
 import generatePaymentCode from "../utils/generatePaymentCodeUtils.js";
 import assignBankAccount from "../utils/assignBankAccount.js";
 import userModel from "../models/userModel.js";
+import {
+  emitListingUpdated,
+  emitGlobalListingUpdated,
+} from "../service/realtimeService.js";
 import { clearDraftReminder } from "../utils/scheduleDraftReminder.js";
 
 const addDays = (date, days) =>
   new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 
-const addMinutes = (date, minutes) =>
-  new Date(date.getTime() + minutes * 60 * 1000);
+// const addMinutes = (date, minutes) =>
+//   new Date(date.getTime() + minutes * 60 * 1000);
 
 export const choosePublishPlan = async (req, res) => {
   try {
@@ -65,11 +69,39 @@ export const choosePublishPlan = async (req, res) => {
       listing.publishStatus = "PUBLISHED";
       listing.publishedAt = now;
       listing.expiresAt = addDays(now, pricing.trialDays);
-      // listing.expiresAt = addMinutes(now, 2);   // for testing free plan if expires
+      // listing.expiresAt = addMinutes(now, 2);   //for testing free plan if expires
 
       clearDraftReminder(listing);
 
       await listing.save();
+
+      emitListingUpdated(String(listing.owner), {
+        listingId: listing._id,
+        slug: listing.slug,
+        publishStatus: listing.publishStatus,
+        publishedAt: listing.publishedAt,
+        expiresAt: listing.expiresAt,
+        updatedAt: listing.updatedAt,
+      });
+      
+      emitGlobalListingUpdated({
+        listingId: listing._id,
+        slug: listing.slug,
+        title: listing.title,
+        publishStatus: listing.publishStatus,
+        publishedAt: listing.publishedAt,
+        expiresAt: listing.expiresAt,
+        updatedAt: listing.updatedAt,
+        city: listing.city,
+        state: listing.state,
+        price: listing.price,
+        images: listing.images,
+        postedBy: listing.postedBy,
+        category: listing.category,
+        subcategory: listing.subcategory,
+        listingType: listing.listingType,
+        attributes: listing.attributes,
+      });
 
       if (!user.trialUsed) user.trialUsed = new Map();
       user.trialUsed.set(trialKey, true);

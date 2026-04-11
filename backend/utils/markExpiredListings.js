@@ -2,6 +2,7 @@ import Listing from "../models/listingModels.js";
 import Notification from "../models/notificationModel.js";
 import {
   emitListingUpdated,
+  emitGlobalListingUpdated,
   emitNotificationToUser,
   emitUnreadNotificationCount,
 } from "../service/realtimeService.js";
@@ -38,6 +39,27 @@ const markExpiredListings = async (userId = null) => {
       expiredAt: listing.expiredAt,
       expiresAt: listing.expiresAt,
       autoDeleteAt: listing.autoDeleteAt,
+    });
+
+    emitGlobalListingUpdated({
+      listingId: listing._id,
+      slug: listing.slug,
+      title: listing.title,
+      publishStatus: listing.publishStatus,
+      publishedAt: listing.publishedAt,
+      expiredAt: listing.expiredAt,
+      expiresAt: listing.expiresAt,
+      autoDeleteAt: listing.autoDeleteAt,
+      updatedAt: listing.updatedAt,
+      city: listing.city,
+      state: listing.state,
+      price: listing.price,
+      images: listing.images,
+      postedBy: listing.postedBy,
+      category: listing.category,
+      subcategory: listing.subcategory,
+      listingType: listing.listingType,
+      attributes: listing.attributes,
     });
 
     const existingNotification = await Notification.findOne({

@@ -26,6 +26,7 @@ export type ListingUpdatePayload = {
   state?: string;
   price?: number;
   images?: { url: string; public_id?: string }[];
+  listingType?: "Sale" | "Rent" | "Shortlet";
   postedBy?: "Owner" | "Agent" | "Dealer" | "Seller";
   category?: string;
   subcategory?: string;

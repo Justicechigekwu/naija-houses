@@ -196,16 +196,16 @@ const listingSchema = new mongoose.Schema(
         "ELECTRONICS",
         "PHONES",
         "HOME",
-        "MEN_FASHION",
-        "WOMEN_FASHION",
+        "BEAUTY_PERSONAL_CARE",
         "FASHION",
         "BABY",
+        "KIDS",
+        "BOOKS_EDUCATION",
         "SPORTS_FITNESS",
         "AGRICULTURE",
         "FOOD",
         "PETS_ANIMALS",
         "TOYS_GAMES",
-        "EDUCATION",
         "SERVICES",
         "JOBS",
         "INDUSTRIAL_TOOLS",
@@ -272,6 +272,7 @@ const listingSchema = new mongoose.Schema(
         "BUTTON_PHONES",
         "SMART_WATCHES",
         "MOBILE_ACCESSORIES",
+        "SMART_WATCHES",
     
         // ELECTRONICS
         "LAPTOPS_COMPUTERS",
@@ -290,6 +291,19 @@ const listingSchema = new mongoose.Schema(
         // HOME
         "FURNITURE",
         "HOME_APPLIANCES",
+        "HOME_DECOR",
+        "KITCHEN_DINING",
+        "BEDDING",
+        "LIGHTING",
+        "BATHROOM_SUPPLIES",
+        "CLEANING_SUPPLIES",
+        "OUTDOOR_GARDEN",
+        "HOME_IMPROVEMENT",
+        "HOME_SECURITY",
+        "HOME_OFFICE",
+        "STORAGE_ORGANIZATION",
+        "CURTAINS_BLINDS",
+        "MATTRESSES",
     
         // FASHION
         "WATCHES",
@@ -301,6 +315,17 @@ const listingSchema = new mongoose.Schema(
         "SUNGLASSES",
         "BELTS",
         "WALLETS",
+
+        // BEAUTY & PERSONAL CARE
+        "SKINCARE",
+        "HAIR_PRODUCTS",
+        "MAKEUP",
+        "PERFUMES",
+        "SALON_EQUIPMENT",
+        "HAIR_EXTENSIONS_WIGS",
+        "NAILS",
+        "PERSONAL_CARE",
+        "BEAUTY_TOOLS",
     
         // BABY
         "BABY_CLOTHING",
@@ -311,11 +336,28 @@ const listingSchema = new mongoose.Schema(
         "GYM_EQUIPMENT",
         "SPORTS_EQUIPMENT",
         "FITNESS_ACCESSORIES",
+        "EXERCISE_MACHINES",
+        "OUTDOOR_SPORTS",
+        "TEAM_SPORTS",
+        "RACQUET_SPORTS",
+        "COMBAT_SPORTS",
+        "WATER_SPORTS_SWIMMING",
+        "SPORTSWEAR",
+        "SPORTS_SHOES",
     
         // AGRICULTURE
         "FARM_MACHINERY",
         "FARM_TOOLS",
         "FARM_PRODUCE",
+        "SEEDS_SEEDLINGS",
+        "FERTILIZERS_SOIL_IMPROVERS",
+        "PESTICIDES_HERBICIDES",
+        "IRRIGATION_WATERING",
+        "ANIMAL_FEED_SUPPLEMENTS",
+        "POULTRY_FISHING_EQUIPMENT",
+        "POULTRY_FISHING_EQUIPMENT",
+        "LIVESTOCK_AGRIC_ANIMALS",
+        "STORAGE_PROCESSING",
     
         // FOOD
         "CEREALS_GRAINS",
@@ -323,17 +365,47 @@ const listingSchema = new mongoose.Schema(
         "BEVERAGES",
         "FRESH_FOOD",
         "MEAT_SEAFOOD",
+        "DAIRY_PRODUCTS",
+        "BAKERY",
+        "COOKING_INGREDIENTS",
+        "FROZEN_FOODS",
+        "BABY_FOOD",
+        "CONDIMENTS_SAUCES",
+        "SWEETS_CONFECTIONERY",
+        "BULK_FOOD_SUPPLIES",
     
-        // PETS
+        // PETS & ANIMALS
         "DOGS",
         "CATS",
+        "BIRDS",
+        "FISH_AQUATICS",
+        "RABBITS_SMALL_PETS",
+        "LIVESTOCK",
+        "PET_FOOD",
         "PET_ACCESSORIES",
+        "PET_HEALTH_GROOMING",
     
         // TOYS & GAMES
         "KIDS_TOYS",
         "BOARD_GAMES",
-    
-        // EDUCATION
+        "EDUCATIONAL_STEM_TOYS",
+        "ELECTRONIC_TOYS",
+        "OUTDOOR_PLAY",
+        "RC_TOYS",
+        "PUZZLES_BRAIN_GAMES",
+        "VIDEO_GAMES_ACCESSORIES",
+        "COLLECTIBLES_HOBBIES",
+        "PARTY_GAMES",
+
+        // KIDS
+        "TOYS",
+        "EDUCATIONAL_MATERIALS",
+        "SCHOOL_BAGS",
+        "KIDS_FURNITURE",
+
+        // BOOKS & EDUCATION
+        "BOOKS",
+        "TEXTBOOKS",
         "COURSES",
         "STUDY_MATERIALS",
     
@@ -341,7 +413,8 @@ const listingSchema = new mongoose.Schema(
         "HOME_SERVICES",
         "BEAUTY_SERVICES",
         "TECH_SERVICES",
-        "AUTO_SERVICES",
+        "EVENT_SERVICES",
+        "AUTOMOTIVE_SERVICES",
         "BUSINESS_SERVICES",
         "CONSTRUCTION_SERVICES",
         "DELIVERY_LOGISTICS",
@@ -349,14 +422,31 @@ const listingSchema = new mongoose.Schema(
         // JOBS
         "DOMESTIC_HELP",
         "BEAUTY_FASHION_WORKERS",
+        "HOSPITALITY_FOOD_WORKERS",
         "CAREGIVERS_NANNIES",
         "DRIVERS_LOGISTICS",
         "ARTISANS_TECHNICIANS",
+        "OFFICE_ADMIN_SUPPORT",
+        "SALES_RETAIL_WORKERS",
+        "SECURITY_WORKERS",
+        "DIGITAL_FREELANCE",
     
         // INDUSTRIAL TOOLS
         "POWER_TOOLS",
         "HAND_TOOLS",
         "WELDING_EQUIPMENT",
+        "ELECTRICAL_TOOLS",
+        "GENERATORS",
+        "PLUMBING_TOOLS",
+        "CONSTRUCTION_EQUIPMENT",
+        "SAFETY_EQUIPMENT",
+        "GENERATORS_POWER_EQUIPMENT",
+        "MEASURING_TESTING_TOOLS",
+        "SOLAR_POWER",
+        "INVERTERS_BATTERIES",
+        "SEWING_MACHINES",
+        "INDUSTRIAL_MACHINERY",
+        "TOOL_STORAGE_WORKSHOP",
       ],
       required: true,
       default: "HOUSE",
@@ -500,7 +590,7 @@ listingSchema.index({ geo: "2dsphere" });
 listingSchema.index({ category: 1, subcategory: 1, createdAt: -1 });
 listingSchema.index({ publishStatus: 1, expiresAt: 1 });
 listingSchema.index({ cityNormalized: 1, stateNormalized: 1, createdAt: -1 });
-listingSchema.index({ autoDeleteAt: 1 }, { expireAfterSeconds: 0 });
+// listingSchema.index({ autoDeleteAt: 1 }, { expireAfterSeconds: 0 });
 
 const Listing = mongoose.model("Listing", listingSchema);
 

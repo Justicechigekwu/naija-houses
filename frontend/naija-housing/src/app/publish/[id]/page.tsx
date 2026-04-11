@@ -58,7 +58,7 @@ export default function PublishPlanPage() {
     }
   };
 
-  if (!options) return <div className="max-w-3xl mx-auto p-4">Loading...</div>;
+  if (!options) return <div className="max-w-3xl mx-auto text-center bg-gradient-to-b from-[#EDEDED] via-white to-[#ededed] p-4">Trade Smart, Live Better.</div>;
 
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-4">

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AxiosError } from "axios";
-import { FileText, X } from "lucide-react";
+import { ArrowLeft, FileText, X } from "lucide-react";
 import adminApi from "@/libs/adminApi";
 import { useUI } from "@/hooks/useUi";
 import useAdminPaymentsSocket, {
@@ -20,12 +20,19 @@ type ProofAttachment = {
 
 type PaymentDetails = {
   _id: string;
+  paymentCode?: string;
   amount?: number;
   status?: string;
   method?: string;
   reference?: string;
   note?: string;
   createdAt?: string;
+  accountExpiresAt?: string;
+  assignedBank?: {
+    bankName?: string;
+    accountName?: string;
+    accountNumber?: string;
+  };
   proofAttachments?: ProofAttachment[];
   user?: {
     _id: string;
@@ -130,7 +137,6 @@ export default function AdminPaymentDetailsPage() {
           setActionLoading("confirm");
           await adminApi.post(`/admin/payments/${paymentId}/confirm`);
           showToast("Payment confirmed and listing published", "success");
-          // router.replace("/admin/payments");
           router.replace("/admin/payments");
         } catch (err: unknown) {
           if (err instanceof AxiosError) {
@@ -236,9 +242,10 @@ export default function AdminPaymentDetailsPage() {
     <>
       <div className="max-w-5xl mx-auto px-4 bg-[#F5F5F5] py-6">
         <button
-          className="border px-3 py-2 rounded mb-4"
           onClick={() => router.push("/admin/payments")}
+          className="flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm font-medium shadow-sm transition hover:shadow-md"
         >
+          <ArrowLeft className="w-4 h-4" />
           Back
         </button>
 
@@ -247,8 +254,12 @@ export default function AdminPaymentDetailsPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white border rounded-xl p-4">
             <h2 className="text-lg font-semibold mb-3">Payment Details</h2>
+            <p><strong>Payment Confirmation Code:</strong> {payment.paymentCode || "-"}</p>
             <p><strong>Status:</strong> {payment.status || "-"}</p>
             <p><strong>Method:</strong> {payment.method || "-"}</p>
+            <p><strong>Bank Name:</strong> {payment.assignedBank?.bankName || "-"}</p>
+            <p><strong>Acct Name:</strong> {payment.assignedBank?.accountNumber || "-"}</p>
+            <p><strong>Acct Number:</strong> {payment.assignedBank?.accountName || "-"}</p>
             <p>
               <strong>Amount:</strong>{" "}
               {payment.amount != null ? `₦${Number(payment.amount).toLocaleString()}` : "-"}
@@ -341,18 +352,6 @@ export default function AdminPaymentDetailsPage() {
           </p>
           <p><strong>Description:</strong> {payment.listing?.description || "-"}</p>
 
-          {payment.listing?._id && (
-            <button
-              className="border px-4 py-2 rounded mt-4"
-              onClick={() =>
-                router.push(
-                  `/admin/listings/${payment.listing?._id}?paymentId=${payment._id}`
-                )
-              }
-            >
-              Open full listing details
-            </button>
-          )}
         </div>
 
         <div className="bg-white border rounded-xl p-4 mt-6 space-y-4">

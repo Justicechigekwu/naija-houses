@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import useSocketListingUpdates, {
+  type ListingUpdatePayload,
+} from "@/hooks/useSocketListingUpdates";
+import type { Listing } from "@/types/listing";
 import { useRouter, useParams } from "next/navigation";
 import api from "@/libs/api";
 import { ArrowLeft } from "lucide-react";
@@ -26,28 +30,20 @@ type SubcategoryConfig = {
   fields: DynamicField[];
 };
 
-interface Listing {
-  _id: string;
-  slug: string;
-  title: string;
-  listingType: string;
-  price: number;
-  city: string;
-  state: string;
-  description: string;
-  images: { url: string; public_id: string }[];
-  publishStatus: string;
-  category: keyof typeof CATEGORY_TREE;
-  subcategory: string;
-  attributes: Record<string, string | number | boolean | string[]>;
-  owner: {
+type ListingDetailsState = Listing & {
+  listingType?: "Sale" | "Rent" | "Shortlet";
+  owner?: {
     _id: string;
-    slug: string;
-    firstName: string;
-    lastName: string;
+    slug?: string;
+    firstName?: string;
+    lastName?: string;
     avatar?: string;
   };
-}
+};
+
+type ListingResponse = {
+  listing: ListingDetailsState;
+};
 
 const quickMessage = [
   "Is this still available?",
@@ -62,7 +58,7 @@ export default function ListingDetails() {
   const { showToast, showConfirm } = useUI();
   const { setLastViewedListingType } = useBrowsingLocation();
 
-  const [listing, setListing] = useState<Listing | null>(null);
+  const [listing, setListing] = useState<ListingDetailsState | null>(null);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -73,12 +69,13 @@ export default function ListingDetails() {
 
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const hasHandledExpiryRef = useRef(false);
 
   useEffect(() => {
     const fetchListing = async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/listings/slug/${slug}`);
+        const res = await api.get<ListingResponse>(`/listings/slug/${slug}`);
         setListing(res.data.listing);
       } catch (err) {
         console.error("Error fetching listing:", err);
@@ -97,7 +94,7 @@ export default function ListingDetails() {
 
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://www.velora.ng";
-  
+
   const jsonLd = listing
     ? {
         "@context": "https://schema.org",
@@ -106,7 +103,9 @@ export default function ListingDetails() {
         description: listing.description,
         image: listing.images?.map((img) => img.url) || [],
         url: `${siteUrl}/listings/${listing.slug}`,
-        category: [listing.category, listing.subcategory].filter(Boolean).join(" / "),
+        category: [listing.category, listing.subcategory]
+          .filter(Boolean)
+          .join(" / "),
         offers: {
           "@type": "Offer",
           priceCurrency: "NGN",
@@ -127,15 +126,13 @@ export default function ListingDetails() {
 
   useEffect(() => {
     if (listing?.listingType) {
-      setLastViewedListingType(
-        listing.listingType as "Sale" | "Rent" | "Shortlet"
-      );
+      setLastViewedListingType(listing.listingType);
     }
   }, [listing?.listingType, setLastViewedListingType]);
 
   useEffect(() => {
     if (!listing?._id) return;
-  
+
     trackAnalyticsEvent({
       eventType: "LISTING_VIEW",
       listingId: listing._id,
@@ -161,7 +158,7 @@ export default function ListingDetails() {
       return;
     }
 
-    if (!text.trim() || !listing) return;
+    if (!text.trim() || !listing?.owner?._id) return;
 
     try {
       setSending(true);
@@ -218,7 +215,49 @@ export default function ListingDetails() {
     );
   };
 
-  const categoryConfig = listing
+  useSocketListingUpdates({
+    onListingUpdated: (payload: ListingUpdatePayload) => {
+      setListing((prev) => {
+        if (!prev) return prev;
+
+        const isSameListing =
+          payload.listingId === prev._id ||
+          (payload.slug && payload.slug === prev.slug);
+
+        if (!isSameListing) return prev;
+
+        return {
+          ...prev,
+          slug: payload.slug ?? prev.slug,
+          title: payload.title ?? prev.title,
+          publishStatus: payload.publishStatus ?? prev.publishStatus,
+          publishedAt: payload.publishedAt ?? prev.publishedAt,
+          expiresAt: payload.expiresAt ?? prev.expiresAt,
+          expiredAt: payload.expiredAt ?? prev.expiredAt,
+          city: payload.city ?? prev.city,
+          state: payload.state ?? prev.state,
+          price: payload.price ?? prev.price,
+          category: payload.category ?? prev.category,
+          subcategory: payload.subcategory ?? prev.subcategory,
+          postedBy: payload.postedBy ?? prev.postedBy,
+          attributes: payload.attributes ?? prev.attributes,
+          images: payload.images ?? prev.images,
+          listingType: payload.listingType ?? prev.listingType,
+        };
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (listing?.publishStatus !== "EXPIRED") return;
+    if (hasHandledExpiryRef.current) return;
+
+    hasHandledExpiryRef.current = true;
+    showToast("This listing has expired", "error");
+    router.push("/");
+  }, [listing?.publishStatus, router, showToast]);
+
+  const categoryConfig = listing?.category
     ? CATEGORY_TREE[listing.category as keyof typeof CATEGORY_TREE]
     : undefined;
 
@@ -239,17 +278,16 @@ export default function ListingDetails() {
 
   const currentUserId = user?.id || user?._id;
   const isOwner = currentUserId === listing?.owner?._id;
+  const images = listing?.images ?? [];
 
   const goToPreviousImage = () => {
-    if (!listing) return;
-    setCurrentImageIndex(
-      (currentImageIndex - 1 + listing.images.length) % listing.images.length
-    );
+    if (!images.length) return;
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
   const goToNextImage = () => {
-    if (!listing) return;
-    setCurrentImageIndex((currentImageIndex + 1) % listing.images.length);
+    if (!images.length) return;
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
@@ -258,8 +296,9 @@ export default function ListingDetails() {
   };
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLImageElement>) => {
-    if (touchStartX.current === null || touchStartY.current === null || !listing)
+    if (touchStartX.current === null || touchStartY.current === null || !images.length) {
       return;
+    }
 
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
@@ -306,6 +345,7 @@ export default function ListingDetails() {
               Back
             </button>
           </div>
+
           {isModalOpen && (
             <div
               className="fixed inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-50"
@@ -329,7 +369,7 @@ export default function ListingDetails() {
               </button>
 
               <img
-                src={listing.images[currentImageIndex]?.url}
+                src={images[currentImageIndex]?.url}
                 alt={`Image ${currentImageIndex + 1}`}
                 className="relative z-10 max-w-full max-h-screen"
                 onClick={(e) => e.stopPropagation()}
@@ -350,11 +390,11 @@ export default function ListingDetails() {
           )}
 
           <div className="bg-white shadow rounded-lg p-4 md:p-6">
-            {listing.images?.[0] && (
+            {images[0] && (
               <div className="flex justify-center mb-4">
                 <img
-                  src={listing.images[0]?.url}
-                  alt={listing.title}
+                  src={images[0].url}
+                  alt={listing.title || "Listing image"}
                   className="w-full md:w-[80%] max-h-[400px] object-cover rounded cursor-pointer shadow-md"
                   onClick={() => {
                     setCurrentImageIndex(0);
@@ -364,12 +404,12 @@ export default function ListingDetails() {
               </div>
             )}
 
-            {listing.images.length > 1 && (
+            {images.length > 1 && (
               <div className="flex justify-center mb-6">
                 <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 w-full gap-3 md:w-[80%]">
-                  {listing.images.slice(1, maxThumbs).map((img, index) => (
+                  {images.slice(1, maxThumbs).map((img, index) => (
                     <img
-                      key={img.public_id}
+                      key={img.public_id ?? img.url}
                       src={img.url}
                       alt={`Thumb ${index + 1}`}
                       className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-80 aspect-ratio"
@@ -380,7 +420,7 @@ export default function ListingDetails() {
                     />
                   ))}
 
-                  {listing.images.length > maxThumbs && (
+                  {images.length > maxThumbs && (
                     <div
                       className="h-24 bg-gray-700 text-white flex items-center justify-center rounded cursor-pointer aspect-ratio"
                       onClick={() => {
@@ -388,7 +428,7 @@ export default function ListingDetails() {
                         setIsModalOpen(true);
                       }}
                     >
-                      +{listing.images.length - (maxThumbs - 1)}
+                      +{images.length - (maxThumbs - 1)}
                     </div>
                   )}
                 </div>
@@ -402,7 +442,7 @@ export default function ListingDetails() {
                     {listing.title}
                   </h1>
                   <p className="text-green-600 font-bold text-lg">
-                    ₦{Number(listing.price).toLocaleString()}
+                    ₦{Number(listing.price ?? 0).toLocaleString()}
                   </p>
                 </div>
 
@@ -464,9 +504,7 @@ export default function ListingDetails() {
                   {isOwner && (
                     <div className="flex flex-col base:flex-row gap-3 mt-4">
                       <button
-                        onClick={() =>
-                          router.push(`/listings/edit/${listing._id}`)
-                        }
+                        onClick={() => router.push(`/listings/edit/${listing._id}`)}
                         className="bg-yellow-500 base:w-auto text-white px-4 py-2 rounded hover:bg-yellow-600"
                       >
                         Edit
@@ -529,27 +567,31 @@ export default function ListingDetails() {
 
                 <div
                   className="pt-6 w-full lg:w-1/2"
-                  onClick={() =>
-                    router.push(
-                      `/profile/${listing.owner.slug}?listingId=${listing._id}&listingSlug=${listing.slug}`
-                    )
-                  }
+                  onClick={() => {
+                    if (listing.owner?.slug) {
+                      router.push(
+                        `/profile/${listing.owner.slug}?listingId=${listing._id}&listingSlug=${listing.slug}`
+                      );
+                    }
+                  }}
                 >
                   <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
                     <img
-                      src={listing.owner.avatar || "/default-avatar.png"}
-                      alt={`${listing.owner?.firstName} ${listing.owner?.lastName}`}
+                      src={listing.owner?.avatar || "/default-avatar.png"}
+                      alt={`${listing.owner?.firstName || ""} ${listing.owner?.lastName || ""}`.trim()}
                       className="w-8 h-8 rounded-full object-cover border"
                     />
 
                     <span className="text-sm font-medium text-gray-800">
-                      {listing.owner.firstName} {listing.owner.lastName}
+                      {listing.owner?.firstName} {listing.owner?.lastName}
                     </span>
                   </div>
 
                   <h2 className="text-lg font-semibold mb-4">Reviews</h2>
 
-                  <ReviewsList ownerId={listing.owner._id} previewCount={3} />
+                  {listing.owner?._id ? (
+                    <ReviewsList ownerId={listing.owner._id} previewCount={3} />
+                  ) : null}
                 </div>
               </div>
             </div>

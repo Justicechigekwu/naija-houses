@@ -18,7 +18,7 @@ export default function PlanOptions ({
         <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-10">
+      <div className="relative mx-auto flex min-h-screen  max-w-6xl items-center justify-center px-4 py-10">
         <div className="w-full max-w-xl">
           {(title || subtitle) && (
             <div className="mb-6 text-center">
@@ -27,7 +27,7 @@ export default function PlanOptions ({
             </div>
           )}
 
-          <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm backdrop-blur">
+          <div className="rounded-2xl border border-gray-200  p-6 shadow-sm bg-gradient-to-b from-[#F5F5F5] via-[#F5F5F5] to-[#E5E5E5] backdrop-blur">
             {children}
           </div>
 

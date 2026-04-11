@@ -53,8 +53,8 @@ export default function Home() {
     }
 
     return browsingLocation.city || browsingLocation.state
-      ? "Trending listings"
-      : "Recommended for you";
+      ? "Trending 🔥"
+      : "For you 🔥";
   }, [
     browsingLocation.isManual,
     browsingLocation.city,
@@ -86,7 +86,7 @@ export default function Home() {
   
     socket.on("listing:updated", handleListingUpdate);
   
-    return () => {
+    return () => { 
       socket.off("listing:updated", handleListingUpdate);
     };
   }, [refreshFeed]);
@@ -118,7 +118,7 @@ export default function Home() {
         </div>
 
         <div className="p-6 bg-[#F5F5F5]">
-          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-6 flex items-center justify-between gap-3">
             <h2 className="text-2xl font-bold">{sectionTitle}</h2>
 
             <LocationFilter
@@ -152,7 +152,7 @@ export default function Home() {
             <p className="text-red-500">{error}</p>
           ) : listings.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 w-full sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="columns-2 md:columns-4 lg:columns-5 gap-3">
                 {listings.map((listing) => (
                   <ListingCard key={listing._id} listing={listing} />
                 ))}
@@ -174,7 +174,7 @@ export default function Home() {
                     {meta?.selectedState ? ` in ${meta.selectedState}` : ""}
                   </h3>
 
-                  <div className="grid grid-cols-2 w-full sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                  <div className="columns-2 md:columns-4 lg:columns-5 gap-3">
                     {similarListings.map((listing) => (
                       <ListingCard key={listing._id} listing={listing} />
                     ))}

@@ -45,6 +45,7 @@ const OPTIONAL_DYNAMIC_FIELD_KEYS = new Set<string>([
   "availability",
   "experienceLevel",
   "experienceYears",
+  "spf"
 ]);
 
 const ALWAYS_REQUIRED_DYNAMIC_FIELD_KEYS = new Set<string>([

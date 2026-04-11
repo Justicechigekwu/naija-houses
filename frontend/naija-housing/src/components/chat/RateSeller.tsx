@@ -79,7 +79,7 @@ export default function RateSellerPrompt({
 
         <button
           onClick={() =>
-            router.push(`/listings/${listingId}/reviews?from=chat&chatId=${chatId}`)
+            router.push(`/listing-actions/${listingId}/reviews?from=chat&chatId=${chatId}`)
           }
           className="inline-flex items-center justify-center rounded-xl bg-[#8A715D] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#755e4d]"
         >

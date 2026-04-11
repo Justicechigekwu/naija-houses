@@ -11,6 +11,7 @@ import { ArrowLeft, MessageSquareText, Star, ShieldCheck } from "lucide-react";
 type ListingOwnerResponse = {
   listing?: {
     _id: string;
+    slug?: string;
     title?: string;
     owner?: {
       _id: string;
@@ -22,6 +23,7 @@ export default function ReviewsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
 
+  const [listingSlug, setListingSlug] = useState("");
   const listingId = params.id as string;
   const chatId = searchParams.get("chatId");
   const from = searchParams.get("from");
@@ -38,10 +40,12 @@ export default function ReviewsPage() {
         const res = await api.get<ListingOwnerResponse>(`/listings/${listingId}`);
         setOwnerId(res.data?.listing?.owner?._id || "");
         setListingTitle(res.data?.listing?.title || "");
+        setListingSlug(res.data?.listing?.slug || "");
       } catch (error) {
         console.error("Failed to fetch listing owner", error);
         setOwnerId("");
         setListingTitle("");
+        setListingSlug("");
       } finally {
         setLoadingOwner(false);
       }
@@ -67,7 +71,7 @@ export default function ReviewsPage() {
           )}
 
           <Link
-            href={`/listings/${listingId}`}
+            href={listingSlug ? `/listings/${listingSlug}` : "#"}
             className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-[#8A715D] hover:text-[#8A715D]"
           >
             <ArrowLeft className="h-4 w-4" />

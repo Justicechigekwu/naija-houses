@@ -147,7 +147,7 @@ export default function ListingPaymentPage() {
       )}
 
       {opts && (
-        <div className="space-y-5">
+        <div className="space-y-5 ">
           <div className="rounded-xl border border-gray-200 p-4 bg-[#F5F5F5]">
             <div className="flex items-start justify-between gap-4">
               <div >

@@ -6,6 +6,7 @@ import { removeListingByAdmin } from "../service/listingModerationService.js";
 import {
   emitAdminReportsUpdated,
   emitAdminUsersUpdated,
+  emitGlobalListingUpdated
 } from "../service/realtimeService.js";
 import { emitAdminSnapshot } from "../service/adminRealtimeService.js";
 
@@ -29,6 +30,25 @@ export const adminDeleteListing = async (req, res) => {
       violationPolicy,
       source: "REPORT_MODERATION",
       rejectionType: "PROHIBITED",
+    });
+
+    emitGlobalListingUpdated({
+      listingId: updatedListing._id,
+      slug: updatedListing.slug,
+      title: updatedListing.title,
+      publishStatus: updatedListing.publishStatus,
+      publishedAt: updatedListing.publishedAt,
+      expiresAt: updatedListing.expiresAt,
+      updatedAt: updatedListing.updatedAt,
+      city: updatedListing.city,
+      state: updatedListing.state,
+      price: updatedListing.price,
+      images: updatedListing.images,
+      postedBy: updatedListing.postedBy,
+      category: updatedListing.category,
+      subcategory: updatedListing.subcategory,
+      listingType: updatedListing.listingType,
+      attributes: updatedListing.attributes,
     });
     
     emitAdminReportsUpdated({
@@ -70,6 +90,10 @@ export const adminDeleteUser = async (req, res) => {
 
     await user.save();
 
+    const affectedListings = await Listing.find({ owner: userId }).select(
+      "_id slug title publishedAt expiresAt updatedAt city state price images postedBy category subcategory listingType attributes"
+    );
+
     await Listing.updateMany(
       { owner: userId },
       {
@@ -90,6 +114,27 @@ export const adminDeleteUser = async (req, res) => {
         },
       }
     );
+
+    for (const listing of affectedListings) {
+      emitGlobalListingUpdated({
+        listingId: listing._id,
+        slug: listing.slug,
+        title: listing.title,
+        publishStatus: "REMOVED_BY_ADMIN",
+        publishedAt: listing.publishedAt,
+        expiresAt: listing.expiresAt,
+        updatedAt: new Date().toISOString(),
+        city: listing.city,
+        state: listing.state,
+        price: listing.price,
+        images: listing.images,
+        postedBy: listing.postedBy,
+        category: listing.category,
+        subcategory: listing.subcategory,
+        listingType: listing.listingType,
+        attributes: listing.attributes,
+      });
+    }
 
     await Report.updateMany(
       { targetUser: userId, status: { $in: ["OPEN", "REVIEWED"] } },
@@ -133,6 +178,7 @@ export const adminDeleteUser = async (req, res) => {
       type: "USER_BANNED",
       updatedAt: new Date().toISOString(),
     });
+    
     
     await emitAdminSnapshot();
 

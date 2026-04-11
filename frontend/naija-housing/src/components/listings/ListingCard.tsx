@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -21,14 +22,14 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link
       href={getListingHref(listing)}
-      className="w-full self-start rounded-xl shadow hover:shadow-lg transition bg-white cursor-pointer block overflow-hidden"
+      className="mb-3 block w-full break-inside-avoid self-start overflow-hidden rounded-xl bg-white shadow transition hover:shadow-lg"
     >
       <div className="w-full aspect-[4/3]">
         <img
           src={listing.images?.[0]?.url || "/placeholder.jpg"}
           alt={listing.title || "Listing image"}
           loading="lazy"
-          className="w-full h-full object-cover block"
+          className="block h-full w-full object-cover"
         />
       </div>
 
@@ -37,41 +38,46 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           {listing.title}
         </h2>
 
-        <p className="mt-1 text-green-600 font-medium">
+        <p className="mt-1 font-medium text-green-600">
           ₦{Number(listing.price || 0).toLocaleString()}
         </p>
 
-        <div className="mt-1 text-xs text-gray-800 leading-tight flex items-center flex-wrap">
-          <MapPin className="w-3 h-3 text-gray-800 mr-1" />
-        
+        <div className="mt-1 flex flex-wrap items-center text-xs leading-tight text-gray-800">
+          <MapPin className="mr-1 h-3 w-3 text-gray-800" />
+
           <span>
             {listing.city}
-            {(listing.city || listing.state) ? ", " : ""}
+            {listing.city || listing.state ? ", " : ""}
             {listing.state}
           </span>
-        
+
           {listing.distanceMeters ? (
             <>
               <span className="mx-1">•</span>
-              <span className="text-[#8A715D] font-medium">
+              <span className="font-medium text-[#8A715D]">
                 {formatDistance(listing.distanceMeters)}
               </span>
             </>
           ) : null}
         </div>
 
-        <div className="mt-1 text-xs text-gray-600 leading-tight flex items-center flex-wrap">
+        <div className="mt-1 flex flex-wrap items-center text-xs leading-tight text-gray-600">
           {listing.attributes?.condition && (
             <span>{String(listing.attributes.condition)}</span>
           )}
-        
+
           {listing.attributes?.condition && (
             <span className="mx-1">•</span>
           )}
-        
-          <span>
-            Posted by {listing.postedBy || "Owner"}
-          </span>
+
+          <span>Posted by {listing.postedBy || "Owner"}</span>
+
+          {listing.listingType ? (
+            <>
+              <span className="mx-1">•</span>
+              <span>{listing.listingType}</span>
+            </>
+          ) : null}
         </div>
       </div>
     </Link>

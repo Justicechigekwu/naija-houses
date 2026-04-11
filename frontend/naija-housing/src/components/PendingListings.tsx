@@ -5,15 +5,18 @@ import { AxiosError } from "axios";
 import api from "@/libs/api";
 import type { Listing } from "@/types/listing";
 import PageReadyLoader from "@/components/pages/PageReadyLoader";
+import { useRouter } from "next/navigation";
 import { useUI } from "@/hooks/useUi";
 import useSocketListingUpdates, {
   type ListingUpdatePayload,
 } from "@/hooks/useSocketListingUpdates";
+import { ArrowLeft } from "lucide-react";
 
 export default function PendingListings() {
   const [items, setItems] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const { showToast } = useUI();
+  const router = useRouter();
 
   const fetchPending = useCallback(async () => {
     setLoading(true);
@@ -95,6 +98,14 @@ export default function PendingListings() {
   return (
     <PageReadyLoader ready={!loading}>
       <div className="max-w-5xl mx-auto p-4 space-y-4">
+        <button
+          onClick={() => router.push("/")}
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+        
         <h1 className="text-2xl font-semibold">Pending Page</h1>
 
         {items.length === 0 ? (

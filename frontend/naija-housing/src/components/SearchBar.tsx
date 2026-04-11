@@ -5,6 +5,7 @@ import { useSearch } from "@/context/SearchContext";
 import { useRouter } from "next/navigation";
 import { CATEGORY_TREE } from "@/libs/listingFormConfig";
 import { trackAnalyticsEvent } from "@/libs/analytics";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export default function SearchBar() {
   const { filters, setFilters } = useSearch();
@@ -26,6 +27,11 @@ export default function SearchBar() {
       label: value.label,
     }));
   }, [filters.category]);
+
+  const categoryOptions = Object.entries(CATEGORY_TREE).map(([key, value]) => ({
+    value: key,
+    label: value.label,
+  }));
 
   const handleSearch = () => {
     const trimmedSearch = filters.search?.trim() || "";
@@ -81,73 +87,57 @@ export default function SearchBar() {
     <div className="w-full rounded-full flex bg-transparent justify-center mt-6">
       <div
         className="
-          w-full max-w-4xl px-3 py-5 overflow-hidden
+          w-full max-w-4xl px-3 py-5 overflow-visible relative
           flex flex-col gap-3
-          sm:flex-row sm:gap-0 sm:items-center
+          sm:flex-row sm:gap-0 sm:items-start
           rounded-2xl sm:rounded-full bg-white
         "
       >
         <div className="w-full sm:flex-1 flex h-14 items-center px-4 bg-white sm:bg-transparent rounded-xl sm:rounded-none">
-          <select
+          <SearchableSelect
             value={filters.category || ""}
-            onChange={(e) => {
-              const nextCategory = e.target.value;
-
+            onChange={(nextCategory) => {
               setFilters({
                 ...filters,
                 category: nextCategory,
                 subcategory: "",
               });
-
+          
               if (nextCategory) {
                 trackAnalyticsEvent({
                   eventType: "CATEGORY_VIEW",
                   category: nextCategory,
-                  meta: {
-                    source: "searchbar-select",
-                  },
+                  meta: { source: "searchbar-select" },
                 });
               }
             }}
-            className="w-full text-center text-medium bg-transparent outline-none"
-          >
-            <option value="">Category</option>
-            {Object.entries(CATEGORY_TREE).map(([key, value]) => (
-              <option key={key} value={key}>
-                {value.label}
-              </option>
-            ))}
-          </select>
+            options={categoryOptions}
+            placeholder="Category"
+          />
         </div>
 
         <div className="w-full sm:flex-1 flex h-14 items-center px-4 bg-white sm:bg-transparent rounded-xl sm:rounded-none">
-          <select
+          <SearchableSelect
             value={filters.subcategory || ""}
-            onChange={(e) => {
-              const nextSubcategory = e.target.value;
-
+            onChange={(nextSubcategory) => {
               setFilters({ ...filters, subcategory: nextSubcategory });
-
+          
               if (filters.category && nextSubcategory) {
                 trackAnalyticsEvent({
                   eventType: "SUBCATEGORY_VIEW",
                   category: filters.category,
                   subcategory: nextSubcategory,
-                  meta: {
-                    source: "searchbar-select",
-                  },
+                  meta: { source: "searchbar-select" },
                 });
               }
             }}
-            className="w-full text-center text-medium bg-transparent outline-none"
-          >
-            <option value="">Subcategory</option>
-            {subcategoryOptions.map((sub) => (
-              <option key={sub.key} value={sub.key}>
-                {sub.label}
-              </option>
-            ))}
-          </select>
+            options={subcategoryOptions.map((sub) => ({
+              value: sub.key,
+              label: sub.label,
+            }))}
+            placeholder="Subcategory"
+            disabled={!filters.category}
+          />
         </div>
 
         <div className="w-full sm:flex-1 flex h-14 items-center px-4 bg-white sm:bg-transparent rounded-xl sm:rounded-none">

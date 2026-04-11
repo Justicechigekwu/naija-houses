@@ -50,6 +50,9 @@ export const notifyPayment = async (req, res) => {
       });
     }
 
+    listing.autoDeleteAt = null;
+    listing.expiredAt = null;
+
     const payment = await Payment.findOne({
       listing: listing._id,
       user: req.user.id,

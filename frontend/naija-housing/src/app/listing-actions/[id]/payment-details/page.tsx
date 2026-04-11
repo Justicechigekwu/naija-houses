@@ -269,10 +269,10 @@ export default function PaymentDetailsPage() {
       title="Payment Details"
       subtitle="Bank transfer is recommended. After you pay, click “I have made payment”."
     >
-      <div className="mx-auto max-w-lg space-y-5">
+      <div className="mx-auto max-w-lg space-y-5 bg-gradient-to-b from-[#F5F5F5] via-[#F5F5F5] to-[#E5E5E5]">
         {loading && (
-          <div className="rounded-3xl border border-gray-200 bg-white p-5 text-sm text-gray-600 shadow-sm">
-            Loading...
+          <div className="rounded-3xl text-center border bg-gradient-to-b from-[#F5F5F5] via-[#F5F5F5] to-[#E5E5E5] border-gray-200 bg-white p-5 text-sm text-gray-600 shadow-sm">
+            Trade Smart, Live Better.
           </div>
         )}
 
@@ -325,7 +325,7 @@ export default function PaymentDetailsPage() {
                 </div>
 
                 <span className="rounded-full bg-[#f5efe9] px-3 py-1.5 text-xs font-semibold text-[#8A715D]">
-                  {timeLeft || "Loading"}
+                  {timeLeft || "Velora.com"}
                 </span>
               </div>
             </div>

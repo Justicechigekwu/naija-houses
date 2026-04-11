@@ -6,6 +6,7 @@ import { CATEGORY_TREE } from "@/libs/listingFormConfig";
 import { NIGERIA_STATES, getCitiesByState } from "@/libs/nigeriaLocations";
 import { validateListingForm } from "@/libs/validateListingForm";
 import { useUI } from "@/hooks/useUi";
+import SearchableSelect from "@/components/SearchableSelect";
 import type {
   Listing,
   ListingImage,
@@ -61,6 +62,13 @@ export default function ListingForm({
   onSubmit,
 }: ListingFormProps) {
   const { showToast } = useUI();
+
+  const categoryOptions = useMemo(() => {
+    return Object.entries(CATEGORY_TREE).map(([key, value]) => ({
+      value: key,
+      label: value.label,
+    }));
+  }, []);
 
   const initialCategory = initialData?.category || "PROPERTY";
   const initialSubcategory =
@@ -573,21 +581,34 @@ export default function ListingForm({
           <div className="space-y-6">
             <div>
               <label className="block text-xl text-gray-700 mb-2">Category</label>
-              <select
-                name="category"
+              <SearchableSelect
                 value={formData.category}
-                onChange={handleChange}
+                onChange={(value) => {
+                  if (isEditMode) return;
+              
+                  clearFieldError("category");
+              
+                  const firstSubcategory = getFirstSubcategory(value);
+              
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: value,
+                    subcategory: firstSubcategory,
+                    listingType: categoryUsesListingType(value)
+                      ? value === "LAND"
+                        ? "Sale"
+                        : ""
+                      : "",
+                    postedBy: categoryUsesPostedBy(value) ? prev.postedBy : "",
+                  }));
+              
+                  setAttributes({});
+                }}
+                options={categoryOptions}
+                placeholder="Select category"
+                error={!!errors.category}
                 disabled={isSubmitting || isEditMode}
-                className={`${getFieldClass("category")} ${
-                  isEditMode ? "cursor-not-allowed bg-gray-100" : ""
-                }`}
-              >
-                {Object.entries(CATEGORY_TREE).map(([key, value]) => (
-                  <option key={key} value={key}>
-                    {value.label}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             {isEditMode && (
@@ -598,21 +619,33 @@ export default function ListingForm({
 
             <div>
               <label className="block text-xl text-gray-700 mb-2">Subcategory</label>
-              <select
-                name="subcategory"
+              <SearchableSelect
                 value={formData.subcategory}
-                onChange={handleChange}
+                onChange={(value) => {
+                  if (isEditMode) return;
+              
+                  clearFieldError("subcategory");
+              
+                  setFormData((prev) => ({
+                    ...prev,
+                    subcategory: value,
+                    listingType: categoryUsesListingType(prev.category)
+                      ? prev.category === "LAND"
+                        ? "Sale"
+                        : prev.listingType
+                      : "",
+                  }));
+              
+                  setAttributes({});
+                }}
+                options={subcategoryOptions.map((sub) => ({
+                  value: sub.key,
+                  label: sub.label,
+                }))}
+                placeholder="Select subcategory"
+                error={!!errors.subcategory}
                 disabled={isSubmitting || isEditMode}
-                className={`${getFieldClass("subcategory")} ${
-                  isEditMode ? "cursor-not-allowed bg-gray-100" : ""
-                }`}
-              >
-                {subcategoryOptions.map((sub) => (
-                  <option key={sub.key} value={sub.key}>
-                    {sub.label}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             {showListingType && (
@@ -706,40 +739,47 @@ export default function ListingForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-2xl text-gray-700 mb-2">State</label>
-                <select
-                  name="state"
+                <SearchableSelect
                   value={formData.state}
-                  onChange={handleChange}
+                  onChange={(value) => {
+                    clearFieldError("state");
+                
+                    setFormData((prev) => ({
+                      ...prev,
+                      state: value,
+                      city: "",
+                    }));
+                  }}
+                  options={NIGERIA_STATES.map((state) => ({
+                    value: state,
+                    label: state,
+                  }))}
+                  placeholder="Select state"
+                  error={!!errors.state}
                   disabled={isSubmitting}
-                  className={getFieldClass("state")}
-                >
-                  <option value="">Select State</option>
-                  {NIGERIA_STATES.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
                 <label className="block text-2xl text-gray-700 mb-2">LGA</label>
-                <select
-                  name="city"
+                <SearchableSelect
                   value={formData.city}
-                  onChange={handleChange}
+                  onChange={(value) => {
+                    clearFieldError("city");
+                
+                    setFormData((prev) => ({
+                      ...prev,
+                      city: value,
+                    }));
+                  }}
+                  options={cityOptions.map((city) => ({
+                    value: city,
+                    label: city,
+                  }))}
+                  placeholder="Select city"
+                  error={!!errors.city}
                   disabled={isSubmitting || !formData.state}
-                  className={getFieldClass("city")}
-                >
-                  <option value="">
-                    {formData.state ? "Select City / LGA" : "Select State First"}
-                  </option>
-                  {cityOptions.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
 
@@ -799,22 +839,6 @@ export default function ListingForm({
                 Upload at least 1 image and up to {MAX_TOTAL_IMAGES} images. JPG, JPEG,
                 PNG, WEBP only.
               </p>
-
-              <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-600">
-                <div className="flex items-start gap-2">
-                  <Move className="mt-0.5 h-4 w-4 text-[#8A715D]" />
-                  <div>
-                    <p className="font-medium text-gray-800">Rearrange images</p>
-                    <p className="mt-1">
-                      On desktop, drag and drop images.
-                    </p>
-                    <p>
-                      On mobile, tap one image to select it, then tap another image
-                      to move it there.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {errors.images && (
                 <p className="text-sm text-red-500">{errors.images}</p>

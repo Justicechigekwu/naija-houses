@@ -50,7 +50,7 @@ export default function InfiniteListingGrid({
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-2 w-full sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <div className="columns-2 md:columns-4 lg:columns-5 gap-3">
         {items.map((listing) => (
           <ListingCard key={listing._id} listing={listing} />
         ))}

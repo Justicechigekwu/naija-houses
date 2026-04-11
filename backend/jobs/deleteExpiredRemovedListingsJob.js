@@ -15,6 +15,7 @@ const startDeleteExpiredRemovedListingsJob = () => {
         appealStatus: "NONE",
       });
 
+
       for (const listing of listings) {
         await userModel.updateMany(
           { favorites: listing._id },

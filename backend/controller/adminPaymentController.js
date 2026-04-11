@@ -5,6 +5,7 @@ import { createNotification } from "../service/notificationService.js";
 import {
   emitListingUpdated,
   emitPaymentUpdated,
+  emitGlobalListingUpdated,
   emitAdminPaymentsUpdated,
 } from "../service/realtimeService.js";
 import { emitAdminSnapshot } from "../service/adminRealtimeService.js";
@@ -98,6 +99,8 @@ export const confirmPaymentAndPublish = async (req, res) => {
     listing.publishStatus = "PUBLISHED";
     listing.rejectionType = "NONE";
     listing.rejectionReason = "";
+    listing.expiredAt = null;
+    listing.autoDeleteAt = null;
     listing.rejectedAt = null;
     listing.publishedAt = new Date();
     listing.expiresAt = addDays(listing.publishedAt, pricing?.paidDays || 30);
@@ -116,6 +119,25 @@ export const confirmPaymentAndPublish = async (req, res) => {
       publishedAt: listing.publishedAt,
       expiresAt: listing.expiresAt,
       updatedAt: listing.updatedAt,
+    });
+
+    emitGlobalListingUpdated({
+      listingId: listing._id,
+      slug: listing.slug,
+      title: listing.title,
+      publishStatus: listing.publishStatus,
+      publishedAt: listing.publishedAt,
+      expiresAt: listing.expiresAt,
+      updatedAt: listing.updatedAt,
+      city: listing.city,
+      state: listing.state,
+      price: listing.price,
+      images: listing.images,
+      postedBy: listing.postedBy,
+      category: listing.category,
+      subcategory: listing.subcategory,
+      listingType: listing.listingType,
+      attributes: listing.attributes,
     });
 
     emitAdminPaymentsUpdated({

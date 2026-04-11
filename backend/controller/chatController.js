@@ -35,6 +35,7 @@ const mapListingPreview = (listing) => {
   if (!listing) {
     return {
       _id: null,
+      slug: null,
       title: "Ad closed",
       price: "",
       images: [],
@@ -56,6 +57,7 @@ const mapListingPreview = (listing) => {
 
   return {
     _id: obj._id,
+    slug: obj.slug,
     title: isClosed ? "Ad closed" : obj.title,
     price: isClosed ? "" : obj.price,
     images: isClosed ? [] : obj.images || [],
@@ -94,7 +96,7 @@ export const startChat = async (req, res) => {
     }
 
     const populatedChat = await Chat.findById(chat._id)
-      .populate("listing", "title price images owner publishStatus")
+      .populate("listing", " slug title price images owner publishStatus")
       .populate("participants", "firstName lastName avatar isBanned");
 
     res.json(hydrateChatForClient(populatedChat));
@@ -107,7 +109,7 @@ export const startChat = async (req, res) => {
 export const getChats = async (req, res) => {
   try {
     const chats = await Chat.find({ participants: req.user.id })
-      .populate("listing", "title price images owner publishStatus")
+      .populate("listing", "slug title price images owner publishStatus")
       .populate("participants", "firstName lastName avatar isBanned")
       .sort({ updatedAt: -1 });
 
@@ -186,7 +188,7 @@ export const getmessages = async (req, res) => {
 export const getChatById = async (req, res) => {
   try {
     const chat = await Chat.findById(req.params.chatId)
-      .populate("listing", "title price images owner publishStatus")
+      .populate("listing", "slug title price images owner publishStatus")
       .populate("participants", "firstName lastName avatar isBanned");
 
     if (!chat) {

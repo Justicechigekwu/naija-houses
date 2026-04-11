@@ -1,7 +1,7 @@
 import Listing from "../models/listingModels.js";
 import Report from "../models/reportModel.js";
 import { createNotification } from "../service/notificationService.js";
-import { emitListingUpdated } from "../service/realtimeService.js";
+import { emitListingUpdated, emitGlobalListingUpdated } from "../service/realtimeService.js";
 import {
   emitAdminAppealsUpdated,
 } from "../service/realtimeService.js";
@@ -99,6 +99,26 @@ export const approveAppeal = async (req, res) => {
       appealStatus: listing.appealStatus,
       updatedAt: new Date().toISOString(),
     });
+
+    
+    emitGlobalListingUpdated({
+      listingId: listing._id,
+      slug: listing.slug,
+      title: listing.title,
+      publishStatus: listing.publishStatus,
+      publishedAt: listing.publishedAt,
+      expiresAt: listing.expiresAt,
+      updatedAt: listing.updatedAt,
+      city: listing.city,
+      state: listing.state,
+      price: listing.price,
+      images: listing.images,
+      postedBy: listing.postedBy,
+      category: listing.category,
+      subcategory: listing.subcategory,
+      listingType: listing.listingType,
+      attributes: listing.attributes,
+    });
     
     await emitAdminSnapshot();
 
@@ -160,6 +180,25 @@ export const rejectAppeal = async (req, res) => {
       publishStatus: listing.publishStatus,
       appealStatus: listing.appealStatus,
       updatedAt: listing.updatedAt,
+    });
+
+    emitGlobalListingUpdated({
+      listingId: listing._id,
+      slug: listing.slug,
+      title: listing.title,
+      publishStatus: listing.publishStatus,
+      publishedAt: listing.publishedAt,
+      expiresAt: listing.expiresAt,
+      updatedAt: listing.updatedAt,
+      city: listing.city,
+      state: listing.state,
+      price: listing.price,
+      images: listing.images,
+      postedBy: listing.postedBy,
+      category: listing.category,
+      subcategory: listing.subcategory,
+      listingType: listing.listingType,
+      attributes: listing.attributes,
     });
 
     emitAdminAppealsUpdated({

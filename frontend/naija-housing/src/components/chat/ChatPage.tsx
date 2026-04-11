@@ -31,6 +31,7 @@ interface ChatDetails {
   _id: string;
   listing: {
     _id?: string | null;
+    slug?: string;
     title?: string;
     price?: string;
     images?: { url: string; public_id: string }[];
@@ -490,7 +491,7 @@ export default function ChatPage({
               </div>
             ) : (
               <Link
-                href={`/listings/${chatDetails.listing._id}`}
+                href={`/listings/${chatDetails.listing.slug}`}
                 className="flex items-center gap-3 px-4 py-2 border-t hover:bg-gray-50"
               >
                 <img
@@ -503,7 +504,6 @@ export default function ChatPage({
                     {chatDetails.listing.title}
                   </p>
                   <p className="text-sm text-green-600 font-semibold">
-                    {/* {chatDetails.listing.price} */}
                     ₦{Number(chatDetails.listing.price || 0).toLocaleString()}
                   </p>
                 </div>

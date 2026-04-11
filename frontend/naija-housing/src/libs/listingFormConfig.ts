@@ -499,11 +499,12 @@ export const CATEGORY_TREE = {
           { key: "transmission", label: "Transmission", type: "select", options: ["Automatic","Manual", "DCT", "CVT"] },
           { key: "bodyType", label: "Body Type", type: "select", options: ["Sedan","SUV","Pickup","Truck","Van","Bus", "Hatch Back", "Coupe", "Hypercar", "Supercar", "Mini Van"] },
           { key: "engineSize", label: "Engine Size", type: "text" },
+          { key: "engineType", label: "Engine Type", type: "select", options: ["3-plugs", "4-plugs", "5-plugs", "Single Turbo 4-plugs","V6", "Twin Turbo V6", "Single Turbo V6", "V8", "Twin Turbo V8", "Singe Turbo V8", "V12", "Twin Turbo V12", "W12", "Twin Turbo W12", "Quad Turbo W16"]},
           { key: "color", label: "Color", type: "text" },
           { key: "trim", label: "Trim", type: "text" },
           { key: "interiorColor", label: "Interior color", type: "text" },
-          { key: "drivetrain", label: "Drivetrain", type: "select", options: ["FOUR WHEEL DRIVE","REAR WHEEL DRIVE","ALL WHEEL DRIVE","4X4"] },
-          { key: "wheels", label: "wheels", type: "select", options: ["Alloy", "Iron", "Cabon Fibre"]},
+          { key: "drivetrain", label: "Drivetrain", type: "select", options: ["Four Wheel Drive","Rear Wheel Drive", "Front Wheel Drive","All Wheel Drive","4X4"] },
+          { key: "rim", label: "Rims", type: "select", options: ["Alloy", "Iron", "Cabon Fibre"]},
           { key: "vinChassisNumber", label: "VIN / Chasis number", type: "text" },
           { key: "registered", label: "Registered", type: "select", options: ["Yes","No"] },
           { key: "numberOfOwners", label: "Number of Previous Owners", type: "number" },
@@ -753,7 +754,6 @@ export const CATEGORY_TREE = {
           { key: "brand", label: "Brand", type: "text" },
           { key: "compatibleWith", label: "Compatible With", type: "text" },
           { key: "condition", label: "Condition", type: "select", options: ["New", "foreign Used", "Local Used"] },
-          { key: "color", label: "Color", type: "text" },
           { key: "warranty", label: "Warranty", type: "select", options: ["Yes","No"] },
         ],
       },
@@ -785,8 +785,8 @@ export const CATEGORY_TREE = {
           { key: "model", label: "Model", type: "text" },
           { key: "condition", label: "Condition", type: "select", options: ["New","Forein Used", "Local Used", "Refurbished"] },
           { key: "processor", label: "Processor", type: "text" },
-          { key: "ram", label: "RAM", type: "text" },
-          { key: "storage", label: "Storage", type: "text" },
+          { key: "ram", label: "RAM", type: "select", options: ["4GB", "6GB", "8GB", "12GB", "16GB", "24GB", "48GB", "64GB", "128", "512GB"] },
+          { key: "storage", label: "Storage", type: "select", options: [ "128", "256GB", "512GB", "1TB", "2TB", "3TB", "4TB", "6TB", "8TB", "12TB", "16TB", "32TB", "64TB", "128TB", "512TB"] },
           { key: "storageType", label: "Storage Type", type: "select", options: ["HDD","SSD"] },
           { key: "screenSize", label: "Screen Size", type: "text" },
           { key: "graphicsCard", label: "Graphics Card", type: "text" },
@@ -804,7 +804,6 @@ export const CATEGORY_TREE = {
           { key: "condition", label: "Condition", type: "select", options: ["New", "foreign Used", "Local Used"] },
           { key: "connectivity", label: "Connectivity", type: "select", options: ["Wired","Wireless","Bluetooth"] },
           { key: "noiseCancellation", label: "Noise Cancellation", type: "select", options: ["Yes","No"] },
-          { key: "batteryLife", label: "Battery Life", type: "text" },
         ],
       },
 
@@ -840,7 +839,6 @@ export const CATEGORY_TREE = {
           { key: "condition", label: "Condition", type: "select", options: ["New","Used","Refurbished"] },
           { key: "connectivity", label: "Connectivity", type: "select", options: ["Bluetooth","Wired","Wi-Fi","Bluetooth + Wired"] },
           { key: "powerSource", label: "Power Source", type: "select", options: ["Battery","Electric","Both"] },
-          { key: "batteryLife", label: "Battery Life", type: "text" },
           { key: "color", label: "Color", type: "text" },
           { key: "warranty", label: "Warranty", type: "select", options: ["Yes","No"] },
         ],
@@ -950,7 +948,6 @@ export const CATEGORY_TREE = {
       SMART_PHONES: {
         label: "Smart Phones",
         fields: [
-          // { key: "deviceType", label: "Device Type", type: "select", options: ["Phone","Tablet"] },
           { key: "brand", label: "Brand", type: "text" },
           { key: "model", label: "Model", type: "text" },
           { key: "condition", label: "Condition", type: "select", options: ["New","Forein Used", "Local Used", "Refurbished"] },
@@ -1511,23 +1508,6 @@ export const CATEGORY_TREE = {
           { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
           { key: "color", label: "Color", type: "text" },
           { key: "blackout", label: "Blackout", type: "select", options: ["Yes","No"] }
-        ]
-      },
-
-      GENERATORS: {
-        label: "Generators",
-        fields: [
-          { key: "generatorType", label: "Generator Type", type: "select", options: ["Petrol", "Diesel", "Inverter Generator", "Industrial Generator"] },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "model", label: "Model", type: "text" },
-          { key: "capacity", label: "Capacity (kVA)", type: "text" },
-          { key: "phase", label: "Phase", type: "select", options: ["Single Phase", "Three Phase"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New", "Foreign Used", "Local Used"] },
-          { key: "fuelTankCapacity", label: "Fuel Tank Capacity", type: "text" },
-          { key: "runtime", label: "Runtime (hours)", type: "text" },
-          { key: "electricStart", label: "Electric Start", type: "select", options: ["Yes", "No"] },
-          { key: "soundproof", label: "Soundproof", type: "select", options: ["Yes", "No"] },
-          { key: "color", label: "Color", type: "text" }
         ]
       },
       
@@ -2372,49 +2352,55 @@ export const CATEGORY_TREE = {
   FASHION: {
     label: "Fashion",
     subcategories: {
-
-      WATCHES: {
-        label: "Watches",
-        fields: [
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "model", label: "Model", type: "text" },
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New", "foreign Used", "Local Used"] },
-          { key: "strapMaterial", label: "Strap Material", type: "select", options: ["Leather","Rubber","Steel","Fabric"] },
-          { key: "displayType", label: "Display Type", type: "select", options: ["Analog","Digital","Smartwatch"] },
-          { key: "movement", label: "Movement", type: "select", options: ["Quartz","Automatic","Mechanical"] },
-          { key: "color", label: "Color", type: "text" },
-          { key: "waterResistant", label: "Water Resistant", type: "select", options: ["Yes","No"] },
-        ],
-      },
-
+  
       CLOTHING: {
         label: "Clothing",
         fields: [
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex","Kids"] },
-          { key: "clothingType", label: "Clothing Type", type: "select", options: [
-            "T-Shirt","Shirt","Polo","Hoodie","Sweater","Jacket","Coat",
-            "Jeans","Trousers","Shorts","Skirt","Dress",
-            "Suit","Blazer","Native Wear","Sportswear","Underwear","Sleepwear","Other"
-          ]},
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
+          {
+            key: "clothingType",
+            label: "Clothing Type",
+            type: "select",
+            options: [
+              "T-Shirt","Shirt","Polo","Hoodie","Sweater","Jacket","Coat",
+              "Jeans","Trousers","Shorts","Skirt","Dress",
+              "Suit","Blazer","Native Wear","Sportswear",
+              "Underwear","Sleepwear","Other"
+            ],
+          },
           { key: "brand", label: "Brand", type: "text" },
           { key: "size", label: "Size", type: "select", options: ["XS","S","M","L","XL","XXL","XXXL"] },
           { key: "material", label: "Material", type: "text" },
           { key: "color", label: "Color", type: "text" },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
           { key: "pattern", label: "Pattern", type: "select", options: ["Plain","Striped","Printed","Checked","Other"] },
           { key: "sleeveLength", label: "Sleeve Length", type: "select", options: ["Short Sleeve","Long Sleeve","Sleeveless"] },
+          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
         ],
       },
-
+  
       FOOTWEAR: {
         label: "Footwear",
         fields: [
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex","Kids"] },
-          { key: "footwearType", label: "Footwear Type", type: "select", options: [
-            "Sneakers","Running Shoes","Boots","Sandals","Slippers","Heels",
-            "Loafers","Flat Shoes","Work Shoes","Sports Shoes","Other"
-          ]},
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
+          {
+            key: "footwearType",
+            label: "Footwear Type",
+            type: "select",
+            options: [
+              "Sneakers","Running Shoes","Boots","Sandals","Slippers",
+              "Heels","Loafers","Flat Shoes","Sports Shoes","Other"
+            ],
+          },
           { key: "brand", label: "Brand", type: "text" },
           { key: "size", label: "Size", type: "text" },
           { key: "material", label: "Material", type: "text" },
@@ -2422,68 +2408,83 @@ export const CATEGORY_TREE = {
           { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
         ],
       },
-
+  
       BAGS: {
         label: "Bags",
         fields: [
-          { key: "bagType", label: "Bag Type", type: "select", options: [
-            "Handbag","Backpack","Travel Bag","Laptop Bag","School Bag",
-            "Wallet Bag","Clutch","Duffel Bag","Messenger Bag"
-          ]},
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex"] },
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
+          {
+            key: "bagType",
+            label: "Bag Type",
+            type: "select",
+            options: [
+              "Handbag","Backpack","Travel Bag","Laptop Bag","School Bag",
+              "Wallet Bag","Clutch","Duffel Bag","Messenger Bag","Tote"
+            ],
+          },
           { key: "brand", label: "Brand", type: "text" },
           { key: "material", label: "Material", type: "select", options: ["Leather","Canvas","Fabric","Nylon","Synthetic"] },
           { key: "color", label: "Color", type: "text" },
           { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
         ],
       },
-
+  
+      WATCHES: {
+        label: "Watches",
+        fields: [
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
+          { key: "brand", label: "Brand", type: "text" },
+          { key: "model", label: "Model", type: "text" },
+          { key: "displayType", label: "Display Type", type: "select", options: ["Analog","Digital","Smartwatch"] },
+          { key: "movement", label: "Movement", type: "select", options: ["Quartz","Automatic","Mechanical"] },
+          { key: "strapMaterial", label: "Strap Material", type: "select", options: ["Leather","Rubber","Steel","Fabric"] },
+          { key: "color", label: "Color", type: "text" },
+          { key: "waterResistant", label: "Water Resistant", type: "select", options: ["Yes","No"] },
+          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
+        ],
+      },
+  
       JEWELRY: {
         label: "Jewelry",
         fields: [
-          { key: "jewelryType", label: "Jewelry Type", type: "select", options: [
-            "Chain","Necklace","Bracelet","Ring","Earrings","Anklet","Pendant"
-          ]},
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex"] },
-          { key: "material", label: "Material", type: "select", options: ["Gold","Silver","Diamond","Stainless Steel","Other"] },
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
+          {
+            key: "jewelryType",
+            label: "Jewelry Type",
+            type: "select",
+            options: ["Chain","Necklace","Bracelet","Ring","Earrings","Anklet","Pendant"],
+          },
+          { key: "material", label: "Material", type: "select", options: ["Gold","Silver","Diamond","Stainless Steel","Beads","Other"] },
           { key: "brand", label: "Brand", type: "text" },
           { key: "color", label: "Color", type: "text" },
           { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
         ],
       },
-
-      HATS_CAPS: {
-        label: "Hats & Caps",
-        fields: [
-          { key: "hatType", label: "Type", type: "select", options: [
-            "Baseball Cap","Snapback","Beanie","Bucket Hat","Fedora","Sun Hat","Other"
-          ]},
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex"] },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "material", label: "Material", type: "text" },
-          { key: "color", label: "Color", type: "text" },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-        ],
-      },
-
-      SUNGLASSES: {
-        label: "Sunglasses",
-        fields: [
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex"] },
-          { key: "frameType", label: "Frame Type", type: "select", options: [
-            "Aviator","Round","Square","Cat Eye","Sport","Oversized"
-          ]},
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "lensColor", label: "Lens Color", type: "text" },
-          { key: "frameMaterial", label: "Frame Material", type: "text" },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-        ],
-      },
-
+  
       BELTS: {
         label: "Belts",
         fields: [
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex"] },
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
           { key: "beltType", label: "Belt Type", type: "select", options: ["Leather Belt","Casual Belt","Designer Belt"] },
           { key: "brand", label: "Brand", type: "text" },
           { key: "material", label: "Material", type: "text" },
@@ -2491,164 +2492,59 @@ export const CATEGORY_TREE = {
           { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
         ],
       },
-
-      WALLETS: {
-        label: "Wallets",
+  
+      SUNGLASSES: {
+        label: "Sunglasses",
         fields: [
-          { key: "walletType", label: "Wallet Type", type: "select", options: [
-            "Leather Wallet","Card Holder","Travel Wallet","Clutch Wallet"
-          ]},
-          { key: "gender", label: "Gender", type: "select", options: ["Men","Women","Unisex"] },
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
+          { key: "frameType", label: "Frame Type", type: "select", options: ["Aviator","Round","Square","Cat Eye","Sport","Oversized"] },
+          { key: "lensColor", label: "Lens Color", type: "text" },
+          { key: "frameMaterial", label: "Frame Material", type: "text" },
+          { key: "brand", label: "Brand", type: "text" },
+          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
+        ],
+      },
+  
+      HATS_CAPS: {
+        label: "Hats & Caps",
+        fields: [
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
+          { key: "hatType", label: "Type", type: "select", options: ["Baseball Cap","Snapback","Beanie","Bucket Hat","Fedora","Sun Hat","Other"] },
           { key: "brand", label: "Brand", type: "text" },
           { key: "material", label: "Material", type: "text" },
           { key: "color", label: "Color", type: "text" },
           { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
         ],
       },
+  
+      WALLETS: {
+        label: "Wallets",
+        fields: [
+          {
+            key: "fashionType",
+            label: "Fashion Type",
+            type: "select",
+            options: ["Men", "Women", "Kids", "Unisex"],
+          },
+          { key: "walletType", label: "Wallet Type", type: "select", options: ["Leather Wallet","Card Holder","Travel Wallet","Clutch Wallet"] },
+          { key: "brand", label: "Brand", type: "text" },
+          { key: "material", label: "Material", type: "text" },
+          { key: "color", label: "Color", type: "text" },
+          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
+        ],
+      },
+  
     },
-  },
-
-  MEN_FASHION: {
-    label: "Men Fashion",
-    subcategories: {
-  
-      CLOTHING: {
-        label: "Clothing",
-        fields: [
-          { key: "clothingType", label: "Clothing Type", type: "select", options: ["Shirts","T-Shirts","Jeans","Trousers","Shorts","Suits","Jackets","Hoodies","Native Wear"] },
-          { key: "size", label: "Size", type: "select", options: ["XS","S","M","L","XL","XXL"] },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "material", label: "Material", type: "select", options: ["Cotton","Denim","Leather","Polyester","Wool"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-          { key: "color", label: "Color", type: "text" }
-        ]
-      },
-  
-      SHOES: {
-        label: "Shoes",
-        fields: [
-          { key: "shoeType", label: "Shoe Type", type: "select", options: ["Sneakers","Formal Shoes","Boots","Sandals","Slippers","Loafers"] },
-          { key: "size", label: "Size", type: "number" },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "material", label: "Material", type: "select", options: ["Leather","Rubber","Canvas","Synthetic"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-          { key: "color", label: "Color", type: "text" }
-        ]
-      },
-  
-      BAGS: {
-        label: "Bags",
-        fields: [
-          { key: "bagType", label: "Bag Type", type: "select", options: ["Backpack","Laptop Bag","Travel Bag","Briefcase","Crossbody"] },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "material", label: "Material", type: "select", options: ["Leather","Fabric","Synthetic"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-          { key: "color", label: "Color", type: "text" }
-        ]
-      },
-  
-      WATCHES: {
-        label: "Watches",
-        fields: [
-          { key: "watchType", label: "Watch Type", type: "select", options: ["Analog","Digital","Smartwatch"] },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "strapMaterial", label: "Strap Material", type: "select", options: ["Leather","Metal","Rubber"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-          { key: "waterResistant", label: "Water Resistant", type: "select", options: ["Yes","No"] }
-        ]
-      },
-  
-      JEWELRY: {
-        label: "Jewelry",
-        fields: [
-          { key: "jewelryType", label: "Jewelry Type", type: "select", options: ["Necklace","Bracelet","Ring","Chain","Cufflinks"] },
-          { key: "material", label: "Material", type: "select", options: ["Gold","Silver","Diamond","Steel","Beads"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] }
-        ]
-      },
-  
-      SUNGLASSES: {
-        label: "Sunglasses",
-        fields: [
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "frameType", label: "Frame Type", type: "select", options: ["Full Rim","Half Rim","Rimless"] },
-          { key: "lensType", label: "Lens Type", type: "select", options: ["Polarized","UV Protection","Standard"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] }
-        ]
-      }
-  
-    }
-  },
-
-  WOMEN_FASHION: {
-    label: "Women Fashion",
-    subcategories: {
-  
-      CLOTHING: {
-        label: "Clothing",
-        fields: [
-          { key: "clothingType", label: "Clothing Type", type: "select", options: ["Dresses","Tops","Jeans","Skirts","Leggings","Jumpsuits","Blazers","Native Wear"] },
-          { key: "size", label: "Size", type: "select", options: ["XS","S","M","L","XL","XXL"] },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "material", label: "Material", type: "select", options: ["Cotton","Silk","Denim","Lace","Polyester"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-          { key: "color", label: "Color", type: "text" }
-        ]
-      },
-  
-      SHOES: {
-        label: "Shoes",
-        fields: [
-          { key: "shoeType", label: "Shoe Type", type: "select", options: ["Heels","Flats","Sneakers","Boots","Sandals","Slippers"] },
-          { key: "size", label: "Size", type: "number" },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "material", label: "Material", type: "select", options: ["Leather","Rubber","Canvas","Synthetic"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-          { key: "color", label: "Color", type: "text" }
-        ]
-      },
-  
-      BAGS: {
-        label: "Bags",
-        fields: [
-          { key: "bagType", label: "Bag Type", type: "select", options: ["Handbag","Clutch","Backpack","Tote","Crossbody"] },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "material", label: "Material", type: "select", options: ["Leather","Fabric","Synthetic"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] },
-          { key: "color", label: "Color", type: "text" }
-        ]
-      },
-  
-      WATCHES: {
-        label: "Watches",
-        fields: [
-          { key: "watchType", label: "Watch Type", type: "select", options: ["Analog","Digital","Smartwatch"] },
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "strapMaterial", label: "Strap Material", type: "select", options: ["Leather","Metal","Rubber"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] }
-        ]
-      },
-  
-      JEWELRY: {
-        label: "Jewelry",
-        fields: [
-          { key: "jewelryType", label: "Jewelry Type", type: "select", options: ["Earrings","Necklace","Bracelet","Ring","Anklet"] },
-          { key: "material", label: "Material", type: "select", options: ["Gold","Silver","Diamond","Beads","Pearls"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] }
-        ]
-      },
-  
-      SUNGLASSES: {
-        label: "Sunglasses",
-        fields: [
-          { key: "brand", label: "Brand", type: "text" },
-          { key: "frameType", label: "Frame Type", type: "select", options: ["Cat Eye","Oversized","Aviator","Round"] },
-          { key: "lensType", label: "Lens Type", type: "select", options: ["Polarized","UV Protection"] },
-          { key: "condition", label: "Condition", type: "select", options: ["New","Used"] }
-        ]
-      }
-  
-    }
   },
 
   BEAUTY_PERSONAL_CARE: {
@@ -2888,6 +2784,23 @@ export const CATEGORY_TREE = {
           { key: "model", label: "Model", type: "text" },
           { key: "condition", label: "Condition", type: "select", options: ["New", "Used"] },
           { key: "digital", label: "Digital", type: "select", options: ["Yes", "No"] }
+        ]
+      },
+
+      GENERATORS: {
+        label: "Generators",
+        fields: [
+          { key: "generatorType", label: "Generator Type", type: "select", options: ["Petrol", "Diesel", "Inverter Generator", "Industrial Generator"] },
+          { key: "brand", label: "Brand", type: "text" },
+          { key: "model", label: "Model", type: "text" },
+          { key: "capacity", label: "Capacity (kVA)", type: "text" },
+          { key: "phase", label: "Phase", type: "select", options: ["Single Phase", "Three Phase"] },
+          { key: "condition", label: "Condition", type: "select", options: ["New", "Foreign Used", "Local Used"] },
+          { key: "fuelTankCapacity", label: "Fuel Tank Capacity", type: "text" },
+          { key: "runtime", label: "Runtime (hours)", type: "text" },
+          { key: "electricStart", label: "Electric Start", type: "select", options: ["Yes", "No"] },
+          { key: "soundproof", label: "Soundproof", type: "select", options: ["Yes", "No"] },
+          { key: "color", label: "Color", type: "text" }
         ]
       },
   
