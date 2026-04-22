@@ -95,3 +95,53 @@ export type PaginatedListingsResponse = {
   nextPage: number | null;
   meta?: ListingsMeta;
 };
+
+export type ChatAttachment = {
+  type: "image" | "audio";
+  url: string;
+  public_id: string;
+  fileName?: string;
+  mimeType: string;
+  size: number;
+  duration?: number | null;
+};
+
+export type ChatUserPreview = {
+  _id: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  isBanned?: boolean;
+};
+
+export type ChatMessage = {
+  _id: string;
+  chat?: string | { _id?: string };
+  sender: ChatUserPreview;
+  text: string;
+  createdAt: string;
+  deliveredTo?: string[];
+  seenBy: string[];
+  messageType?: "text" | "image" | "audio" | "mixed";
+  attachments?: ChatAttachment[];
+  previewText?: string;
+};
+
+export type ChatListingPreview = {
+  _id?: string | null;
+  slug?: string;
+  title?: string;
+  price?: string;
+  images?: { url: string; public_id?: string }[];
+  owner?: string;
+  isClosed?: boolean;
+  closedLabel?: string;
+};
+
+export type ChatPreview = {
+  _id: string;
+  listing?: ChatListingPreview;
+  participants: ChatUserPreview[];
+  lastMessage?: ChatMessage;
+  unreadCount?: number;
+};

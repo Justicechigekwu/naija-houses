@@ -1,7 +1,7 @@
 {
-  "name": "full-stack",
+  "name": "velora-marketplace",
   "version": "1.0.0",
-  "description": "building my first complete project from scratch",
+  "description": " Velora Marketplace Nigeria | Buy, Sell, Rent Properties, Cars, Phones and More. Description: Discover houses for sale, apartments for rent, cars, phones, electronics and more across Abuja, Lagos and other cities in Nigeria on Velora.",
   "main": "app.js",
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "full_stack"
+    "url": "velora"
   },
   "author": "justice",
   "license": "ISC",

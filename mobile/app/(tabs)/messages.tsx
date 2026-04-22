@@ -53,9 +53,7 @@ export default function MessagesScreen() {
     }) => {
       if (!message?._id || !chatId) return;
 
-      if (processedMessageIdsRef.current.has(message._id)) {
-        return;
-      }
+      if (processedMessageIdsRef.current.has(message._id)) return;
 
       processedMessageIdsRef.current.add(message._id);
 
@@ -77,6 +75,9 @@ export default function MessagesScreen() {
             sender: message.sender,
             seenBy: message.seenBy || [],
             deliveredTo: message.deliveredTo || [],
+            messageType: message.messageType,
+            attachments: message.attachments || [],
+            previewText: message.previewText,
           },
           unreadCount:
             message.sender?._id !== user.id
@@ -89,18 +90,51 @@ export default function MessagesScreen() {
       });
     };
 
+    const handleMessagesSeen = ({
+      chatId,
+      seenBy,
+    }: {
+      chatId: string;
+      seenBy: string;
+    }) => {
+      if (!seenBy) return;
+
+      setChats((prev) =>
+        prev.map((chat) => {
+          if (chat._id !== chatId) return chat;
+
+          return {
+            ...chat,
+            unreadCount: 0,
+            lastMessage: chat.lastMessage
+              ? {
+                  ...chat.lastMessage,
+                  seenBy: (chat.lastMessage.seenBy || []).some(
+                    (id) => String(id) === String(seenBy)
+                  )
+                    ? chat.lastMessage.seenBy
+                    : [...(chat.lastMessage.seenBy || []), seenBy],
+                }
+              : chat.lastMessage,
+          };
+        })
+      );
+    };
+
     const handleChatDeleted = ({ chatId }: { chatId: string }) => {
       setChats((prev) => prev.filter((chat) => chat._id !== chatId));
     };
 
     socket.on("chat:new-message", handleNewMessage);
+    socket.on("chat:messages-seen", handleMessagesSeen);
     socket.on("chat:deleted", handleChatDeleted);
 
     return () => {
       socket.off("chat:new-message", handleNewMessage);
+      socket.off("chat:messages-seen", handleMessagesSeen);
       socket.off("chat:deleted", handleChatDeleted);
     };
-  }, [user, router]);
+  }, [user]);
 
   if (loading) {
     return (

@@ -86,6 +86,34 @@ app.use("/api/v1/admin", adminModerationRoutes);
 app.use("/api/v1/admin", adminAppealRoutes);
 app.use("/api/v1/admin/support", adminSupportRoutes);
 
+app.use((err, req, res, next) => {
+  if (err?.name === "MulterError") {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        message: "File too large. Maximum allowed size is 15MB per file.",
+      });
+    }
+
+    if (err.code === "LIMIT_FILE_COUNT") {
+      return res.status(400).json({
+        message: "Too many files uploaded. Maximum allowed is 5 files.",
+      });
+    }
+
+    return res.status(400).json({
+      message: err.message || "Upload error",
+    });
+  }
+
+  if (err) {
+    return res.status(400).json({
+      message: err.message || "Request failed",
+    });
+  }
+
+  next();
+});
+
 app.get("/api/v1/ping", (req, res) => {
   res.json({ message: "Backend connected" });
 });

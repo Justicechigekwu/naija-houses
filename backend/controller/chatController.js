@@ -116,17 +116,39 @@ export const getChats = async (req, res) => {
 
     const chatsWithLastMessage = await Promise.all(
       chats.map(async (chat) => {
-        const lastMessage = await Message.findOne({ chat: chat._id })
+        const lastMessageDoc = await Message.findOne({ chat: chat._id })
           .sort({ createdAt: -1 })
           .populate("sender", "firstName lastName avatar isBanned")
           .lean();
-
+    
         const unreadCount = await Message.countDocuments({
           chat: chat._id,
           sender: { $ne: req.user.id },
           seenBy: { $ne: req.user.id },
         });
-
+    
+        let lastMessage = lastMessageDoc;
+    
+        if (lastMessage) {
+          let previewText = lastMessage.text || "";
+    
+          if (!previewText) {
+            if (lastMessage.messageType === "audio") {
+              previewText = "🎤 Voice note";
+            } else if (lastMessage.messageType === "image") {
+              previewText =
+                lastMessage.attachments?.length > 1 ? "📷 Images" : "📷 Image";
+            } else if (lastMessage.messageType === "mixed") {
+              previewText = "📎 Attachment";
+            }
+          }
+    
+          lastMessage = {
+            ...lastMessage,
+            previewText,
+          };
+        }
+    
         return {
           ...hydrateChatForClient(chat),
           lastMessage,
@@ -213,10 +235,11 @@ export const getChatById = async (req, res) => {
 
 export const sendmessage = async (req, res) => {
   try {
-    const { chatId, text } = req.body;
+    const { chatId } = req.body;
+    const text = typeof req.body.text === "string" ? req.body.text.trim() : "";
 
-    if (!text?.trim()) {
-      return res.status(400).json({ message: "Message text is required" });
+    if (!chatId) {
+      return res.status(400).json({ message: "Chat ID is required" });
     }
 
     const chat = await Chat.findById(chatId).populate(
@@ -236,10 +259,48 @@ export const sendmessage = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
+    const files = Array.isArray(req.files) ? req.files : [];
+
+    const attachments = files.map((file) => {
+      const mimeType = file.mimetype || "";
+      const isAudio = mimeType.startsWith("audio/");
+
+      return {
+        type: isAudio ? "audio" : "image",
+        url: file.path,
+        public_id: file.filename || "",
+        fileName: file.originalname || "",
+        mimeType,
+        size: file.size || 0,
+        duration: null,
+      };
+    });
+
+    if (!text && attachments.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Message must contain text or an attachment" });
+    }
+
+    const audioCount = attachments.filter((item) => item.type === "audio").length;
+
+    if (audioCount > 1) {
+      return res
+        .status(400)
+        .json({ message: "Only one voice note is allowed per message" });
+    }
+
+    if (audioCount > 0 && attachments.length > 1) {
+      return res.status(400).json({
+        message: "Voice note cannot be combined with multiple attachments",
+      });
+    }
+
     const message = await Message.create({
       chat: chatId,
       sender: req.user.id,
-      text: text.trim(),
+      text,
+      attachments,
       deliveredTo: [req.user.id],
       seenBy: [req.user.id],
     });
@@ -284,27 +345,44 @@ export const sendmessage = async (req, res) => {
     const otherParticipantName =
       senderParticipant?.isBanned
         ? "Velora User"
-        : `${senderParticipant?.firstName || ""} ${senderParticipant?.lastName || ""}`.trim() ||
-          "New message";
+        : `${senderParticipant?.firstName || ""} ${
+            senderParticipant?.lastName || ""
+          }`.trim() || "New message";
+
+    let pushBody = "Sent you a message";
+
+    if (safeMessage.messageType === "audio") {
+      pushBody = "🎤 Sent you a voice note";
+    } else if (safeMessage.messageType === "image") {
+      pushBody =
+        safeMessage.attachments?.length > 1
+          ? "📷 Sent you images"
+          : "📷 Sent you an image";
+    } else if (safeMessage.messageType === "mixed") {
+      pushBody = text || "📎 Sent you an attachment";
+    } else if (text) {
+      pushBody = text;
+    }
 
     for (const recipientId of recipientIds) {
       await sendPushToUser({
         userId: recipientId,
         title: otherParticipantName,
-        body: text.trim(),
+        body: pushBody,
         data: {
           route: `/messages/${chatId}`,
           chatId,
           type: "CHAT_NEW_MESSAGE",
           senderId: req.user.id,
+          messageType: safeMessage.messageType,
         },
       });
     }
 
-    res.json(safeMessage);
+    return res.status(201).json(safeMessage);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to send message" });
+    console.error("sendmessage error:", error);
+    return res.status(500).json({ message: "Failed to send message" });
   }
 };
 

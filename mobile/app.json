@@ -39,7 +39,8 @@
             "image": "./assets/images/velora-logo.png"
           }
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

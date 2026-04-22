@@ -1,5 +1,15 @@
 import { api } from "@/libs/api";
 
+export type ChatAttachment = {
+  type: "image" | "audio";
+  url: string;
+  public_id: string;
+  fileName?: string;
+  mimeType: string;
+  size: number;
+  duration?: number | null;
+};
+
 export type UserPreview = {
   _id: string;
   firstName?: string;
@@ -26,6 +36,9 @@ export type Message = {
   createdAt: string;
   deliveredTo?: string[];
   seenBy: string[];
+  messageType?: "text" | "image" | "audio" | "mixed";
+  attachments?: ChatAttachment[];
+  previewText?: string;
 };
 
 export type Chat = {
@@ -39,6 +52,9 @@ export type Chat = {
     sender?: UserPreview;
     seenBy?: string[];
     deliveredTo?: string[];
+    messageType?: "text" | "image" | "audio" | "mixed";
+    attachments?: ChatAttachment[];
+    previewText?: string;
   };
   unreadCount?: number;
 };
@@ -51,11 +67,12 @@ export async function startChat(payload: {
   return response.data;
 }
 
-export async function sendChatMessage(payload: {
-  chatId: string;
-  text: string;
-}) {
-  const response = await api.post<Message>("/chats/message", payload);
+export async function sendChatMessage(formData: FormData) {
+  const response = await api.post<Message>("/chats/message", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 }
 
