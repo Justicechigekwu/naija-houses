@@ -1,5 +1,9 @@
 import Notification from "../models/notificationModel.js";
+import userModel from "../models/userModel.js";
+import { Expo } from "expo-server-sdk";
 import { emitUnreadNotificationCount } from "../service/realtimeService.js";
+
+const expo = new Expo();
 
 export const getMyNotifications = async (req, res) => {
   try {
@@ -87,5 +91,63 @@ export const deleteNotification = async (req, res) => {
     res.json({ message: "Notification deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message || "Failed to delete notification" });
+  }
+};
+
+export const registerPushToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({ message: "Valid push token is required" });
+    }
+
+    if (!Expo.isExpoPushToken(token)) {
+      return res.status(400).json({ message: "Invalid Expo push token" });
+    }
+
+    const user = await userModel.findByIdAndUpdate(
+      req.user.id,
+      {
+        $addToSet: { pushTokens: token },
+        $set: {
+          pushNotificationsEnabled: true,
+          lastPushTokenUpdatedAt: new Date(),
+        },
+      },
+      { new: true }
+    ).select("_id pushTokens pushNotificationsEnabled lastPushTokenUpdatedAt");
+
+    res.json({
+      message: "Push token registered successfully",
+      pushTokens: user?.pushTokens || [],
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to register push token",
+    });
+  }
+};
+
+export const unregisterPushToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({ message: "Valid push token is required" });
+    }
+
+    await userModel.findByIdAndUpdate(req.user.id, {
+      $pull: { pushTokens: token },
+      $set: {
+        lastPushTokenUpdatedAt: new Date(),
+      },
+    });
+
+    res.json({ message: "Push token removed successfully" });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to remove push token",
+    });
   }
 };

@@ -28,6 +28,17 @@ const pointSchema = new mongoose.Schema(
   { _id: false }
 );
 
+function getFieldFromContext(ctx, field) {
+  if (!ctx) return undefined;
+
+  if (typeof ctx.get === "function") {
+    const value = ctx.get(field);
+    if (value !== undefined) return value;
+  }
+
+  return ctx[field];
+}
+
 const listingSchema = new mongoose.Schema(
   {
     title: {
@@ -46,14 +57,16 @@ const listingSchema = new mongoose.Schema(
       enum: ["Sale", "Rent", "Shortlet", null, ""],
       validate: {
         validator: function (value) {
-          if (["PROPERTY", "LAND"].includes(this.category)) {
+          const category = String(getFieldFromContext(this, "category") || "").toUpperCase();
+    
+          if (["PROPERTY", "LAND"].includes(category)) {
             if (!value) return false;
     
-            if (this.category === "PROPERTY") {
+            if (category === "PROPERTY") {
               return ["Sale", "Rent", "Shortlet"].includes(value);
             }
     
-            if (this.category === "LAND") {
+            if (category === "LAND") {
               return value === "Sale";
             }
           }
@@ -64,10 +77,10 @@ const listingSchema = new mongoose.Schema(
       },
       required: [
         function () {
-          return (
-            this.publishStatus !== "DRAFT" &&
-            ["PROPERTY", "LAND"].includes(this.category)
-          );
+          const category = String(getFieldFromContext(this, "category") || "").toUpperCase();
+          const publishStatus = String(getFieldFromContext(this, "publishStatus") || "");
+    
+          return publishStatus !== "DRAFT" && ["PROPERTY", "LAND"].includes(category);
         },
         "Please select listing type",
       ],
@@ -147,16 +160,21 @@ const listingSchema = new mongoose.Schema(
       enum: ["Owner", "Agent", "Dealer", "Seller", null, ""],
       required: [
         function () {
+          const category = String(getFieldFromContext(this, "category") || "").toUpperCase();
+          const publishStatus = String(getFieldFromContext(this, "publishStatus") || "");
+    
           return (
-            this.publishStatus !== "DRAFT" &&
-            ["PROPERTY", "LAND", "VEHICLES"].includes(this.category)
+            publishStatus !== "DRAFT" &&
+            ["PROPERTY", "LAND", "VEHICLES"].includes(category)
           );
         },
         "Please select who is posting this listing",
       ],
       validate: {
         validator: function (value) {
-          if (["PROPERTY", "LAND", "VEHICLES"].includes(this.category)) {
+          const category = String(getFieldFromContext(this, "category") || "").toUpperCase();
+    
+          if (["PROPERTY", "LAND", "VEHICLES"].includes(category)) {
             return ["Owner", "Agent", "Dealer", "Seller"].includes(value);
           }
     

@@ -167,6 +167,7 @@ export function validateListingForm(
     { key: "title", label: "Title" },
     { key: "price", label: "Price" },
     { key: "state", label: "State" },
+    { key: "city", label: "City" },
     { key: "description", label: "Description" },
     { key: "category", label: "Category" },
     { key: "subcategory", label: "Subcategory" },

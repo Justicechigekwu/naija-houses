@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { GripVertical, ImagePlus, Move, X } from "lucide-react";
 import { CATEGORY_TREE } from "@/libs/listingFormConfig";
 import { NIGERIA_STATES, getCitiesByState } from "@/libs/nigeriaLocations";
 import { validateListingForm } from "@/libs/validateListingForm";
 import { useUI } from "@/hooks/useUi";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import SearchableSelect from "@/components/SearchableSelect";
 import type {
   Listing,
@@ -19,6 +21,11 @@ import {
   categoryUsesPostedBy,
   getListingTypeOptions,
 } from "@/libs/listingFieldRules";
+import {
+  saveListingFormDraft,
+  loadListingFormDraft,
+  clearListingFormDraft,
+} from "@/libs/listingFormDrafts";
 
 interface ListingFormProps {
   initialData?: Listing | null;
@@ -56,12 +63,32 @@ function reorderArray<T>(items: T[], fromIndex: number, toIndex: number) {
   return updated;
 }
 
+function buildEmptyForm(category = "PROPERTY"): ListingFormShape {
+  return {
+    title: "",
+    listingType: categoryUsesListingType(category)
+      ? category === "LAND"
+        ? "Sale"
+        : ""
+      : "",
+    price: "",
+    city: "",
+    state: "",
+    description: "",
+    postedBy: "",
+    category,
+    subcategory: getFirstSubcategory(category),
+  };
+}
+
 export default function ListingForm({
   initialData,
   isEditMode = false,
   onSubmit,
 }: ListingFormProps) {
-  const { showToast } = useUI();
+  const { showToast, showConfirm } = useUI();
+  const { user } = useAuth();
+  const draftUserId = user?.id || user?._id || null;
 
   const categoryOptions = useMemo(() => {
     return Object.entries(CATEGORY_TREE).map(([key, value]) => ({
@@ -86,20 +113,57 @@ export default function ListingForm({
 
   const [selectedExistingImageIndex, setSelectedExistingImageIndex] = useState<number | null>(null);
   const [selectedNewImageIndex, setSelectedNewImageIndex] = useState<number | null>(null);
-
-  const [formData, setFormData] = useState<ListingFormShape>({
-    title: "",
-    listingType: "",
-    price: "",
-    city: "",
-    state: "",
-    description: "",
-    postedBy: "",
+  
+  const [formData, setFormData] = useState<ListingFormShape>(() => ({
+    ...buildEmptyForm(initialCategory),
     category: initialCategory,
     subcategory: initialSubcategory,
-  });
+  }));
 
   const [attributes, setAttributes] = useState<Record<string, string>>({});
+
+  const initialCreateFormSnapshot = useMemo(
+    () =>
+      JSON.stringify({
+        formData: {
+          ...buildEmptyForm(initialCategory),
+          category: initialCategory,
+          subcategory: initialSubcategory,
+        },
+        attributes: {},
+      }),
+    [initialCategory, initialSubcategory]
+  );
+  
+  const currentCreateFormSnapshot = useMemo(
+    () =>
+      JSON.stringify({
+        formData,
+        attributes,
+      }),
+    [formData, attributes]
+  );
+  
+  const isCreateMode = !isEditMode;
+  const isDirty = isCreateMode && currentCreateFormSnapshot !== initialCreateFormSnapshot;
+  
+  const persistLocalDraft = useCallback(() => {
+    if (!isCreateMode) return;
+    if (!isDirty) return;
+  
+    saveListingFormDraft(
+      {
+        formData,
+        attributes,
+        savedAt: new Date().toISOString(),
+      },
+      draftUserId
+    );
+  }, [isCreateMode, isDirty, formData, attributes, draftUserId]);
+  
+  const clearLocalDraft = useCallback(() => {
+    clearListingFormDraft(draftUserId);
+  }, [draftUserId]);
 
   useEffect(() => {
     if (!initialData) return;
@@ -133,6 +197,84 @@ export default function ListingForm({
 
     setExistingImages(initialData.images || []);
   }, [initialData]);
+
+  useEffect(() => {
+    if (!isCreateMode) return;
+  
+    const savedDraft = loadListingFormDraft(draftUserId);
+    if (!savedDraft?.formData) return;
+  
+    const hasMeaningfulData =
+      Object.values(savedDraft.formData || {}).some(
+        (value) => String(value || "").trim() !== ""
+      ) || Object.keys(savedDraft.attributes || {}).length > 0;
+  
+    if (!hasMeaningfulData) {
+      clearListingFormDraft(draftUserId);
+      return;
+    }
+  
+    showConfirm(
+      {
+        title: "Restore saved form draft?",
+        message:
+          "You have an unsaved listing form draft. Do you want to restore it?",
+        confirmText: "Restore",
+        cancelText: "Discard",
+        confirmVariant: "primary",
+      },
+      () => {
+        setFormData(savedDraft.formData);
+        setAttributes(savedDraft.attributes || {});
+        setStep(1);
+  
+        showToast(
+          "Saved form draft restored. Please reselect any images before creating the listing.",
+          "success"
+        );
+      },
+      () => {
+        clearListingFormDraft(draftUserId);
+      }
+    );
+  }, [isCreateMode, draftUserId, showToast, showConfirm]);
+
+  useEffect(() => {
+    if (!isCreateMode) return;
+  
+    if (!isDirty) {
+      clearListingFormDraft(draftUserId);
+      return;
+    }
+  
+    const timeout = window.setTimeout(() => {
+      persistLocalDraft();
+    }, 500);
+  
+    return () => window.clearTimeout(timeout);
+  }, [
+    isCreateMode,
+    isDirty,
+    formData,
+    attributes,
+    draftUserId,
+    persistLocalDraft,
+  ]);
+
+  useEffect(() => {
+    if (!isCreateMode || !isDirty) return;
+  
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+  
+    window.addEventListener("beforeunload", handleBeforeUnload);
+  
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isCreateMode, isDirty]);
 
   const categoryConfig = useMemo(() => {
     return CATEGORY_TREE[formData.category as keyof typeof CATEGORY_TREE];
@@ -522,9 +664,41 @@ export default function ListingForm({
     try {
       setIsSubmitting(true);
       await onSubmit(data);
+    
+      if (!isEditMode) {
+        clearLocalDraft();
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleClearForm = () => {
+    if (isSubmitting) return;
+  
+    showConfirm(
+      {
+        title: "Clear form?",
+        message:
+          "Clear everything you have entered in this form? This will also remove the saved local draft.",
+        confirmText: "Clear form",
+        cancelText: "Cancel",
+        confirmVariant: "danger",
+      },
+      () => {
+        const resetCategory = "PROPERTY";
+  
+        setFormData(buildEmptyForm(resetCategory));
+        setAttributes({});
+        setImages([]);
+        setErrors({});
+        setStep(1);
+        setAgreedToListingPolicy(false);
+        clearLocalDraft();
+  
+        showToast("Form cleared", "success");
+      }
+    );
   };
 
   const renderDynamicField = (field: DynamicField) => {
@@ -577,6 +751,18 @@ export default function ListingForm({
   return (
     <div className="max-w-4xl border bg-[#F5F5F5] rounded shadow mx-auto p-6">
       <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-6">
+      {!isEditMode && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleClearForm}
+            disabled={isSubmitting}
+            className="rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+          >
+            Clear form
+          </button>
+        </div>
+      )}
         {step === 1 && (
           <div className="space-y-6">
             <div>

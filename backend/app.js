@@ -55,6 +55,11 @@ app.use(
   })
 );
 
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.originalUrl}`);
+  next();
+})
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/reset", resetPasswordRoutes);
 app.use("/api/v1/profile", profileRoutes);
@@ -90,7 +95,7 @@ const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);
 initSocket(httpServer);
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
 

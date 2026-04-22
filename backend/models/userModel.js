@@ -87,6 +87,21 @@ const userSchema = new mongoose.Schema({
     default: {}
   },
 
+  pushTokens: {
+    type: [String],
+    default: [],
+  },
+
+  pushNotificationsEnabled: {
+    type: Boolean,
+    default: true,
+  },
+  
+  lastPushTokenUpdatedAt: {
+    type: Date,
+    default: null,
+  },
+
   slug: {
     type: String,
     trim: true,

@@ -1,8 +1,7 @@
-
 import { OAuth2Client } from "google-auth-library";
 import userModel from "../models/userModel.js";
-import generateToken from "../utils/generateTokenUtils.js";
-import setTokenCookie from "../utils/setTokenCookies.js";
+import { sendAuthResponse } from "../utils/sendAuthResponse.js";
+import { generateUniqueUserSlug } from "../utils/userSlug.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -45,33 +44,49 @@ export const googleAuth = async (req, res) => {
     });
 
     if (!user) {
+      const slug = await generateUniqueUserSlug(userModel, {
+        firstName: given_name || "Google",
+        lastName: family_name || "User",
+      });
+
       user = await userModel.create({
         firstName: given_name || "Google",
         lastName: family_name || "User",
+        slug,
         email: normalizedEmail,
         googleId: sub,
         provider: "google",
         avatar: picture || "",
       });
     } else {
+      if (user.isBanned) {
+        return res.status(403).json({
+          code: "ACCOUNT_BANNED",
+          message:
+            user.banReason ||
+            "Your account has been banned for violating marketplace standards.",
+        });
+      }
+
       if (!user.googleId) user.googleId = sub;
       if (!user.avatar && picture) user.avatar = picture;
+
+      if (!user.slug) {
+        user.slug = await generateUniqueUserSlug(userModel, {
+          firstName: user.firstName || "Google",
+          lastName: user.lastName || "User",
+        }, user._id);
+      }
+
       await user.save();
     }
 
-    const token = generateToken(user._id, { provider: user.provider });
-    setTokenCookie(res, token);
-
-    return res.status(200).json({
+    return sendAuthResponse({
+      req,
+      res,
+      user,
+      statusCode: 200,
       message: "Google login successful",
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        avatar: user.avatar || null,
-        provider: user.provider,
-      },
     });
   } catch (error) {
     console.error("Google auth error:", error);

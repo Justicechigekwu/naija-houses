@@ -6,6 +6,7 @@ import {
   emitChatDeleted,
   emitUnreadChatCount,
 } from "../service/realtimeService.js";
+import { sendPushToUser } from "../service/pushNotificationService.js";
 
 const mapParticipantPreview = (participant) => {
   if (!participant) return null;
@@ -218,13 +219,17 @@ export const sendmessage = async (req, res) => {
       return res.status(400).json({ message: "Message text is required" });
     }
 
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId).populate(
+      "participants",
+      "firstName lastName avatar isBanned"
+    );
+
     if (!chat) {
       return res.status(404).json({ message: "Chat not found" });
     }
 
     const isParticipant = chat.participants.some(
-      (p) => p.toString() === req.user.id
+      (p) => p._id.toString() === req.user.id
     );
 
     if (!isParticipant) {
@@ -249,6 +254,7 @@ export const sendmessage = async (req, res) => {
     );
 
     const safeMessage = populatedMessage.toObject();
+
     if (safeMessage.sender?.isBanned) {
       safeMessage.sender = {
         _id: safeMessage.sender._id,
@@ -259,7 +265,7 @@ export const sendmessage = async (req, res) => {
       };
     }
 
-    const participantIds = chat.participants.map((p) => p.toString());
+    const participantIds = chat.participants.map((p) => p._id.toString());
     const recipientIds = participantIds.filter((id) => id !== req.user.id);
 
     emitNewChatMessage(participantIds, {
@@ -269,6 +275,30 @@ export const sendmessage = async (req, res) => {
 
     for (const recipientId of recipientIds) {
       await emitUnreadChatCount(recipientId);
+    }
+
+    const senderParticipant = chat.participants.find(
+      (p) => p._id.toString() === req.user.id
+    );
+
+    const otherParticipantName =
+      senderParticipant?.isBanned
+        ? "Velora User"
+        : `${senderParticipant?.firstName || ""} ${senderParticipant?.lastName || ""}`.trim() ||
+          "New message";
+
+    for (const recipientId of recipientIds) {
+      await sendPushToUser({
+        userId: recipientId,
+        title: otherParticipantName,
+        body: text.trim(),
+        data: {
+          route: `/messages/${chatId}`,
+          chatId,
+          type: "CHAT_NEW_MESSAGE",
+          senderId: req.user.id,
+        },
+      });
     }
 
     res.json(safeMessage);

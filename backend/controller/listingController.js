@@ -189,9 +189,38 @@ export const updateListing = async (req, res) => {
         ? req.body.postedBy || listing.postedBy || null
         : null;
 
+    // const updates = {
+    //   title: nextTitle,
+    //   slug: nextSlug,
+    //   listingType: normalizedListingType,
+    //   price: req.body.price
+    //     ? Number(String(req.body.price).replace(/[^\d]/g, ""))
+    //     : listing.price,
+    //   city: nextCity,
+    //   state: nextState,
+    //   stateNormalized: String(nextState || "").trim().toLowerCase(),
+    //   cityNormalized: String(nextCity || "").trim().toLowerCase(),
+    //   geo: nextGeo || listing.geo,
+    //   description: req.body.description || listing.description,
+    //   postedBy: normalizedPostedBy,
+    //   images: updatedImages,
+    //   attributes: req.body.attributes
+    //     ? JSON.parse(req.body.attributes)
+    //     : listing.attributes,
+    // };
+
+    // if (listing.publishStatus === "DRAFT") {
+    //   updates.category = nextCategory;
+    //   updates.subcategory = nextSubcategory;
+    //   updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000);
+    //   updates.draftReminderSentAt = null;
+    // }
+
     const updates = {
       title: nextTitle,
       slug: nextSlug,
+      category: nextCategory,
+      subcategory: nextSubcategory,
       listingType: normalizedListingType,
       price: req.body.price
         ? Number(String(req.body.price).replace(/[^\d]/g, ""))
@@ -208,10 +237,8 @@ export const updateListing = async (req, res) => {
         ? JSON.parse(req.body.attributes)
         : listing.attributes,
     };
-
+    
     if (listing.publishStatus === "DRAFT") {
-      updates.category = nextCategory;
-      updates.subcategory = nextSubcategory;
       updates.draftReminderAt = new Date(Date.now() + 1 * 60 * 1000);
       updates.draftReminderSentAt = null;
     }
@@ -219,7 +246,7 @@ export const updateListing = async (req, res) => {
     const updatedListing = await Listing.findByIdAndUpdate(
       req.params.id,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, context: "query" }
     );
 
     return res.status(200).json(updatedListing);

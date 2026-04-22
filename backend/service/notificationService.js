@@ -3,6 +3,7 @@ import {
   emitNotificationToUser,
   emitUnreadNotificationCount,
 } from "./realtimeService.js";
+import { sendPushToUser } from "./pushNotificationService.js";
 
 export const createNotification = async ({
   userId,
@@ -31,6 +32,19 @@ export const createNotification = async ({
 
   emitNotificationToUser(userId, populatedNotification);
   emitUnreadNotificationCount(userId, unreadCount);
+
+  await sendPushToUser({
+    userId,
+    title,
+    body: message,
+    data: {
+      notificationId: notification._id.toString(),
+      type,
+      listingId: listingId ? String(listingId) : null,
+      reviewId: metadata?.reviewId ? String(metadata.reviewId) : null,
+      route: metadata?.route || null,
+    },
+  });
 
   return populatedNotification;
 };

@@ -1,8 +1,7 @@
 import bcrypt from "bcryptjs";
 import userModel from "../models/userModel.js";
-import generateToken from "../utils/generateTokenUtils.js";
-import setTokenCookie from "../utils/setTokenCookies.js";
 import { generateUniqueUserSlug } from "../utils/userSlug.js";
+import { sendAuthResponse } from "../utils/sendAuthResponse.js";
 
 export const signup = async (req, res) => {
   const { firstName, lastName, email, password, confirmPassword } = req.body;
@@ -45,20 +44,12 @@ export const signup = async (req, res) => {
 
     await newUser.save();
 
-    const token = generateToken(newUser._id, { provider: newUser.provider });
-    setTokenCookie(res, token);
-
-    return res.status(201).json({
+    return sendAuthResponse({
+      req,
+      res,
+      user: newUser,
+      statusCode: 201,
       message: "Signup successful",
-      user: {
-        id: newUser._id,
-        slug: newUser.slug,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newUser.email,
-        avatar: newUser.avatar || null,
-        provider: newUser.provider,
-      },
     });
   } catch (error) {
     console.error("Signup error:", error);
@@ -72,8 +63,8 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const normalizedEmail = email.trim().toLowerCase();
 
+    const normalizedEmail = email.trim().toLowerCase();
     const user = await userModel.findOne({ email: normalizedEmail });
 
     if (!user) {
@@ -96,24 +87,17 @@ export const login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const token = generateToken(user._id, { provider: user.provider });
-    setTokenCookie(res, token);
-
-    return res.status(200).json({
+    return sendAuthResponse({
+      req,
+      res,
+      user,
+      statusCode: 200,
       message: "Login successful",
-      user: {
-        id: user._id,
-        slug: user.slug,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        avatar: user.avatar || null,
-        provider: user.provider,
-      },
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -135,7 +119,9 @@ export const logout = async (req, res) => {
       path: "/",
     });
 
-    return res.status(200).json({ message: "Logged out successfully" });
+    return res.status(200).json({
+      message: "Logged out successfully",
+    });
   } catch (error) {
     return res.status(500).json({ message: "Logout failed" });
   }
@@ -144,6 +130,7 @@ export const logout = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await userModel.findById(req.user.id).select("-password");
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

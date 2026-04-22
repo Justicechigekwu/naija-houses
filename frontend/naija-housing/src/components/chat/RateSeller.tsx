@@ -69,7 +69,7 @@ export default function RateSellerPrompt({
     <div className="my-3 overflow-hidden rounded-2xl border border-[#eadfd6] bg-gradient-to-r from-[#f8f4f1] to-[#fcfbfa] shadow-sm">
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-sm font-semibold">
             How was your conversation with this seller?
           </p>
           <p className="mt-1 text-sm text-gray-600">

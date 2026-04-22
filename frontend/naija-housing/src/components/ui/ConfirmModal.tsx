@@ -9,6 +9,7 @@ type ConfirmModalProps = {
   confirmVariant?: "danger" | "primary";
   onClose: () => void;
   onConfirm: () => void;
+  onCancel?: () => void;
 };
 
 export default function ConfirmModal({
@@ -20,6 +21,7 @@ export default function ConfirmModal({
   confirmVariant = "primary",
   onClose,
   onConfirm,
+  onCancel,
 }: ConfirmModalProps) {
   if (!isOpen) return null;
 
@@ -36,7 +38,7 @@ export default function ConfirmModal({
 
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
-            onClick={onClose}
+            onClick={onCancel || onClose}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-100 transition hover:bg-gray-200 hover:text-gray-900"
           >
             {cancelText}
