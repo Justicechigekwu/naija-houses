@@ -1,46 +1,4 @@
-// import mongoose from "mongoose";
-
-// const messageSchema = new mongoose.Schema(
-//   {
-//     chat: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "Chat",
-//       required: true,
-//     },
-
-//     sender: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "userModel",
-//       required: true,
-//     },
-
-//     text: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//     },
-
-//     deliveredTo: [
-//       {
-//         type: mongoose.Schema.Types.ObjectId,
-//         ref: "userModel",
-//       },
-//     ],
-
-//     seenBy: [
-//       {
-//         type: mongoose.Schema.Types.ObjectId,
-//         ref: "userModel",
-//       },
-//     ],
-//   },
-//   { timestamps: true }
-// );
-
-// const Message =
-//   mongoose.models.Message || mongoose.model("Message", messageSchema);
-
-// export default Message;
+import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
@@ -56,21 +14,10 @@ const messageSchema = new mongoose.Schema(
       required: true,
     },
 
-    type: {
-      type: String,
-      enum: ["text", "audio", "image", "video"],
-      default: "text",
-    },
-
     text: {
       type: String,
+      required: true,
       trim: true,
-    },
-
-    audio: {
-      url: String,
-      duration: Number, // seconds
-      size: Number, // bytes
     },
 
     deliveredTo: [
@@ -89,3 +36,8 @@ const messageSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+const Message =
+  mongoose.models.Message || mongoose.model("Message", messageSchema);
+
+export default Message;
